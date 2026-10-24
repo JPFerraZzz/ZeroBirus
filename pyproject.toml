@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "zerobirus"
+version = "0.0.0"
+description = "Portable Windows tool that detects and removes crypto miners, trojans and other malware."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12,<3.13"
+authors = [{ name = "João Ferraz" }]
+dependencies = []
+
+[project.scripts]
+zerobirus = "zerobirus.cli:main"
+
+[dependency-groups]
+dev = [
+    "ruff==0.17.2",
+    "mypy==2.4.0",
+    "pyright==1.1.414",
+    "pytest==9.1.1",
+    "hypothesis==6.170.9",
+    "pytest-socket==0.8.1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/zerobirus"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF", "PT"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
+mypy_path = "src"
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.12"
+pythonPlatform = "Windows"
+typeCheckingMode = "strict"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--disable-socket --strict-markers -ra"
+markers = ["windows: runs only on real Windows (CI windows-latest)"]
