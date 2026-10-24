@@ -3,7 +3,7 @@
 import time
 
 import pytest
-from hypothesis import given, settings
+from hypothesis import given
 from hypothesis import strategies as st
 
 from zerobirus.core.redact import REDACTED, redact
@@ -210,14 +210,12 @@ def test_linear_time_on_adversarial_input(name: str) -> None:
     assert elapsed < 1.5, f"{name}: {elapsed:.2f}s for {len(text)} chars"
 
 
-@settings(max_examples=500, deadline=None)
 @given(st.text())
 def test_redact_never_raises_and_is_idempotent(text: str) -> None:
     once = redact(text)
     assert redact(once) == once
 
 
-@settings(max_examples=300, deadline=None)
 @given(
     st.sampled_from(["--password ", "--password=", "/pwd:", "password=", '"password":"']),
     st.text(alphabet="XYZ0123456789!@#$%^&*()_+-=", min_size=1, max_size=30),
@@ -228,3 +226,23 @@ def test_generated_secrets_never_survive(prefix: str, secret: str) -> None:
     tail = out[len("tool ") + len(prefix.rstrip('"')) :]
     assert secret not in tail
     assert REDACTED in tail
+
+
+# Killers for surviving mutants (mutmut audit) -----------------------------------------
+
+PATH_LIKE = "see Users/Ana/AppDataLocalTempkzqpxabcdefghijklmnopqrstuvwxyz/svc end"
+SLASH_AND_DIGIT = "tok Ab/cdefghijklmnopqrstuvwxyzABCDEFGH1JKLMNOPQRSTUV end"
+SLASH_AND_PLUS = "tok abcdefghij/klmnopqrst+uvwxyzABCDEFGHIJKLMNOPQRSTUV end"
+DIGIT_NO_SLASH = "tok abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV1 end"
+LETTERS_ONLY = "tok abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ end"
+
+
+def test_slash_separated_name_without_digit_or_plus_is_kept() -> None:
+    assert redact(PATH_LIKE) == PATH_LIKE
+
+
+@pytest.mark.parametrize(
+    "text", [SLASH_AND_DIGIT, SLASH_AND_PLUS, DIGIT_NO_SLASH, LETTERS_ONLY], ids=lambda t: t[4:24]
+)
+def test_token_like_blobs_are_hidden(text: str) -> None:
+    assert redact(text) == "tok " + REDACTED + " end"

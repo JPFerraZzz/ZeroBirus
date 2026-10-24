@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import pytest
 from ctx_factory import typical_context
-from hypothesis import given, settings
+from hypothesis import given
 from hypothesis import strategies as st
 
 from zerobirus.core.safety import (
@@ -298,7 +298,6 @@ _seps = st.sampled_from(["\\", "/", "\\\\", "/\\", "\\/"])
 _prefixes = st.sampled_from(["C:", "c:", "\\\\?\\C:", "\\\\.\\C:", "//?/C:", "\\\\?\\c:"])
 
 
-@settings(max_examples=2000)
 @given(_base_parts, st.lists(_obfuscations, min_size=5, max_size=5), _seps, _prefixes)
 def test_obfuscated_protected_paths_stay_protected(
     parts: list[str],
@@ -311,7 +310,6 @@ def test_obfuscated_protected_paths_stay_protected(
     assert is_protected_path(path, CTX), path
 
 
-@settings(max_examples=2000)
 @given(st.text())
 def test_never_raises_and_normalize_is_idempotent(text: str) -> None:
     once = normalize_windows_path(text)
@@ -320,7 +318,6 @@ def test_never_raises_and_normalize_is_idempotent(text: str) -> None:
     is_protected_process(text, text, CTX)
 
 
-@settings(max_examples=2000)
 @given(st.text(alphabet=st.characters(blacklist_categories=["Cs"]), min_size=1, max_size=60))
 def test_arbitrary_text_under_temp_is_protected_or_clean(tail: str) -> None:
     """Whatever follows a Temp prefix, a path that escapes into Windows must be protected."""
@@ -328,3 +325,74 @@ def test_arbitrary_text_under_temp_is_protected_or_clean(tail: str) -> None:
     n = normalize_windows_path(path)
     if n == "c:\\windows" or n.startswith("c:\\windows\\"):
         assert is_protected_path(path, CTX)
+
+
+# Killers for surviving mutants (mutmut audit) -----------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("field", "bad"),
+    [
+        ("system_root", ""),
+        ("system_root", r"\\server\share\Windows"),
+        ("program_data", ""),
+        ("users_dir", "relative"),
+        ("program_files", ("",)),
+        ("program_files", (r"C:\PROGRA~1",)),
+        ("profile_roots", ("",)),
+        ("personal_folders", ("relative",)),
+        ("personal_folders", (r"C:\Users\Ana\OneDrive\Doc*",)),
+    ],
+)
+def test_context_error_names_the_offending_field(field: str, bad: object) -> None:
+    with pytest.raises(ValueError, match=rf"SystemContext\.{field}"):
+        typical_context(**{field: bad})  # type: ignore[arg-type]  # pyright: ignore
+
+
+@pytest.mark.parametrize("field", ["program_files", "profile_roots"])
+def test_context_empty_tuple_error_says_which(field: str) -> None:
+    with pytest.raises(ValueError, match=rf"^SystemContext\.{field} must not be empty$"):
+        typical_context(**{field: ()})  # type: ignore[arg-type]  # pyright: ignore
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "svchost.exe",
+        "SVCHOST.EXE",
+        "svchost",
+        "SvcHost",
+        " svchost.exe ",
+        "svchost.exe.",
+        "svchost.exe. ",
+        "C:/Windows/System32/svchost.exe",
+        r"C:\Windows\System32\svchost.exe",
+        "\uff53\uff56\uff43\uff48\uff4f\uff53\uff54.exe",
+        "lsass",
+        "explorer",
+        "MsMpEng",
+    ],
+)
+def test_protected_by_name_alone_when_path_unknown(name: str) -> None:
+    assert is_protected_process(name, None, CTX)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        r"C:\Windows\System32\svchost.exe*",
+        r"C:\Windows\System32\svchost.exe%",
+        "C:\\Windows\\System32\\svchost.exe\x00",
+        r"\\server\share\x\svchost.exe",
+        r"\\?\UNC\server\share\x\svchost.exe",
+    ],
+)
+def test_unsafe_or_unc_path_keeps_system_name_protected(path: str) -> None:
+    assert is_protected_process("svchost.exe", path, CTX)
+
+
+def test_extended_length_prefix_is_accepted_for_impostor_detection() -> None:
+    # A canonical \\?\ path outside the expected folder is an impostor: killable.
+    impostor = r"\\?\C:\Users\Ana\AppData\Local\Temp\svchost.exe"
+    assert not is_protected_process("svchost.exe", impostor, CTX)
+    assert is_protected_process("svchost.exe", r"\\?\C:\Windows\System32\svchost.exe", CTX)

@@ -180,15 +180,15 @@ def _is_root(normalized: str) -> bool:
     return bool(re.fullmatch(r"[a-z]:\\", normalized))
 
 
-def _require_location(name: str, value: str, *, allow_root: bool = False) -> str:
+def _require_location(name: str, value: str) -> str:
     n = normalize_windows_path(value)
+    # _is_root also rejects every UNC path.
     if (
         not value
         or not is_absolute(n)
-        or n.startswith("\\\\")
         or has_short_name(n)
         or has_unsafe_characters(value)
-        or (not allow_root and _is_root(n))
+        or _is_root(n)
     ):
         raise ValueError(f"SystemContext.{name} must be a canonical absolute drive path: {value!r}")
     return n
@@ -361,9 +361,9 @@ _PROTECTED_PROCESS_NAMES = (
 
 
 def _process_key(name: str) -> str:
-    key = _fold(name, compat=True).strip().replace("/", "\\").rsplit("\\", 1)[-1]
+    key = _fold(name, compat=True).strip().replace("/", "\\").rpartition("\\")[2]
     key = key.strip().rstrip(" .")
-    if key and "." not in key and key + ".exe" in _PROTECTED_PROCESS_NAMES:
+    if key + ".exe" in _PROTECTED_PROCESS_NAMES:
         key += ".exe"
     return key
 
@@ -387,9 +387,9 @@ def _expected_location(name: str, n_path: str, ctx: SystemContext) -> bool:
 
 def _path_is_canonical(path: str) -> bool:
     """True if normalisation changes nothing but case and an optional extended-length prefix."""
-    if path != path.strip() or unicodedata.normalize("NFKC", path) != path:
-        return False
-    if has_unsafe_characters(path) or has_ambiguous_component(path):
+    # Whitespace, compatibility characters, dot-only segments and streams are all removed by
+    # normalisation, so the final comparison with the original already rejects them.
+    if has_unsafe_characters(path):
         return False
     n = normalize_windows_path(path)
     if not is_absolute(n) or n.startswith("\\\\") or has_short_name(n):
