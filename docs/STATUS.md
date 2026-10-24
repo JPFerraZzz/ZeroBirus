@@ -34,6 +34,11 @@ Nada disto foi testado em Windows real (só no runner windows-latest). Todo o `c
 
 ### Pendentes e decisões a registar
 
+- **Caminhos canónicos (obrigatório para o backend Windows, Fase 1)**: `core/safety` só compara strings. O backend tem de lhe entregar caminhos canónicos obtidos com `GetFinalPathNameByHandle` (resolve links, nomes 8.3 e maiúsculas), nunca o texto cru vindo de um processo ou do registo. Sem isto, as garantias de `safety` não valem.
+- **Decisão pendente do João: `C:\Windows\Temp`**: hoje fica inteiramente protegido (tudo sob `%SystemRoot%`), mas é onde o malware costuma cair. Decidir se há uma exceção explícita (por exemplo só ficheiros executáveis sem assinatura em `C:\Windows\Temp`), sabendo que o BRIEF §8 manda não mexer em `C:\Windows`.
+- **Assinatura inválida em binário de sistema**: a proteção de processos depende de nome mais caminho esperado, não da assinatura. Na Fase 1, um binário de sistema com assinatura inválida tem de gerar um Finding SUSPEITO a recomendar a Análise offline do Microsoft Defender, nunca uma ação de remoção.
+- **`SystemContext`**: todos os campos de localização são obrigatórios. `personal_folders` tem de vir de SHGetKnownFolderPath (OneDrive e nomes localizados como "Ambiente de Trabalho"); o `safety` não os adivinha, e há um teste a provar que sem eles a pasta NÃO fica protegida.
+
 - **Program Files (provisório)**: `is_protected_path` protege Program Files por inteiro. A regra definitiva (BRIEF §8) é por assinatura: só Microsoft ou fabricantes de antivírus. O parâmetro `signer` já existe mas é ignorado. O teste `test_unsigned_in_program_files_can_be_removed` está marcado `xfail(strict=True)` e descreve o comportamento final: um executável sem assinatura em Program Files tem de poder entrar num plano de remoção. Resolver na Fase 1, quando houver dados de assinatura do backend.
 - **Segmentos ambíguos**: caminhos com segmentos só de pontos ou espaços a meio (`C:\Windows\ \x`) são tratados como protegidos (falham fechado), porque o Windows é ambíguo. Encontrado por hypothesis.
 - **Nomes 8.3**: um caminho com `~N` num componente é tratado como protegido. O backend tem de resolver o nome longo antes.
