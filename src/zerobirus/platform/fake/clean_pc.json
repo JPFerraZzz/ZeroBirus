@@ -1,0 +1,40 @@
+{
+  "elevated": true,
+  "system": {
+    "system_root": "C:\\Windows",
+    "program_files": ["C:\\Program Files", "C:\\Program Files (x86)"],
+    "program_data": "C:\\ProgramData",
+    "users_dir": "C:\\Users",
+    "profile_roots": ["C:\\Users\\Demo"],
+    "personal_folders": []
+  },
+  "processes": [
+    {
+      "pid": 4,
+      "name": "System",
+      "path": null,
+      "cmdline": "",
+      "user": "NT AUTHORITY\\SYSTEM",
+      "parent_pid": 0,
+      "signed_by_microsoft": true
+    },
+    {
+      "pid": 812,
+      "name": "svchost.exe",
+      "path": "C:\\Windows\\System32\\svchost.exe",
+      "cmdline": "C:\\Windows\\System32\\svchost.exe -k netsvcs",
+      "user": "NT AUTHORITY\\SYSTEM",
+      "parent_pid": 640,
+      "signed_by_microsoft": true
+    },
+    {
+      "pid": 4120,
+      "name": "explorer.exe",
+      "path": "C:\\Windows\\explorer.exe",
+      "cmdline": "C:\\Windows\\explorer.exe",
+      "user": "DEMO\\Demo",
+      "parent_pid": null,
+      "signed_by_microsoft": true
+    }
+  ]
+}

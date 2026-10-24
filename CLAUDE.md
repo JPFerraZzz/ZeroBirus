@@ -41,4 +41,19 @@ Antes de qualquer trabalho, lê docs/BRIEF.md (especificação completa) e docs/
 
 ## Comandos
 
-(a preencher na Fase 0: setup do ambiente, lint, tipos, testes, correr a GUI em modo offscreen, gerar capturas de ecrã)
+Em Linux, a partir da raiz do repositório. O `uv` gere o Python 3.12 e o ambiente (`uv.lock` é a fonte de verdade das versões).
+
+```
+uv sync --locked                       # setup do ambiente
+uv run ruff check .                    # lint
+uv run ruff format --check .           # formatação (sem --check para corrigir)
+uv run mypy                            # tipos, plataforma Linux
+uv run mypy --platform win32           # tipos, plataforma Windows
+uv run pyright                         # tipos, pythonPlatform Windows (em pyproject.toml)
+uv run pytest                          # testes (sem rede; os marcados `windows` fazem skip em Linux)
+uv run zerobirus selftest              # verificação interna com o backend fake
+```
+
+Uma tarefa só está terminada com lint, tipos (os dois mypy e o pyright) e pytest verdes. CI: `gh run watch` e `gh run view --log-failed`.
+
+A fazer quando existirem: GUI em modo offscreen (`QT_QPA_PLATFORM=offscreen`, Fase 2) e geração de capturas de ecrã (Fase 2).
