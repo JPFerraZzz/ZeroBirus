@@ -8,7 +8,7 @@ Três níveis de teste, nunca confundidos:
 
 ## Fase 0: base
 
-Estado: CI verde nos dois sistemas (PR #1). Aguarda revisão e OK do João para merge.
+Estado: fase 0 mergeada (PR #1). Endurecimento e auditoria em curso no PR `chore/phase-0-hardening`, ver `docs/reviews/phase-0-audit.md`.
 
 ### Feito
 
@@ -18,6 +18,14 @@ Estado: CI verde nos dois sistemas (PR #1). Aguarda revisão e OK do João para 
 - `.gitattributes` com LF por omissão.
 - CI Ubuntu e Windows, actions fixadas por SHA, permissões mínimas, Dependabot.
 - LICENSE, README.md, README.pt-PT.md, SECURITY.md.
+
+### Hardening e auditoria (branch chore/phase-0-hardening)
+
+- `SystemContext` com campos obrigatórios e validados; proteção de processos por nome mais caminho, nunca por assinatura.
+- Auditoria adversarial de `safety` e `redact` (relatório em `docs/reviews/phase-0-audit.md`): 32 problemas encontrados e corrigidos, incluindo um ReDoS quadrático em `redact`.
+- mutmut local (grupo `mutation`, fora do CI): 597 de 598 mutantes mortos, o sobrevivente é equivalente. Hypothesis perfil `deep`: sem contraexemplos.
+- Testes de política com detetores puros e casos sintéticos de violação.
+- O `# STATUS` não estava repetido no ficheiro; o ponto A1 não precisou de correção.
 
 ### Onde foi testado
 
