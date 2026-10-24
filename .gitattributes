@@ -1,0 +1,13 @@
+# LF by default for all text.
+* text=auto eol=lf
+
+# Binaries.
+*.ico binary
+*.png binary
+*.zip binary
+*.exe binary
+
+# PowerShell: LF, and the file must be pure ASCII or UTF-8 with BOM.
+# Windows PowerShell 5.1 reads BOM-less files as ANSI and corrupts non-ASCII.
+# Git attributes cannot enforce this; tests/unit/test_policy_encoding.py does.
+*.ps1 text eol=lf
