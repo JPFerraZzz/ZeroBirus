@@ -28,15 +28,20 @@ class SignerKind(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class SystemContext:
-    """Machine-specific locations, supplied by the backend (never read from the OS here)."""
+    """Machine-specific locations, supplied by the backend (never read from the OS here).
 
-    system_root: str = r"C:\Windows"
-    program_files: tuple[str, ...] = (r"C:\Program Files", r"C:\Program Files (x86)")
-    program_data: str = r"C:\ProgramData"
-    users_dir: str = r"C:\Users"
-    profile_roots: tuple[str, ...] = ()
-    # Personal data folders as resolved by SHGetKnownFolderPath (OneDrive redirection).
-    personal_folders: tuple[str, ...] = ()
+    Every location field is required on purpose: Windows may live on another drive, and an
+    empty field would silently mean "nothing protected". ``personal_folders`` must hold the
+    folders as resolved by SHGetKnownFolderPath (OneDrive redirection, localised names such
+    as "Ambiente de Trabalho"); this module cannot guess them.
+    """
+
+    system_root: str
+    program_files: tuple[str, ...]
+    program_data: str
+    users_dir: str
+    profile_roots: tuple[str, ...]
+    personal_folders: tuple[str, ...]
     own_pids: frozenset[int] = frozenset()
 
 
@@ -220,19 +225,21 @@ def is_protected_process(
     path: str | None,
     ctx: SystemContext,
     *,
-    signed_by_microsoft: bool,
     pid: int | None = None,
 ) -> bool:
     """Return True if the process must never be terminated.
 
-    A system process name is protected only when it runs from its expected path and is
-    signed by Microsoft. The same name anywhere else is NOT protected: it is a strong
-    sign of malware. ZeroBirus's own processes (``ctx.own_pids``) are always protected.
+    Protection depends on name plus expected path only, never on the signature: a system
+    binary with a missing or invalid signature is a finding (Phase 1: SUSPEITO, pointing
+    to the Defender offline scan), never a reason to put it in a kill plan. ``System`` and
+    ``Registry`` have no image file and are protected by name when no path is reported.
+    The same name anywhere else is NOT protected: it is a strong sign of malware.
+    ZeroBirus's own processes (``ctx.own_pids``) are always protected.
     """
     if pid is not None and pid in ctx.own_pids:
         return True
     lowered = name.strip().lower()
-    if lowered not in _PROTECTED_PROCESS_NAMES or not signed_by_microsoft:
+    if lowered not in _PROTECTED_PROCESS_NAMES:
         return False
     if lowered in _NO_IMAGE_PATH:
         return path in (None, "")

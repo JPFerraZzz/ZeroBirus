@@ -30,9 +30,7 @@ def selftest(inspector: Inspector | None = None) -> list[str]:
     if not procs:
         failures.append("inspector: no processes returned")
     for p in procs.values():
-        if p.name.lower() == "svchost.exe" and not is_protected_process(
-            p.name, p.path, ctx, signed_by_microsoft=p.signed_by_microsoft
-        ):
+        if p.name.lower() == "svchost.exe" and not is_protected_process(p.name, p.path, ctx):
             failures.append("safety: genuine svchost not protected")
     return failures
 
