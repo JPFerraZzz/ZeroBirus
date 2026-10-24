@@ -54,3 +54,19 @@ Nada disto foi testado em Windows real (só no runner windows-latest). Todo o `c
 - **UNC e raízes de unidade**: sempre protegidos.
 - Ainda não existem: docs/ARCHITECTURE.md, DETECTION.md, DESIGN.md, WINDOWS_TEST_PLAN.md, modelos de issue, lock com hashes verificado em CI além de `--locked`.
 - `psutil` e PySide6 não estão nas dependências: entram na Fase 1 e na Fase 2.
+
+## Próximo passo
+
+A Fase 1 começa por três commits, antes de qualquer scanner.
+
+1. **Suíte "tem de ser removível"**: prova que NÃO são protegidos `Users\Public\x.exe`, `AppData\Roaming\<pasta aleatória>\x.exe`, `AppData\Local\Temp\x.exe`, `Downloads\crack.exe`, `ProgramData\<pasta aleatória>\x.exe`, as pastas de Arranque e um perfil fora de `users_dir`.
+2. **Teste diferencial no CI Windows, só leitura**: grafias exóticas de ficheiros de sistema reais, abertas com `CreateFileW` e resolvidas com `GetFinalPathNameByHandle`. Se resolvem para dentro de `SystemRoot`, `is_protected_path` tem de dar True para a grafia original. Falhas são bugs, não testes a desligar.
+3. **Teste Windows com dados reais do psutil**: System (PID 4), Registry e Memory Compression protegidos; `System.exe` numa pasta de AppData não protegido.
+
+Regras da Fase 1:
+
+- O scoring usa sempre a linha de comando original; o redact só se aplica à saída.
+- Verificação que não correu é `NAO_VERIFICADO`, nunca `OK`.
+- O STATUS.md lista tudo o que ficou em skip no CI e porquê.
+
+Decisões do João: System e Registry ficam como estão. A exceção para `C:\Windows\Temp` fica para a Fase 3.
