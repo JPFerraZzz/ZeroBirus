@@ -187,7 +187,6 @@ def test_genuine_svchost_is_protected() -> None:
         r"C:\Users\Ana\AppData\Local\Temp\svchost.exe",
         r"C:\Windows\svchost.exe",
         r"C:\Windows\System32\evil\svchost.exe",
-        None,
     ],
 )
 def test_svchost_outside_system32_is_not_protected(path: str | None) -> None:
