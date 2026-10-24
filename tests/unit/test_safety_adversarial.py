@@ -396,3 +396,16 @@ def test_extended_length_prefix_is_accepted_for_impostor_detection() -> None:
     impostor = r"\\?\C:\Users\Ana\AppData\Local\Temp\svchost.exe"
     assert not is_protected_process("svchost.exe", impostor, CTX)
     assert is_protected_process("svchost.exe", r"\\?\C:\Windows\System32\svchost.exe", CTX)
+
+
+# Second-round findings -----------------------------------------------------------------
+
+
+def test_profile_outside_users_dir_keeps_its_personal_folders_protected() -> None:
+    ctx = typical_context(profile_roots=(r"D:\Perfis\Ana",), personal_folders=())
+    assert is_protected_path(r"D:\Perfis\Ana", ctx)
+    assert is_protected_path(r"D:\Perfis\Ana\Documents\cv.docx", ctx)
+    assert is_protected_path(r"D:\Perfis\Ana\Desktop\a.txt", ctx)
+    assert is_protected_path(r"D:\Perfis\Ana\AppData\Local\Temp", ctx)
+    assert is_protected_path(r"D:\Perfis\Ana\NTUSER.DAT", ctx)
+    assert not is_protected_path(r"D:\Perfis\Ana\AppData\Local\Temp\kzq\a.exe", ctx)

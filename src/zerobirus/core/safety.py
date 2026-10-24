@@ -230,11 +230,8 @@ class SystemContext:
             _require_location("personal_folders", folder)
 
 
-def _profile_protected(n: str, users: str) -> bool:
-    """Rules for anything under the users directory, for ANY profile (not only known ones)."""
-    if not is_under(n, users) or n == users:
-        return False
-    parts = n[len(users.rstrip("\\")) + 1 :].split("\\")
+def _profile_parts_protected(parts: list[str]) -> bool:
+    """Rules inside one profile. ``parts[0]`` is the profile name, the rest is relative to it."""
     profile = parts[0]
     if len(parts) == 1 or profile in _BUILTIN_PROFILES:
         return True
@@ -251,6 +248,23 @@ def _profile_protected(n: str, users: str) -> bool:
         if len(parts) == 3:
             return parts[2] in ("local", "roaming", "locallow")
         return len(parts) == 4 and parts[2] == "local" and parts[3] == "temp"
+    return False
+
+
+def _relative_parts(n: str, parent: str) -> list[str]:
+    return n[len(parent.rstrip("\\")) + 1 :].split("\\")
+
+
+def _profile_protected(n: str, users: str, profile_roots: tuple[str, ...]) -> bool:
+    """Profile rules for ANY profile under the users directory and for each known root."""
+    if is_under(n, users) and n != users and _profile_parts_protected(_relative_parts(n, users)):
+        return True
+    for root in map(normalize_windows_path, profile_roots):
+        if not is_under(n, root):
+            continue
+        parts = ["profile"] if n == root else ["profile", *_relative_parts(n, root)]
+        if _profile_parts_protected(parts):
+            return True
     return False
 
 
@@ -280,9 +294,7 @@ def _normalized_is_protected(n: str, ctx: SystemContext) -> bool:
             return True
 
     users = normalize_windows_path(ctx.users_dir)
-    if n == users or _profile_protected(n, users):
-        return True
-    if any(n == normalize_windows_path(p) for p in ctx.profile_roots):
+    if n == users or _profile_protected(n, users, ctx.profile_roots):
         return True
     return any(is_under(n, normalize_windows_path(p)) for p in ctx.personal_folders)
 

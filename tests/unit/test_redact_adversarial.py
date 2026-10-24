@@ -93,6 +93,15 @@ HIDDEN = [
     ("sk-" + "proj1234567890abcdef12345", "proj1234567890abcdef12345"),
     ("npm_" + "A1b2C3d4" * 5, "A1b2C3d4A1b2C3d4"),
     (f"jwt {JWT} end", "dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U"),
+    # Second round: quoted header values, PowerShell secure strings, schtasks
+    ('{"Authorization":"Basic dXNlcjpwYXNz"}', "dXNlcjpwYXNz"),
+    ('{"Authorization": "Bearer abc"}', "abc"),
+    ("{'Authorization': 'Basic Zm9vOmJhcg=='}", "Zm9vOmJhcg=="),
+    ('{"Cookie":"sid=SECRET9; other=1"}', "SECRET9"),
+    ('powershell -Password (ConvertTo-SecureString "plainPW1" -AsPlainText -Force)', "plainPW1"),
+    ("ConvertTo-SecureString 'plainPW2' -AsPlainText -Force", "plainPW2"),
+    ("ConvertTo-SecureString plainPW3 -AsPlainText -Force", "plainPW3"),
+    ("schtasks /create /tn x /tr y /ru bob /rp rpSECRET", "rpSECRET"),
     # PEM
     (PEM, "b3BlbnNzaC1rZXktdjE"),
     ("x " + PEM.split("\n")[0] + "\nAAAAB3NzaC1yc2EAAAADAQABAAABgQC\n", "AAAAB3NzaC1yc2EAAAADAQAB"),

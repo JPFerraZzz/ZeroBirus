@@ -20,6 +20,8 @@ REDACTED = "[oculto]"
 # A value: quoted (with escapes), unterminated quote up to end of line, or a bare run.
 _VALUE = r"""(?:"(?:[^"\\\r\n]|\\.)*"|'(?:[^'\\\r\n]|\\.)*'|"[^"\r\n]*|'[^'\r\n]*|[^\s"']+)"""
 _SEP = r"""["']?[ \t]*[=:][ \t]*"""
+# A header value: quoted string (JSON) or the rest of the line up to a quote.
+_HEADER_VALUE = r"""(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\r\n"']*)"""
 
 # Names that are secret wherever they appear in an identifier (db_password, mypassword).
 _LONG_KEYS = (
@@ -84,14 +86,14 @@ _PATTERNS: tuple[tuple[re.Pattern[str], Callable[[re.Match[str]], str]], ...] = 
     (
         re.compile(
             r"(?P<pre>(?<![A-Za-z0-9])(?:proxy-)?authorization[\"']?[ \t]*[=:][ \t]*)"
-            r"[^\r\n\"']*",
+            + _HEADER_VALUE,
             re.IGNORECASE,
         ),
         _sub_value,
     ),
     (
         re.compile(
-            r"(?P<pre>(?<![A-Za-z0-9])(?:set-)?cookie[ \t]*:[ \t]*)[^\r\n\"']*",
+            r"(?P<pre>(?<![A-Za-z0-9])(?:set-)?cookie[\"']?[ \t]*:[ \t]*)" + _HEADER_VALUE,
             re.IGNORECASE,
         ),
         _sub_value,
@@ -101,6 +103,16 @@ _PATTERNS: tuple[tuple[re.Pattern[str], Callable[[re.Match[str]], str]], ...] = 
         re.compile(r"(?P<pre>(?<![A-Za-z0-9])bearer[ \t]+)[A-Za-z0-9._~+/=-]{8,}", re.IGNORECASE),
         _sub_value,
     ),
+    # PowerShell secure strings: the plain text sits in the argument, not behind a flag.
+    (
+        re.compile(
+            r"(?P<pre>(?<![A-Za-z0-9])convertto-securestring[ \t]+(?:-string[ \t]+)?)" + _VALUE,
+            re.IGNORECASE,
+        ),
+        _sub_value,
+    ),
+    # schtasks /RP password
+    (re.compile(r"(?P<pre>(?<![\w-])[-/]rp[ \t]+)(?!-)" + _VALUE, re.IGNORECASE), _sub_value),
     # Flags: --password x, -pass x, /pwd:x (whitespace separator only after a flag marker).
     (
         re.compile(
