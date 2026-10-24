@@ -6,7 +6,11 @@
     "program_data": "C:\\ProgramData",
     "users_dir": "C:\\Users",
     "profile_roots": ["C:\\Users\\Demo"],
-    "personal_folders": []
+    "personal_folders": [
+      "C:\\Users\\Demo\\Documents",
+      "C:\\Users\\Demo\\Desktop",
+      "C:\\Users\\Demo\\Pictures"
+    ]
   },
   "processes": [
     {

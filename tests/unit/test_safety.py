@@ -1,4 +1,5 @@
 import pytest
+from ctx_factory import ONEDRIVE_PT_FOLDERS, typical_context
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -11,7 +12,7 @@ from zerobirus.core.safety import (
     normalize_windows_path,
 )
 
-CTX = SystemContext(profile_roots=(r"C:\Users\Ana",), personal_folders=(r"D:\Dados\Docs",))
+CTX = typical_context()
 
 
 @pytest.mark.parametrize(
@@ -71,6 +72,10 @@ def test_short_names_detected() -> None:
         r"C:\Users\Ana\Desktop\notes.txt",
         r"C:\Users\Ana\OneDrive\Pictures\a.jpg",
         r"D:\Dados\Docs\x.txt",
+        r"C:\Users\Ana\OneDrive\Ambiente de Trabalho",
+        r"C:\Users\Ana\OneDrive\Ambiente de Trabalho\nota.txt",
+        r"C:\Users\Ana\OneDrive\Documentos\cv.docx",
+        r"C:\Users\Ana\OneDrive\Imagens\Rolo\a.jpg",
         r"C:\Program Files\Microsoft\x.exe",
     ],
 )
@@ -173,9 +178,7 @@ def test_decision_is_case_and_slash_invariant(path: str) -> None:
 
 
 def test_genuine_svchost_is_protected() -> None:
-    assert is_protected_process(
-        "svchost.exe", r"C:\Windows\System32\svchost.exe", CTX, signed_by_microsoft=True
-    )
+    assert is_protected_process("svchost.exe", r"C:\Windows\System32\svchost.exe", CTX)
 
 
 @pytest.mark.parametrize(
@@ -184,53 +187,83 @@ def test_genuine_svchost_is_protected() -> None:
         r"C:\Users\Ana\AppData\Local\Temp\svchost.exe",
         r"C:\Windows\svchost.exe",
         r"C:\Windows\System32\evil\svchost.exe",
-        None,
     ],
 )
 def test_svchost_outside_system32_is_not_protected(path: str | None) -> None:
-    assert not is_protected_process("svchost.exe", path, CTX, signed_by_microsoft=True)
-
-
-def test_unsigned_svchost_is_not_protected() -> None:
     assert not is_protected_process(
-        "svchost.exe", r"C:\Windows\System32\svchost.exe", CTX, signed_by_microsoft=False
+        "svchost.exe",
+        path,
+        CTX,
     )
 
 
 def test_name_check_is_case_insensitive() -> None:
-    assert is_protected_process(
-        "SVCHOST.EXE", r"c:\WINDOWS\system32\SvcHost.exe", CTX, signed_by_microsoft=True
-    )
+    assert is_protected_process("SVCHOST.EXE", r"c:\WINDOWS\system32\SvcHost.exe", CTX)
 
 
 def test_explorer_only_from_windows_dir() -> None:
-    assert is_protected_process(
-        "explorer.exe", r"C:\Windows\explorer.exe", CTX, signed_by_microsoft=True
-    )
-    assert not is_protected_process(
-        "explorer.exe", r"C:\Users\Ana\explorer.exe", CTX, signed_by_microsoft=True
-    )
+    assert is_protected_process("explorer.exe", r"C:\Windows\explorer.exe", CTX)
+    assert not is_protected_process("explorer.exe", r"C:\Users\Ana\explorer.exe", CTX)
 
 
 def test_defender_engine_locations() -> None:
     good = r"C:\ProgramData\Microsoft\Windows Defender\Platform\4.18.1\MsMpEng.exe"
-    assert is_protected_process("MsMpEng.exe", good, CTX, signed_by_microsoft=True)
+    assert is_protected_process(
+        "MsMpEng.exe",
+        good,
+        CTX,
+    )
     fake = r"C:\ProgramData\Windows Defender\MsMpEng.exe"
-    assert not is_protected_process("MsMpEng.exe", fake, CTX, signed_by_microsoft=True)
+    assert not is_protected_process(
+        "MsMpEng.exe",
+        fake,
+        CTX,
+    )
 
 
 def test_system_process_has_no_image_path() -> None:
-    assert is_protected_process("System", None, CTX, signed_by_microsoft=True)
-    assert not is_protected_process("System", r"C:\Temp\System", CTX, signed_by_microsoft=True)
+    assert is_protected_process(
+        "System",
+        None,
+        CTX,
+    )
+    assert not is_protected_process(
+        "System",
+        r"C:\Temp\System",
+        CTX,
+    )
 
 
 def test_own_processes_are_protected() -> None:
-    ctx = SystemContext(own_pids=frozenset({1234}))
-    assert is_protected_process("anything.exe", None, ctx, signed_by_microsoft=False, pid=1234)
-    assert not is_protected_process("anything.exe", None, ctx, signed_by_microsoft=False, pid=99)
+    ctx = typical_context(own_pids=frozenset({1234}))
+    assert is_protected_process("anything.exe", None, ctx, pid=1234)
+    assert not is_protected_process("anything.exe", None, ctx, pid=99)
 
 
 def test_unknown_process_is_not_protected() -> None:
-    assert not is_protected_process(
-        "xmrig.exe", r"C:\Temp\xmrig.exe", CTX, signed_by_microsoft=False
-    )
+    assert not is_protected_process("xmrig.exe", r"C:\Temp\xmrig.exe", CTX)
+
+
+def test_onedrive_pt_desktop_is_protected_only_if_backend_supplies_it() -> None:
+    desktop = r"C:\Users\Ana\OneDrive\Ambiente de Trabalho\nota.txt"
+    assert is_protected_path(desktop, typical_context(personal_folders=ONEDRIVE_PT_FOLDERS))
+    # Documents the contract: safety cannot guess localised OneDrive names. If the backend
+    # forgets to pass the folder, the user's Desktop is NOT protected.
+    without = typical_context(personal_folders=())
+    assert not is_protected_path(desktop, without)
+
+
+def test_system_context_requires_every_location() -> None:
+    with pytest.raises(TypeError):
+        SystemContext()  # type: ignore[call-arg]  # pyright: ignore[reportCallIssue]
+
+
+def test_unsigned_svchost_in_system32_is_protected() -> None:
+    # Protection is by name + path, never by signature: an invalid signature on a system
+    # binary is a finding (Phase 1), not a reason to kill it.
+    assert is_protected_process("svchost.exe", r"C:\Windows\System32\svchost.exe", CTX)
+
+
+def test_system_and_registry_are_protected_by_name_without_path() -> None:
+    assert is_protected_process("System", None, CTX)
+    assert is_protected_process("Registry", "", CTX)

@@ -29,7 +29,16 @@ Antes de qualquer trabalho, lê docs/BRIEF.md (especificação completa) e docs/
 
 - Uma fase de cada vez, como definido no BRIEF. Commits pequenos, Conventional Commits em inglês. No fim de cada fase, atualiza docs/STATUS.md, para e reporta ao João antes de seguir.
 - Trabalha em branches. Só se faz merge em main com o CI verde e com o OK do João.
-- Uma tarefa só está terminada com ruff, mypy e pytest verdes.
+- Auditorias locais (fora do CI):
+
+```
+HYPOTHESIS_PROFILE=deep uv run pytest tests/unit          # hypothesis com 5000 exemplos
+uv run --group mutation mutmut run                         # mutation testing de safety.py e redact.py
+uv run --group mutation mutmut results                     # sobreviventes; `mutmut show <nome>` mostra o diff
+rm -rf mutants                                             # limpar antes de repetir
+```
+
+Uma tarefa só está terminada com ruff, mypy e pytest verdes.
 - Confirma as versões das dependências no PyPI na altura da implementação. Não confies na memória.
 - No fim da Fase 0, preenche a secção Comandos abaixo com os comandos reais.
 

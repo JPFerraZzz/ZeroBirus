@@ -6,8 +6,9 @@ import sys
 from pathlib import Path, PureWindowsPath
 
 import pytest
+from ctx_factory import typical_context
 
-from zerobirus.core.safety import SystemContext, is_protected_path, normalize_windows_path
+from zerobirus.core.safety import is_protected_path, normalize_windows_path
 
 pytestmark = pytest.mark.windows
 
@@ -28,5 +29,5 @@ def test_safety_agrees_with_real_pathlib() -> None:
 
 def test_real_system_root_is_protected() -> None:
 
-    ctx = SystemContext(system_root=os.environ["SYSTEMROOT"])
+    ctx = typical_context(system_root=os.environ["SYSTEMROOT"])
     assert is_protected_path(os.environ["SYSTEMROOT"] + r"\System32\cmd.exe", ctx)
