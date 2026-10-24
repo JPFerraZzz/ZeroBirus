@@ -29,10 +29,10 @@ Estado: fase 0 mergeada (PR #1). Endurecimento e auditoria em curso no PR `chore
 
 ### Onde foi testado
 
-| Item | Linux | CI Windows (PR #1) | Manual (João) |
+| Item | Linux | CI Windows (PR #2) | Manual (João) |
 | --- | --- | --- | --- |
 | ruff, mypy (linux e win32), pyright | verde | mypy verde (ruff e pyright só correm no Ubuntu) | não aplicável |
-| pytest (unit, política, encoding) | verde (145 passed, 4 skipped, 1 xfailed) | verde (148 passed, 1 skipped, 1 xfailed) | não testado |
+| pytest (unit, política, encoding) | verde (519 passed, 4 skipped, 1 xfailed) | verde (522 passed, 1 skipped, 1 xfailed) | não testado |
 | testes marcados `windows` (4) | skipped por desenho | verde (4 passed) | não testado |
 | `zerobirus version` e `selftest` | verde | verde | não testado |
 
