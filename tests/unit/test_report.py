@@ -212,3 +212,34 @@ def test_whole_drive_exclusion_has_its_own_explanation() -> None:
     finding = next(f for f in result.findings if f.item == "C:\\")
     assert "unidade inteira" in finding.signals[0].text
     assert levels(result)["C:\\"] is Level.CONFERIR
+
+
+def test_report_lists_pool_and_wallet_as_indicators_and_never_the_password() -> None:
+    wallet = "4" + "A" * 94
+    cmd = f"x.exe -o stratum+tcp://{wallet}.rig:{SECRET}@pool.exemplo:3333 --donate-level=1"
+    insp = inspector(processes=(ProcessInfo(9, "x.exe", DROP, cmd, "PC\\Ana", None, 80.0),))
+    report = build_report(run_scan(insp))
+    assert {"kind": "pool", "value": "pool.exemplo:3333", "scheme": "stratum+tcp"} in report[
+        "indicators"
+    ]
+    assert {"kind": "wallet", "value": f"{wallet}.rig", "scheme": "stratum+tcp"} in report[
+        "indicators"
+    ]
+    text = json.dumps(report)
+    assert SECRET not in text
+    assert f"stratum+tcp://{wallet}.rig:[oculto]@pool.exemplo:3333" in text
+    assert "Indicadores para investigação" in render_text(report)
+
+
+def test_a_wallet_that_is_not_in_a_stratum_url_is_never_an_indicator() -> None:
+    wallet = "4" + "A" * 94
+    insp = inspector(
+        processes=(
+            ProcessInfo(
+                9, "x.exe", DROP, f"x.exe --donate-level=1 -u {wallet}", "PC\\Ana", None, 80.0
+            ),
+        )
+    )
+    report = build_report(run_scan(insp))
+    assert report["indicators"] == []
+    assert wallet not in json.dumps(report)

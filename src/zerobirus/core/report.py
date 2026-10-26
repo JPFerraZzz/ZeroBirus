@@ -15,6 +15,8 @@ from typing import Any
 
 from zerobirus import __version__
 from zerobirus.core.diagnosis import Diagnosis, diagnose
+from zerobirus.core.ioc import extract_pool_indicators
+from zerobirus.core.models import Level
 from zerobirus.core.privacy import Anonymizer
 from zerobirus.core.redact import redact
 from zerobirus.core.rules import load_rules
@@ -127,6 +129,15 @@ def build_report(
         raw["snapshot"] = snapshot_to_dict(_shareable_snapshot(result.snapshot))
     anon = Anonymizer(result.snapshot.system, _strings(raw), _accounts(raw))
     cleaned: dict[str, Any] = _clean(raw, anon)
+    # Built from the original strings and added after redaction on purpose: these are the
+    # attacker's data the redaction policy keeps visible (pool address, pool user or wallet).
+    evidence = [
+        e for c in result.checks for f in c.findings if f.level is not Level.OK for e in f.evidence
+    ]
+    cleaned["indicators"] = [
+        {"kind": i.kind, "value": i.value, "scheme": i.scheme}
+        for i in extract_pool_indicators(evidence)
+    ]
     return cleaned
 
 
@@ -164,6 +175,9 @@ def render_text(report: dict[str, Any]) -> str:
             lines += ["", f"{threat['name']}.", f"  {threat['note']}"]
         else:
             lines += ["", f"Ameaça provável: {threat['name']} (certeza {threat['certainty']})"]
+    if report.get("indicators"):
+        lines += ["", "Indicadores para investigação (dados do atacante):"]
+        lines += [f"  {i['kind']}: {i['value']}" for i in report["indicators"]]
     if diagnosis["entry_vector"]:
         lines += ["", f"Por onde pode ter entrado: {diagnosis['entry_vector']}"]
     if diagnosis["normal_things"]:
