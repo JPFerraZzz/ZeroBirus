@@ -9,8 +9,10 @@ from zerobirus.core.parsing import (
     classify_signer,
     expand_vars,
     iso_minutes,
+    offline_profiles_gap,
     organisation,
     parse_defender,
+    parse_ps_envelope,
     parse_shortcuts,
     parse_signatures,
     parse_tasks,
@@ -237,3 +239,26 @@ def test_empty_strings_from_powershell_are_not_exclusions() -> None:
     assert state.exclusion_extensions == ()
     assert state.exclusion_processes == ()
     assert state.exclusion_ips == ()
+
+
+def test_offline_profiles_are_one_grouped_calm_line() -> None:
+    assert offline_profiles_gap([]) is None
+    assert offline_profiles_gap(["", ""]) is None
+    assert offline_profiles_gap(["Bob", "ana", "Bob"]) == (
+        "persistência de utilizadores sem sessão iniciada: perfis ana, Bob"
+    )
+
+
+def test_ps_envelope_items_and_errors() -> None:
+    items, errors = parse_ps_envelope('{"items":[{"a":1}],"errors":["boom",3]}')
+    assert items == [{"a": 1}]
+    assert errors == ["boom"]
+    assert parse_ps_envelope("") == ([], [])
+    assert parse_ps_envelope('{"items":[],"errors":null}') == ([], [])
+    assert parse_ps_envelope('{"items":{"x":1}}')[0] == {"x": 1}
+
+
+@pytest.mark.parametrize("bad", ["not json", "[1,2]", '{"errors":[]}', "123"])
+def test_ps_envelope_rejects_other_shapes(bad: str) -> None:
+    with pytest.raises(ValueError, match="not JSON|unexpected shape"):
+        parse_ps_envelope(bad)

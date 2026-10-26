@@ -56,7 +56,7 @@ PERSONAL_FOLDERS = (
     knownfolders.VIDEOS,
     knownfolders.MUSIC,
 )
-SIGNATURE_BATCH = 150
+SIGNATURE_BATCH = 200
 
 
 def _canon(path: str) -> str:
@@ -84,10 +84,10 @@ class WindowsInspector:
         return bool(_shell32.IsUserAnAdmin())
 
     def system_context(self) -> SystemContext:
-        users_dir = registry.profiles_directory() or os.path.dirname(
+        users_dir = registry.profiles_directory(self._system_root) or os.path.dirname(
             knownfolders.known_folder(knownfolders.PROFILE)
         )
-        profiles = registry.profile_list()
+        profiles = registry.profile_list(self._system_root)
         roots = [_canon(p) for p in profiles.values() if os.path.isdir(p)]
         current = _canon(knownfolders.known_folder(knownfolders.PROFILE))
         if current.lower() not in {r.lower() for r in roots}:
@@ -117,8 +117,8 @@ class WindowsInspector:
         return list_processes()
 
     def autoruns(self) -> Observed[AutorunEntry]:
-        profiles = registry.profile_list()
-        observed = registry.collect_autoruns(profiles)
+        profiles = registry.profile_list(self._system_root)
+        observed = registry.collect_autoruns(profiles, self._system_root)
         gaps = list(observed.gaps)
         folders: list[tuple[str, str]] = [
             ("comum", knownfolders.known_folder(knownfolders.COMMON_STARTUP))
@@ -133,9 +133,9 @@ class WindowsInspector:
         resolved: dict[str, str] = {}
         if lnk:
             try:
-                resolved = parse_shortcuts(
-                    ps.run_json("shortcuts", {"paths": lnk}, system_root=self._system_root)
-                )
+                out = ps.run_json("shortcuts", {"paths": lnk}, system_root=self._system_root)
+                resolved = parse_shortcuts(out.items)
+                gaps += [f"atalhos de Arranque: {e}" for e in out.errors]
             except ps.PowerShellError as exc:
                 gaps.append(f"os atalhos de Arranque não foram resolvidos: {exc}")
         return Observed(
@@ -185,24 +185,26 @@ class WindowsInspector:
 
     def scheduled_tasks(self) -> Observed[TaskInfo]:
         try:
-            raw = ps.run_json("tasks", None, system_root=self._system_root)
+            out = ps.run_json("tasks", None, system_root=self._system_root)
         except ps.PowerShellError as exc:
             return Observed((), (f"as tarefas agendadas não foram lidas: {exc}",))
-        return parse_tasks(raw, elevated=self.is_elevated())
+        parsed = parse_tasks(out.items, elevated=self.is_elevated())
+        extra = tuple(f"tarefas agendadas: {e}" for e in out.errors)
+        return Observed(parsed.items, (*parsed.gaps, *extra))
 
     def defender(self) -> Observed[DefenderState]:
         try:
-            raw = ps.run_json("defender", None, system_root=self._system_root)
+            out = ps.run_json("defender", None, system_root=self._system_root)
         except ps.PowerShellError as exc:
             return Observed((), (f"o estado do Defender não foi lido: {exc}",))
-        return parse_defender(raw, elevated=self.is_elevated())
+        return parse_defender(out.items, elevated=self.is_elevated())
 
     def wmi_bindings(self) -> Observed[WmiBinding]:
         try:
-            raw = ps.run_json("wmi", None, system_root=self._system_root)
+            out = ps.run_json("wmi", None, system_root=self._system_root)
         except ps.PowerShellError as exc:
             return Observed((), (f"as assinaturas WMI não foram lidas: {exc}",))
-        return Observed(parse_wmi(raw))
+        return Observed(parse_wmi(out.items), tuple(f"assinaturas WMI: {e}" for e in out.errors))
 
     def signatures(self, paths: Sequence[str]) -> Observed[Signature]:
         found: list[Signature] = []
@@ -211,12 +213,12 @@ class WindowsInspector:
         for start in range(0, len(existing), SIGNATURE_BATCH):
             batch = existing[start : start + SIGNATURE_BATCH]
             try:
-                raw = ps.run_json("signatures", {"paths": batch}, system_root=self._system_root)
+                out = ps.run_json("signatures", {"paths": batch}, system_root=self._system_root)
             except ps.PowerShellError as exc:
                 gaps.append(f"assinaturas não verificadas: {exc}")
                 continue
-            found += parse_signatures(raw)
-            failed = [r for r in as_rows(raw) if r.get("status") == -1]
+            found += parse_signatures(out.items)
+            failed = [r for r in as_rows(out.items) if r.get("status") == -1]
             if failed:
                 detail = str(failed[0].get("detail", ""))[:160]
                 gaps.append(

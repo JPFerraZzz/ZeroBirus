@@ -165,9 +165,10 @@ def test_raw_signature_rows_for_diagnosis() -> None:
         os.path.join(root, "System32", "kernel32.dll"),
         os.path.join(root, "explorer.exe"),
     ]
-    rows = ps.run_json("signatures", {"paths": paths}, system_root=root)
-    _show("raw signature rows", rows)
-    assert len(rows) == 3
+    out = ps.run_json("signatures", {"paths": paths}, system_root=root)
+    _show("raw signature output", out)
+    assert len(out.items) == 3
+    assert out.errors == ()
 
 
 def test_signatures_valid_microsoft_unknown_for_text_and_nothing_made_up(
@@ -201,6 +202,52 @@ def test_a_hostile_inherited_module_path_cannot_break_or_hijack_the_bridge(
     assert got.gaps == ()
 
 
+def test_the_bridge_child_environment_is_built_from_scratch_and_still_works(
+    inspector: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ps = mod("ps")
+    for name, value in {
+        "PATH": r"C:\evil",
+        "PATHEXT": ".EVIL",
+        "COMSPEC": r"C:\evil\cmd.exe",
+        "PSModulePath": r"C:\evil\Modules",
+        "PSExecutionPolicyPreference": "Bypass",
+        "POWERSHELL_TELEMETRY_OPTOUT": "1",
+        "SystemRoot": r"C:\evil",
+        "windir": r"C:\evil",
+    }.items():
+        monkeypatch.setenv(name, value)
+    root = inspector.system_context().system_root
+    env = ps.child_environment(root)
+    assert "evil" not in " ".join(env.values()).lower()
+    assert not [k for k in env if k.upper().startswith("PS") and k != "PSModulePath"]
+    cmd = os.path.join(root, "System32", "cmd.exe")
+    got = inspector.signatures([cmd])
+    assert [s.status for s in got.items] == [SignatureStatus.VALID]
+
+
+def test_registry_expansion_never_uses_the_process_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    registry = mod("registry")
+    monkeypatch.setenv("SystemRoot", r"C:\evil")
+    monkeypatch.setenv("ProgramData", r"C:\evil")
+    variables = registry.machine_variables(mod("inspector").windows_directory())
+    assert "evil" not in " ".join(variables.values()).lower()
+    assert variables["SystemRoot"].lower().endswith("windows")
+
+
+def test_a_script_reports_per_item_errors_and_keeps_the_good_items() -> None:
+    ps = mod("ps")
+    root = mod("inspector").windows_directory()
+    good = os.path.join(root, "System32", "cmd.exe")
+    out = ps.run_json("signatures", {"paths": [good, r"Z:\does\not\exist.exe"]}, system_root=root)
+    by_path = {r["path"]: r["status"] for r in out.items}
+    assert by_path[good] == 0
+    assert by_path[r"Z:\does\not\exist.exe"] == -1
+    assert len(out.errors) == 1
+
+
 def test_data_given_to_powershell_is_never_executed_or_altered() -> None:
     ps = mod("ps")
     nasty = [
@@ -209,9 +256,10 @@ def test_data_given_to_powershell_is_never_executed_or_altered() -> None:
         "C:\\z$(Get-Date)",
         "C:\\ã\u00e7\u4e2d\u6587 `n %PATH%",
     ]
-    rows = ps.run_json("signatures", {"paths": nasty}, system_root=os.environ["SYSTEMROOT"])
-    assert [r["path"] for r in rows] == nasty
-    assert all(r["status"] == -1 for r in rows)
+    out = ps.run_json("signatures", {"paths": nasty}, system_root=os.environ["SYSTEMROOT"])
+    assert [r["path"] for r in out.items] == nasty
+    assert all(r["status"] == -1 for r in out.items)
+    assert len(out.errors) == len(nasty)
 
 
 def test_powershell_timeout_is_enforced() -> None:

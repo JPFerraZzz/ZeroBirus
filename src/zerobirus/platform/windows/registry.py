@@ -13,7 +13,8 @@ from collections.abc import Iterator, Mapping
 from typing import Any
 
 from zerobirus.core.models import AutorunEntry, Observed, ServiceInfo
-from zerobirus.core.parsing import expand_vars, profile_variables
+from zerobirus.core.parsing import expand_vars, offline_profiles_gap, profile_variables
+from zerobirus.platform.windows import knownfolders
 
 if sys.platform != "win32":  # pragma: no cover
     raise ImportError("zerobirus.platform.windows only works on Windows")
@@ -70,11 +71,31 @@ def _value(root: int, path: str, view: int, name: str) -> tuple[Any, int] | None
         return None
 
 
-def machine_variables() -> dict[str, str]:
-    return dict(os.environ)
+def machine_variables(system_root: str) -> dict[str, str]:
+    """System-wide variables for expanding REG_EXPAND_SZ values, built from trusted sources.
+
+    ``system_root`` comes from GetSystemWindowsDirectoryW and the folders from the shell's
+    known folders; nothing is taken from the process environment, which a user-level process
+    (or malware that started us) controls. Names not listed stay as written (``%X%``).
+    """
+    root = system_root.rstrip("\\")
+    env = {"SystemRoot": root, "windir": root, "SystemDrive": root[:2]}
+    for name, folder in (
+        ("ProgramData", knownfolders.PROGRAM_DATA),
+        ("ProgramFiles", knownfolders.PROGRAM_FILES),
+        ("ProgramW6432", knownfolders.PROGRAM_FILES),
+        ("ProgramFiles(x86)", knownfolders.PROGRAM_FILES_X86),
+    ):
+        try:
+            env[name] = knownfolders.known_folder(folder)
+        except OSError:
+            continue
+    if "ProgramFiles" in env:
+        env["CommonProgramFiles"] = env["ProgramFiles"] + "\\Common Files"
+    return env
 
 
-def profile_list() -> dict[str, str]:
+def profile_list(system_root: str) -> dict[str, str]:
     """SID to profile folder for real user accounts (S-1-5-21-...)."""
     out: dict[str, str] = {}
     for sid in _subkeys(winreg.HKEY_LOCAL_MACHINE, PROFILE_LIST, winreg.KEY_WOW64_64KEY):
@@ -87,15 +108,19 @@ def profile_list() -> dict[str, str]:
             "ProfileImagePath",
         )
         if got is not None and isinstance(got[0], str):
-            out[sid] = expand_vars(got[0], machine_variables())
+            out[sid] = expand_vars(got[0], machine_variables(system_root))
     return out
 
 
-def profiles_directory() -> str | None:
+def profiles_directory(system_root: str) -> str | None:
     got = _value(
         winreg.HKEY_LOCAL_MACHINE, PROFILE_LIST, winreg.KEY_WOW64_64KEY, "ProfilesDirectory"
     )
-    return expand_vars(got[0], machine_variables()) if got and isinstance(got[0], str) else None
+    return (
+        expand_vars(got[0], machine_variables(system_root))
+        if got and isinstance(got[0], str)
+        else None
+    )
 
 
 def _entries_under(
@@ -143,11 +168,11 @@ def _winlogon_entries(
     return out
 
 
-def collect_autoruns(profiles: Mapping[str, str]) -> Observed[AutorunEntry]:
+def collect_autoruns(profiles: Mapping[str, str], system_root: str) -> Observed[AutorunEntry]:
     """Run/RunOnce/Policies Run for the machine and every loaded user, Winlogon, AppInit, IFEO."""
     entries: list[AutorunEntry] = []
     gaps: list[str] = []
-    env = machine_variables()
+    env = machine_variables(system_root)
     hklm = winreg.HKEY_LOCAL_MACHINE
 
     entries += _entries_under(hklm, "", "HKLM", "", env, gaps)
@@ -202,12 +227,11 @@ def collect_autoruns(profiles: Mapping[str, str]) -> Observed[AutorunEntry]:
         entries += _winlogon_entries(
             winreg.HKEY_USERS, prefix, f"HKU\\{sid}", who, ("Shell",), variables
         )
-    for sid, root_dir in profiles.items():
-        if sid not in loaded:
-            gaps.append(
-                f"o registo do perfil '{os.path.basename(root_dir)}' não está carregado: "
-                "o seu arranque pelo registo não foi lido"
-            )
+    offline = offline_profiles_gap(
+        [os.path.basename(root_dir) for sid, root_dir in profiles.items() if sid not in loaded]
+    )
+    if offline:
+        gaps.append(offline)
     return Observed(tuple(entries), tuple(dict.fromkeys(gaps)))
 
 
@@ -215,7 +239,7 @@ def collect_services(system_root: str) -> Observed[ServiceInfo]:
     """Win32 services from the registry (not drivers). Native read, no PowerShell."""
     services: list[ServiceInfo] = []
     gaps: list[str] = []
-    env = machine_variables()
+    env = machine_variables(system_root)
     hklm = winreg.HKEY_LOCAL_MACHINE
     try:
         names = _subkeys(hklm, SERVICES, winreg.KEY_WOW64_64KEY)

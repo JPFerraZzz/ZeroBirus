@@ -7,6 +7,7 @@ the I/O and hands the rows to these functions.
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Mapping
 from typing import Any, cast
@@ -205,3 +206,37 @@ def profile_variables(profile_root: str) -> dict[str, str]:
         "TEMP": base + "\\AppData\\Local\\Temp",
         "TMP": base + "\\AppData\\Local\\Temp",
     }
+
+
+def offline_profiles_gap(names: list[str]) -> str | None:
+    """One grouped, calm line for the profiles whose registry hive is not loaded.
+
+    Their Run keys cannot be read without mounting the hive, which would change the registry,
+    so it is not done (offline hive reading is planned for v1.1). The check is therefore
+    NAO_VERIFICADO, which is a statement of what was not looked at, not an alarm.
+    """
+    unique = sorted(dict.fromkeys(n for n in names if n), key=str.lower)
+    if not unique:
+        return None
+    return f"persistência de utilizadores sem sessão iniciada: perfis {', '.join(unique)}"
+
+
+def parse_ps_envelope(text: str) -> tuple[Any, list[str]]:
+    """The JSON a bridge script prints: ``{"items": ..., "errors": [...]}``.
+
+    Empty output is an empty result. Anything that is not that shape raises ``ValueError``.
+    """
+    stripped = text.strip()
+    if not stripped:
+        return [], []
+    try:
+        data: Any = json.loads(stripped)
+    except json.JSONDecodeError as exc:
+        raise ValueError("not JSON") from exc
+    if not isinstance(data, dict):
+        raise ValueError("unexpected shape")
+    fields = as_rows(data)[0]
+    if "items" not in fields:
+        raise ValueError("unexpected shape")
+    errors = [e for e in _list(fields.get("errors")) if isinstance(e, str)]
+    return fields["items"], errors
