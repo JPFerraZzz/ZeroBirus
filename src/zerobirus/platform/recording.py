@@ -66,6 +66,12 @@ class RecordingInspector:
         ).items[0]
         return ctx
 
+    def desktop_folder(self) -> str:
+        value: str = self._once("desktop", lambda: Observed((self._inner.desktop_folder(),))).items[
+            0
+        ]
+        return value
+
     def processes(self) -> Observed[ProcessInfo]:
         return self._once("processes", self._inner.processes)
 
@@ -139,6 +145,7 @@ class RecordingInspector:
         return Snapshot(
             elevated=self.is_elevated(),
             system=self.system_context(),
+            desktop=self.desktop_folder(),
             processes=items("processes"),
             autoruns=items("autoruns"),
             tasks=items("tasks"),

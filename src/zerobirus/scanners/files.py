@@ -94,6 +94,7 @@ def judge(
         rules=rules,
         signals=signals,
         path=f.path,
+        subject=(("kind", "file"), ("path", f.path)),
         description="Executável numa pasta gravável pelo utilizador.",
     )
     return finding if finding.level is not Level.OK else None

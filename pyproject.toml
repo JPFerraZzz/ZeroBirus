@@ -11,7 +11,7 @@ license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.12,<3.13"
 authors = [{ name = "João Ferraz" }]
-dependencies = ["psutil==7.2.2"]
+dependencies = ["psutil==7.2.2", "PySide6-Essentials==6.12.0"]
 
 [project.scripts]
 zerobirus = "zerobirus.cli:main"
@@ -24,6 +24,7 @@ dev = [
     "pytest==9.1.1",
     "hypothesis==6.170.9",
     "pytest-socket==0.8.1",
+    "pytest-qt==4.5.0",
     "types-psutil==7.2.2.20260906",
 ]
 
@@ -51,6 +52,8 @@ select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF", "PT"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101"]
+# The style sheet is CSS text; wrapping its lines would make it harder to read.
+"src/zerobirus/ui/theme.py" = ["E501"]
 
 [tool.mypy]
 strict = true

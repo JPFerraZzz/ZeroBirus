@@ -120,6 +120,11 @@ def _exclusion_findings(
                 evidence=(value, *proof),
                 description=text,
                 path=value if kind == "pasta" else None,
+                subject=(
+                    ("kind", "defender_exclusion"),
+                    ("exclusion_kind", kind),
+                    ("value", value),
+                ),
             )
         )
 

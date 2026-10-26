@@ -31,6 +31,12 @@ def judge(b: WmiBinding, rules: Rules, vendor_known: bool) -> Finding | None:
         location=f"root\\subscription ({b.consumer_class})",
         rules=rules,
         signals=(rules.signal(code),),
+        subject=(
+            ("kind", "wmi_subscription"),
+            ("filter", b.filter_name),
+            ("consumer", b.consumer_name),
+            ("consumer_class", b.consumer_class),
+        ),
         evidence=(b.command,),
         description=f"Assinatura WMI permanente (filtro {b.filter_name}).",
     )

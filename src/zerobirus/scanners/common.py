@@ -48,6 +48,7 @@ def make_finding(
     evidence: Iterable[str] = (),
     path: str | None = None,
     advice: str = "",
+    subject: Sequence[tuple[str, str]] = (),
 ) -> Finding:
     rules = rules or load_rules()
     sigs = tuple(signals)
@@ -61,6 +62,7 @@ def make_finding(
         evidence=tuple(e for e in evidence if e),
         path=path,
         advice=advice,
+        subject=tuple(subject),
     )
 
 

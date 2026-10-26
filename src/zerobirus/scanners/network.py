@@ -56,6 +56,12 @@ def scan(inspector: Inspector) -> CheckResult:
             rules=rules,
             signals=(signal,),
             path=proc.path if proc else None,
+            subject=(
+                ("kind", "connection"),
+                ("pid", str(c.pid) if c.pid is not None else ""),
+                ("remote_address", c.remote_address),
+                ("remote_port", str(c.remote_port)),
+            ),
             description="Ligação a uma porta usada por pools de mineração.",
             evidence=(proc.cmdline,) if proc else (),
         )
