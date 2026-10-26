@@ -64,6 +64,14 @@ class Snapshot:
     gaps: dict[str, tuple[str, ...]] = field(default_factory=dict[str, tuple[str, ...]])
 
 
+def _seq(value: Any) -> list[Any]:
+    return list(value)
+
+
+def _items(value: Any) -> list[tuple[Any, Any]]:
+    return list(value.items())
+
+
 def to_jsonable(obj: object) -> Any:
     """Dataclasses, enums and tuples to plain JSON types."""
     if is_dataclass(obj) and not isinstance(obj, type):
@@ -75,8 +83,7 @@ def to_jsonable(obj: object) -> Any:
     if isinstance(obj, (tuple, list)):
         return [to_jsonable(x) for x in cast("list[Any]", obj)]
     if isinstance(obj, dict):
-        mapping: dict[Any, Any] = obj
-        return {str(k): to_jsonable(v) for k, v in mapping.items()}
+        return {str(k): to_jsonable(v) for k, v in _items(obj)}
     return obj
 
 
@@ -96,8 +103,7 @@ def _decode(tp: Any, data: Any) -> Any:
     if origin is tuple:
         if not isinstance(data, list):
             raise TypeError(f"expected a list, got {type(data).__name__}")
-        items: list[Any] = data
-        return tuple(_decode(args[0], x) for x in items)
+        return tuple(_decode(args[0], x) for x in _seq(data))
     if origin is frozenset:
         return frozenset(_decode(args[0], x) for x in data)
     if origin is dict:
