@@ -105,8 +105,8 @@ Resultado numa máquina real limpa (runner): nenhum SUSPEITO. Os CONFERIR que so
 | Item | Linux | CI Windows (PR #4) | Manual (João) |
 | --- | --- | --- | --- |
 | ruff, mypy (linux e win32), pyright | verde | mypy verde (ruff e pyright só correm no Ubuntu) | não aplicável |
-| pytest unit e golden | verde (ver contagem abaixo) | verde | não testado |
-| testes marcados `windows` (42) | skipped por desenho | verde | não testado |
+| pytest unit e golden | verde (1028 passed, 49 skipped) | verde (1069 passed, 8 skipped, run 40411973874) | não testado |
+| testes marcados `windows` (44) | skipped por desenho | verde (43 passed, 1 skipped: Memory Compression) | não testado |
 | Backend Windows (registo, serviços, processos, ligações, tarefas, Defender, WMI, assinaturas, pesquisa de ficheiros) | só os parsers | verde no runner windows-latest | **não testado em Windows real** |
 | Artefactos inofensivos: deteção, nada alterado, limpeza | não aplicável | verde | não testado |
 | `zerobirus scan --json --out` com o backend real | não aplicável | verde | não testado |
