@@ -97,3 +97,30 @@ def test_progress_is_reported_per_check_and_cancelling_raises() -> None:
     finally:
         release.set()
         timer.cancel()
+
+
+def test_concurrent_requests_for_the_same_signature_wait_for_the_one_fetch() -> None:
+    """A second check asking for a path that is being fetched must get the answer, not nothing."""
+    from zerobirus.core.models import Observed, Signature, SignatureStatus
+    from zerobirus.platform.recording import RecordingInspector
+
+    calls: list[list[str]] = []
+    path = r"C:\x\a.exe"
+
+    class Slow(FakeInspector):
+        def signatures(self, paths):  # type: ignore[no-untyped-def]
+            calls.append(list(paths))
+            time.sleep(0.3)
+            return Observed((Signature(path, SignatureStatus.UNSIGNED),))
+
+    rec = RecordingInspector(Slow("clean_pc"))
+    results: list[Observed[Signature]] = []
+    threads = [
+        threading.Thread(target=lambda: results.append(rec.signatures([path]))) for _ in range(4)
+    ]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert len(calls) == 1
+    assert all(len(r.items) == 1 and r.items[0].status is SignatureStatus.UNSIGNED for r in results)

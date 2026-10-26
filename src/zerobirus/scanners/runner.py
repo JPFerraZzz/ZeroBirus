@@ -19,6 +19,7 @@ from zerobirus.core.snapshot import Snapshot
 from zerobirus.platform.base import Inspector
 from zerobirus.platform.recording import RecordingInspector
 from zerobirus.scanners import SCANNERS, Scanner
+from zerobirus.scanners.crosscheck import apply_cross_checks
 
 DEFAULT_TIMEOUT = 90.0
 
@@ -124,5 +125,6 @@ def run_scan(
     if cancel is not None and cancel.is_set():
         raise ScanCancelled
     checks = tuple(results[name] for name in chosen)
+    checks = apply_cross_checks(checks, recording.system_context())
     checks = _with_hashes(recording, checks)
     return ScanResult(checks=checks, snapshot=recording.snapshot(), seconds=seconds)
