@@ -234,6 +234,23 @@ def test_file_search_respects_depth_and_finds_executables(tmp_path: Path) -> Non
     assert found == {"a.exe", "b.dll"}
 
 
+def test_a_huge_first_root_cannot_starve_the_roots_after_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    files = mod("files")
+    big = tmp_path / "big"
+    big.mkdir()
+    for i in range(300):
+        (big / f"f{i}.txt").write_bytes(b"x")
+    small = tmp_path / "small"
+    small.mkdir()
+    (small / "needle.exe").write_bytes(b"x")
+    monkeypatch.setattr(files, "MAX_ENTRIES", 100)
+    result = files.search_roots([str(big), str(small)])
+    assert "needle.exe" in {os.path.basename(f.path) for f in result.items}
+    assert any(str(big) in g for g in result.gaps)
+
+
 def test_file_search_does_not_follow_symlinks(tmp_path: Path) -> None:
     files = mod("files")
     target = tmp_path / "target"

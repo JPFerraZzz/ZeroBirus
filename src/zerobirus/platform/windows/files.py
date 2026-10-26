@@ -7,6 +7,7 @@ import os
 import stat
 import sys
 import time
+from collections import deque
 from collections.abc import Iterable, Sequence
 
 from zerobirus.core.models import AutorunEntry, FileCandidate, FileHash, Observed
@@ -95,36 +96,30 @@ def read_hosts(path: str) -> Observed[str]:
     return Observed(tuple(text.splitlines()))
 
 
-def search_roots(roots: Iterable[str]) -> Observed[FileCandidate]:
-    """Bounded search for executables: depth, entry count, candidate count and time limits.
-
-    Never follows junctions or symlinks. Hitting a limit or being denied somewhere is a gap.
-    """
-    started = time.monotonic()
+def _search_one(
+    root: str, max_entries: int, deadline: float
+) -> tuple[list[FileCandidate], int, int, str]:
+    """Breadth-first search of one root. Returns (found, visited, denied, why it stopped)."""
     found: list[FileCandidate] = []
     visited = 0
     denied = 0
-    truncated = ""
-    stack: list[tuple[str, int]] = [(r, 0) for r in roots]
-    while stack:
-        folder, depth = stack.pop()
-        if time.monotonic() - started > MAX_SECONDS:
-            truncated = "o tempo da pesquisa dirigida acabou"
-            break
+    queue: deque[tuple[str, int]] = deque([(root, 0)])
+    while queue:
+        folder, depth = queue.popleft()
+        if time.monotonic() > deadline:
+            return found, visited, denied, "o tempo acabou"
         try:
             with os.scandir(folder) as it:
                 for entry in it:
                     visited += 1
-                    if visited > MAX_ENTRIES:
-                        truncated = "a pesquisa dirigida atingiu o limite de entradas"
-                        stack.clear()
-                        break
+                    if visited > max_entries:
+                        return found, visited, denied, "o limite de entradas foi atingido"
                     if _is_reparse(entry):
                         continue
                     try:
                         if entry.is_dir(follow_symlinks=False):
                             if depth < MAX_DEPTH:
-                                stack.append((entry.path, depth + 1))
+                                queue.append((entry.path, depth + 1))
                         elif os.path.splitext(entry.name)[
                             1
                         ].lower() in EXECUTABLE_EXTENSIONS and not entry.name.lower().startswith(
@@ -141,11 +136,36 @@ def search_roots(roots: Iterable[str]) -> Observed[FileCandidate]:
             continue
         except OSError:
             denied += 1
+    return found, visited, denied, ""
+
+
+def search_roots(roots: Iterable[str]) -> Observed[FileCandidate]:
+    """Bounded search for executables, root by root in the order given (most likely first).
+
+    Every root gets a fair share of what is left of the time and entry budgets, so one huge
+    folder cannot starve the ones after it. Never follows junctions or symlinks. Stopping at a
+    limit, or being denied somewhere, is a gap: it is reported, never silent.
+    """
+    ordered = list(roots)
+    started = time.monotonic()
+    entries_left = MAX_ENTRIES
+    found: list[FileCandidate] = []
     gaps: list[str] = []
-    if truncated:
-        gaps.append(f"{truncated}; parte das pastas não foi vista")
-    if denied:
-        gaps.append(f"sem acesso a {denied} pastas ou ficheiros durante a pesquisa dirigida")
+    denied_total = 0
+    for index, root in enumerate(ordered):
+        roots_left = len(ordered) - index
+        deadline = time.monotonic() + max(
+            0.0, (MAX_SECONDS - (time.monotonic() - started)) / roots_left
+        )
+        got, visited, denied, why = _search_one(root, max(1, entries_left // roots_left), deadline)
+        entries_left -= visited
+        denied_total += denied
+        found += got
+        if why:
+            gaps.append(f"a pesquisa em {root} parou: {why}; parte das pastas não foi vista")
+    found = found[:MAX_CANDIDATES]
+    if denied_total:
+        gaps.append(f"sem acesso a {denied_total} pastas ou ficheiros durante a pesquisa dirigida")
     return Observed(tuple(found), tuple(gaps))
 
 

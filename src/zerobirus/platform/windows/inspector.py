@@ -164,18 +164,18 @@ class WindowsInspector:
 
     def candidate_files(self) -> Observed[FileCandidate]:
         ctx = self.system_context()
+        # Most likely first: where droppers and persistence usually live.
         roots: list[str] = []
         for profile in ctx.profile_roots:
             roots += [
                 os.path.join(profile, "AppData", "Roaming"),
-                os.path.join(profile, "AppData", "Local"),
+                os.path.join(profile, "AppData", "Local", "Temp"),
                 os.path.join(profile, "Downloads"),
             ]
-        roots += [
-            os.path.join(ctx.users_dir, "Public"),
-            ctx.program_data,
-            os.path.join(ctx.system_root, "Temp"),
-        ]
+        roots += [os.path.join(ctx.users_dir, "Public"), os.path.join(ctx.system_root, "Temp")]
+        for profile in ctx.profile_roots:
+            roots.append(os.path.join(profile, "AppData", "Local"))
+        roots.append(ctx.program_data)
         return files.search_roots(r for r in roots if os.path.isdir(r))
 
     def file_hashes(self, paths: Sequence[str]) -> Observed[FileHash]:
