@@ -49,6 +49,7 @@ jobs:
       - name: All tests (windows-marked tests run here, never skipped)
         run: uv run pytest -v -rs
       - name: Windows-marked tests only (visible in the log)
+        if: success() || failure()
         run: uv run pytest -m windows -v -s
       - run: uv run zerobirus version
       - run: uv run zerobirus selftest
