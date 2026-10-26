@@ -39,7 +39,7 @@ def _seq(value: Any) -> list[Any]:
     return list(value)
 
 
-def _rows(value: Any) -> list[dict[str, Any]]:
+def as_rows(value: Any) -> list[dict[str, Any]]:
     """A PowerShell result (one object or a list of them) as a list of dicts."""
     if isinstance(value, dict):
         return [dict(cast("dict[str, Any]", value))]
@@ -73,7 +73,7 @@ def classify_signer(subject: str, rules: Rules | None = None) -> SignerKind:
 
 def parse_signatures(raw: Any, rules: Rules | None = None) -> tuple[Signature, ...]:
     out: list[Signature] = []
-    for row in _rows(raw):
+    for row in as_rows(raw):
         path = _s(row.get("path"))
         status = row.get("status")
         subject = _s(row.get("subject"))
@@ -106,10 +106,10 @@ def iso_minutes(text: str | None) -> int | None:
 
 def parse_tasks(raw: Any, *, elevated: bool) -> Observed[TaskInfo]:
     tasks: list[TaskInfo] = []
-    for row in _rows(raw):
+    for row in as_rows(raw):
         actions = tuple(
             TaskAction(_s(a.get("execute")), _s(a.get("arguments")))
-            for a in _rows(row.get("actions"))
+            for a in as_rows(row.get("actions"))
             if _s(a.get("execute"))
         )
         state = row.get("state")
@@ -142,7 +142,7 @@ def _opt_list(value: Any, *, readable: bool) -> tuple[str, ...] | None:
 
 
 def parse_defender(raw: Any, *, elevated: bool) -> Observed[DefenderState]:
-    rows = _rows(raw)
+    rows = as_rows(raw)
     if not rows:
         return Observed[DefenderState]((), ("o Defender não devolveu dados",))
     row = rows[0]
@@ -175,14 +175,14 @@ def parse_wmi(raw: Any) -> tuple[WmiBinding, ...]:
             consumer_class=_s(r.get("consumer_class")),
             command=_s(r.get("command")),
         )
-        for r in _rows(raw)
+        for r in as_rows(raw)
     )
 
 
 def parse_shortcuts(raw: Any) -> dict[str, str]:
     """Shortcut path to the command it runs (``"target" arguments``)."""
     out: dict[str, str] = {}
-    for row in _rows(raw):
+    for row in as_rows(raw):
         path, target, args = _s(row.get("path")), _s(row.get("target")), _s(row.get("arguments"))
         if path and target:
             out[path] = f'"{target}" {args}'.rstrip()

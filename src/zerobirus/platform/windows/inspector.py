@@ -28,6 +28,7 @@ from zerobirus.core.models import (
     WmiBinding,
 )
 from zerobirus.core.parsing import (
+    as_rows,
     parse_defender,
     parse_shortcuts,
     parse_signatures,
@@ -215,4 +216,10 @@ class WindowsInspector:
                 gaps.append(f"assinaturas não verificadas: {exc}")
                 continue
             found += parse_signatures(raw)
+            failed = [r for r in as_rows(raw) if r.get("status") == -1]
+            if failed:
+                detail = str(failed[0].get("detail", ""))[:160]
+                gaps.append(
+                    f"não foi possível verificar a assinatura de {len(failed)} ficheiros: {detail}"
+                )
         return Observed(tuple(found), tuple(dict.fromkeys(gaps)))

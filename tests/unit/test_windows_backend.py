@@ -186,6 +186,21 @@ def test_signatures_valid_microsoft_unknown_for_text_and_nothing_made_up(
     assert missing not in by_path
 
 
+def test_a_hostile_inherited_module_path_cannot_break_or_hijack_the_bridge(
+    inspector: Any, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    evil = tmp_path / "Modules"
+    (evil / "Microsoft.PowerShell.Security").mkdir(parents=True)
+    (evil / "Microsoft.PowerShell.Security" / "Microsoft.PowerShell.Security.psm1").write_text(
+        "throw 'hijacked'", "utf-8"
+    )
+    monkeypatch.setenv("PSModulePath", str(evil))
+    cmd = os.path.join(os.environ["SYSTEMROOT"], "System32", "cmd.exe")
+    got = inspector.signatures([cmd])
+    assert [s.status for s in got.items] == [SignatureStatus.VALID]
+    assert got.gaps == ()
+
+
 def test_data_given_to_powershell_is_never_executed_or_altered() -> None:
     ps = mod("ps")
     nasty = [

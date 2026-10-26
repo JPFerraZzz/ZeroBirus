@@ -55,6 +55,20 @@ def script_text(name: str) -> str:
     return resources.files(__package__).joinpath("scripts", f"{name}.ps1").read_text("utf-8")
 
 
+def child_environment(system_root: str) -> dict[str, str]:
+    """Environment for the child: ours, but with a fixed module path.
+
+    An inherited ``PSModulePath`` (PowerShell 7 sets one; malware could set a hostile one)
+    makes Windows PowerShell load the wrong modules or none. The module path is pinned to
+    the system modules.
+    """
+    env = {k: v for k, v in os.environ.items() if k.upper() != "PSMODULEPATH"}
+    env["PSModulePath"] = os.path.join(
+        system_root, "System32", "WindowsPowerShell", "v1.0", "Modules"
+    )
+    return env
+
+
 def encode_command(script: str) -> str:
     return base64.b64encode((_PREAMBLE + script + _EPILOGUE).encode("utf-16-le")).decode("ascii")
 
@@ -87,6 +101,7 @@ def run_json(
             capture_output=True,
             timeout=timeout,
             cwd=os.path.join(system_root, "System32"),
+            env=child_environment(system_root),
             creationflags=CREATE_NO_WINDOW,
             check=False,
         )
