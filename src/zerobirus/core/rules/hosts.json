@@ -1,0 +1,10 @@
+{
+  "defaults": ["127.0.0.1 localhost", "::1 localhost", "0.0.0.0 localhost"],
+  "own_marker": "# zerobirus",
+  "security_domain_fragments": [
+    "microsoft.com", "windowsupdate.com", "update.microsoft", "live.com", "defender",
+    "kaspersky", "avast", "avg.com", "bitdefender", "eset.com", "malwarebytes", "mcafee",
+    "norton", "symantec", "sophos", "trendmicro", "f-secure", "avira", "virustotal",
+    "windows.com", "smartscreen"
+  ]
+}

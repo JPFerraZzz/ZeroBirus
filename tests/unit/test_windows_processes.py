@@ -16,7 +16,7 @@ KERNEL_PSEUDO = ("System", "Registry", "Memory Compression")
 
 def _listing() -> list[ProcessInfo]:
     processes = importlib.import_module("zerobirus.platform.windows.processes")
-    return list(processes.iter_processes())
+    return list(processes.list_processes(sample_cpu=False).items)
 
 
 def test_system_pid_4_is_listed_and_protected() -> None:

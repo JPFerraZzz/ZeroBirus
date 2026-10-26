@@ -1,0 +1,320 @@
+{
+ "thresholds": {
+  "conferir": 30,
+  "suspeito": 100
+ },
+ "signals": {
+  "cmdline_miner_marker": {
+   "weight": 100,
+   "strong": true,
+   "threat": "minerador",
+   "text": "A linha de comando tem marcas típicas de mineração de criptomoeda."
+  },
+  "cmdline_pool_domain": {
+   "weight": 100,
+   "strong": true,
+   "threat": "minerador",
+   "text": "A linha de comando liga a um domínio conhecido de pool de mineração."
+  },
+  "cmdline_miner_weak": {
+   "weight": 30,
+   "strong": false,
+   "threat": "minerador",
+   "text": "A linha de comando tem várias opções que também aparecem em mineradores."
+  },
+  "miner_process_name": {
+   "weight": 70,
+   "strong": false,
+   "threat": "minerador",
+   "text": "O nome do programa é o de um minerador conhecido."
+  },
+  "high_cpu": {
+   "weight": 25,
+   "strong": false,
+   "threat": "minerador",
+   "text": "Usa muito processador de forma continuada."
+  },
+  "writable_location": {
+   "weight": 20,
+   "strong": false,
+   "threat": null,
+   "text": "Corre a partir de uma pasta onde o utilizador pode escrever (AppData, Temp, ProgramData ou Public)."
+  },
+  "random_folder": {
+   "weight": 25,
+   "strong": false,
+   "threat": null,
+   "text": "A pasta ou o ficheiro tem um nome de aspeto aleatório."
+  },
+  "unsigned": {
+   "weight": 15,
+   "strong": false,
+   "threat": null,
+   "text": "Não tem assinatura digital."
+  },
+  "invalid_signature": {
+   "weight": 40,
+   "strong": false,
+   "threat": null,
+   "text": "A assinatura digital é inválida."
+  },
+  "valid_signature": {
+   "weight": -30,
+   "strong": false,
+   "threat": null,
+   "text": "Tem assinatura digital válida (baixa a pontuação, não anula outras provas)."
+  },
+  "system_binary_bad_signature": {
+   "weight": 100,
+   "strong": true,
+   "threat": null,
+   "text": "Um ficheiro do sistema tem assinatura inválida ou foi alterado."
+  },
+  "system_name_wrong_location": {
+   "weight": 100,
+   "strong": true,
+   "threat": null,
+   "text": "Tem o nome de um processo do Windows mas está fora da pasta onde esse processo vive."
+  },
+  "mining_port_writable": {
+   "weight": 100,
+   "strong": true,
+   "threat": "minerador",
+   "text": "Liga a uma porta usada por pools de mineração a partir de uma pasta gravável pelo utilizador."
+  },
+  "mining_port_other": {
+   "weight": 30,
+   "strong": false,
+   "threat": "minerador",
+   "text": "Liga a uma porta usada por pools de mineração."
+  },
+  "persist_writable": {
+   "weight": 35,
+   "strong": false,
+   "threat": null,
+   "text": "Arranca com o Windows a partir de uma pasta gravável pelo utilizador."
+  },
+  "persist_unsigned_random_writable": {
+   "weight": 100,
+   "strong": true,
+   "threat": "trojan",
+   "text": "Arranca com o Windows um programa sem assinatura, com nome aleatório, numa pasta gravável pelo utilizador."
+  },
+  "winlogon_changed": {
+   "weight": 70,
+   "strong": false,
+   "threat": "trojan",
+   "text": "O arranque da sessão (Winlogon) foi alterado em relação ao normal."
+  },
+  "appinit_dll": {
+   "weight": 50,
+   "strong": false,
+   "threat": "trojan",
+   "text": "Há DLLs carregadas em todos os programas (AppInit_DLLs)."
+  },
+  "ifeo_debugger": {
+   "weight": 40,
+   "strong": false,
+   "threat": "trojan",
+   "text": "Um programa está redirecionado para outro (Image File Execution Options)."
+  },
+  "task_outside_microsoft": {
+   "weight": 10,
+   "strong": false,
+   "threat": null,
+   "text": "Tarefa agendada fora da pasta Microsoft."
+  },
+  "task_from_writable": {
+   "weight": 60,
+   "strong": false,
+   "threat": null,
+   "text": "A tarefa executa um programa de uma pasta gravável pelo utilizador."
+  },
+  "task_disguised_microsoft": {
+   "weight": 70,
+   "strong": false,
+   "threat": "trojan",
+   "text": "Está numa pasta com nome da Microsoft mas executa um programa de uma pasta gravável pelo utilizador."
+  },
+  "task_frequent": {
+   "weight": 10,
+   "strong": false,
+   "threat": null,
+   "text": "Repete-se com muita frequência."
+  },
+  "service_non_microsoft": {
+   "weight": 15,
+   "strong": false,
+   "threat": null,
+   "text": "Serviço que não é da Microsoft."
+  },
+  "service_from_writable": {
+   "weight": 60,
+   "strong": false,
+   "threat": null,
+   "text": "O serviço executa um programa de uma pasta gravável pelo utilizador."
+  },
+  "shell_command": {
+   "weight": 25,
+   "strong": false,
+   "threat": null,
+   "text": "Executa através de uma consola de comandos ou de um interpretador de scripts."
+  },
+  "file_in_writable": {
+   "weight": 15,
+   "strong": false,
+   "threat": null,
+   "text": "Executável numa pasta gravável pelo utilizador."
+  },
+  "referenced_by_persistence": {
+   "weight": 40,
+   "strong": false,
+   "threat": "trojan",
+   "text": "Algo no arranque do Windows aponta para este ficheiro."
+  },
+  "defender_exclusion_covers": {
+   "weight": 10,
+   "strong": false,
+   "threat": null,
+   "text": "O Microsoft Defender tem uma exclusão que cobre este ficheiro."
+  },
+  "defender_exclusion_and_persistence": {
+   "weight": 100,
+   "strong": true,
+   "threat": "trojan",
+   "text": "O Defender foi instruído a ignorar uma pasta com um executável que também arranca com o Windows."
+  },
+  "running_from_file": {
+   "weight": 20,
+   "strong": false,
+   "threat": null,
+   "text": "Está a correr neste momento."
+  },
+  "crack_folder": {
+   "weight": 20,
+   "strong": false,
+   "threat": null,
+   "text": "Está numa pasta com nome de crack, keygen ou ativador."
+  },
+  "defender_realtime_off": {
+   "weight": 50,
+   "strong": false,
+   "threat": null,
+   "text": "A proteção em tempo real do Defender está desligada."
+  },
+  "defender_tamper_off": {
+   "weight": 30,
+   "strong": false,
+   "threat": null,
+   "text": "A proteção contra adulteração do Defender está desligada."
+  },
+  "defender_signatures_old": {
+   "weight": 20,
+   "strong": false,
+   "threat": null,
+   "text": "As assinaturas do Defender estão desatualizadas."
+  },
+  "defender_signatures_very_old": {
+   "weight": 40,
+   "strong": false,
+   "threat": null,
+   "text": "As assinaturas do Defender estão muito desatualizadas."
+  },
+  "defender_threat_history": {
+   "weight": 40,
+   "strong": false,
+   "threat": null,
+   "text": "O Defender tem ameaças no histórico."
+  },
+  "defender_exclusion_path_writable": {
+   "weight": 50,
+   "strong": false,
+   "threat": null,
+   "text": "Exclusão do Defender sobre uma pasta gravável pelo utilizador."
+  },
+  "defender_exclusion_whole_drive": {
+   "weight": 50,
+   "strong": false,
+   "threat": null,
+   "text": "O Defender foi instruído a não analisar uma unidade inteira."
+  },
+  "defender_whole_drive_exclusion_with_evidence": {
+   "weight": 100,
+   "strong": true,
+   "threat": null,
+   "text": "O Defender foi instruído a ignorar uma unidade inteira e há, ao mesmo tempo, outros sinais de infeção (arranque a partir de AppData ou Temp, ligação a porta de mineração ou linha de comando de mineração)."
+  },
+  "defender_exclusion_path": {
+   "weight": 30,
+   "strong": false,
+   "threat": null,
+   "text": "Exclusão de pasta no Defender."
+  },
+  "defender_exclusion_extension": {
+   "weight": 40,
+   "strong": false,
+   "threat": null,
+   "text": "Exclusão de extensão de executáveis no Defender."
+  },
+  "defender_exclusion_process": {
+   "weight": 30,
+   "strong": false,
+   "threat": null,
+   "text": "Exclusão de processo no Defender."
+  },
+  "defender_exclusion_ip": {
+   "weight": 30,
+   "strong": false,
+   "threat": null,
+   "text": "Exclusão de endereço IP no Defender."
+  },
+  "hosts_security_domain": {
+   "weight": 100,
+   "strong": true,
+   "threat": "trojan",
+   "text": "O ficheiro hosts redireciona um domínio de segurança ou de atualizações."
+  },
+  "hosts_other": {
+   "weight": 35,
+   "strong": false,
+   "threat": null,
+   "text": "Linha no ficheiro hosts que não é das predefinidas."
+  },
+  "wmi_command_unknown": {
+   "weight": 100,
+   "strong": true,
+   "threat": "trojan",
+   "text": "Assinatura WMI permanente que executa comandos e não é de um fabricante conhecido."
+  },
+  "wmi_other": {
+   "weight": 40,
+   "strong": false,
+   "threat": null,
+   "text": "Assinatura WMI permanente."
+  },
+  "cmdline_miner_unverified": {
+   "weight": 20,
+   "strong": false,
+   "threat": "minerador",
+   "text": "A linha de comando tem uma marca ligada a mineração que ainda não está confirmada em fonte pública."
+  },
+  "miner_process_name_unverified": {
+   "weight": 20,
+   "strong": false,
+   "threat": "minerador",
+   "text": "O nome do programa lembra o de um minerador, mas não está confirmado em fonte pública."
+  },
+  "mining_port_unverified_writable": {
+   "weight": 50,
+   "strong": false,
+   "threat": "minerador",
+   "text": "Liga a uma porta que se diz usada por pools de mineração (ainda sem confirmação oficial) a partir de uma pasta gravável pelo utilizador."
+  },
+  "mining_port_unverified_other": {
+   "weight": 15,
+   "strong": false,
+   "threat": "minerador",
+   "text": "Liga a uma porta que se diz usada por pools de mineração (ainda sem confirmação oficial)."
+  }
+ }
+}

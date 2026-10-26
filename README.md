@@ -4,7 +4,7 @@
 
 A portable tool for Windows 10 and 11 (x64) that guides you step by step through detecting and removing crypto miners, trojans and other malware. It is designed to run from a repair USB stick, with no installation and no internet connection.
 
-**Status: early development (Phase 0, foundation). There is nothing to download or run yet.**
+**Status: early development (Phase 1, read-only scan). There is no download or executable yet; the scan runs from source.**
 
 ## Principles
 
@@ -20,6 +20,15 @@ A portable tool for Windows 10 and 11 (x64) that guides you step by step through
 - It cannot recover files encrypted by ransomware.
 - Browser extensions, proxies, Winsock, BITS and Active Setup, and read-only `sfc`/`DISM` checks are planned for v1.1.
 - Miners that talk over ports 80 and 443 are harder to catch by network alone; detection then relies on persistence and command lines.
+
+## Read-only scan (Phase 1)
+
+`zerobirus scan` inspects the machine and changes nothing: processes, startup entries, scheduled tasks, services, executables in user-writable folders, miner-pool connections, Microsoft Defender, the hosts file and WMI subscriptions. Every check ends as OK, CONFERIR (check), SUSPEITO (suspicious) or NAO_VERIFICADO (not verified); a check that could not run is never reported as OK. `--json --out FILE` writes a report with secrets redacted and user names replaced, safe to share after you read it. See `docs/DETECTION.md` and `docs/WINDOWS_TEST_PLAN.md`.
+
+```
+uv run zerobirus scan --demo            # synthetic data, works on Linux
+uv run zerobirus scan --json --out report.json   # Windows only
+```
 
 ## Development
 

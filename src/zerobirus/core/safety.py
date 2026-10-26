@@ -268,7 +268,37 @@ def _profile_protected(n: str, users: str, profile_roots: tuple[str, ...]) -> bo
     return False
 
 
-def _normalized_is_protected(n: str, ctx: SystemContext) -> bool:
+# Always protected inside Program Files, whatever the signer (BRIEF section 8: Defender folders
+# and the folders Windows itself manages).
+_PROGRAM_FILES_ALWAYS = (
+    r"\windows defender",
+    r"\windows defender advanced threat protection",
+    r"\windowsapps",
+    r"\modifiablewindowsapps",
+    r"\windows nt",
+)
+_PROTECTED_SIGNERS = frozenset({SignerKind.MICROSOFT, SignerKind.ANTIVIRUS_VENDOR})
+
+
+def _program_files_protected(n: str, ctx: SystemContext, signer: SignerKind | None) -> bool:
+    """Program Files is protected by signature (BRIEF section 8).
+
+    Unknown signer (``None``) fails closed. An item signed by Microsoft or an antivirus
+    vendor is protected. Unsigned or third-party items are not, so that a dropper placed in
+    Program Files can enter a removal plan. The Program Files folders themselves and the
+    Defender and Windows-managed folders are protected whatever the signer.
+    """
+    for pf in map(normalize_windows_path, ctx.program_files):
+        if not is_under(n, pf):
+            continue
+        if n == pf or signer is None or signer in _PROTECTED_SIGNERS:
+            return True
+        if any(is_under(n, pf + sub) for sub in _PROGRAM_FILES_ALWAYS):
+            return True
+    return False
+
+
+def _normalized_is_protected(n: str, ctx: SystemContext, signer: SignerKind | None) -> bool:
     if not is_absolute(n) or has_short_name(n) or _is_root(n) or has_reserved_device_name(n):
         return True
     if n.rsplit("\\", 1)[-1].startswith(_HIVE_PREFIXES):
@@ -280,8 +310,7 @@ def _normalized_is_protected(n: str, ctx: SystemContext) -> bool:
 
     if is_under(n, normalize_windows_path(ctx.system_root)):
         return True
-    # PROVISIONAL (Phase 0): all of Program Files; the final rule is by signature.
-    if any(is_under(n, normalize_windows_path(pf)) for pf in ctx.program_files):
+    if _program_files_protected(n, ctx, signer):
         return True
     program_data = normalize_windows_path(ctx.program_data)
     if n == program_data:
@@ -315,12 +344,10 @@ def is_protected_path(
     The path is evaluated under every plausible reading (with and without compatibility
     folding, with ``..`` collapsed and kept literally); it is protected if any reading is.
 
-    PROVISIONAL (Phase 0): everything under Program Files is protected, whatever
-    ``signer`` says. The definitive rule, per BRIEF section 8, is by signature: only
-    items signed by Microsoft or by an antivirus vendor are protected there, and an
-    unsigned executable in Program Files must be able to enter a removal plan. Until the
-    signature data flows in from the backend (Phase 1 onwards), ``signer`` is accepted but
-    not used. See ``test_unsigned_in_program_files_can_be_removed`` (xfail).
+    ``signer`` is who signed the file, as established by the backend. Under Program Files
+    only items signed by Microsoft or an antivirus vendor are protected (BRIEF section 8);
+    ``None`` means "unknown" and fails closed, so pass ``UNSIGNED`` or ``OTHER`` only when
+    the signature was actually checked.
     """
     if link_target is not None and is_protected_path(link_target, ctx, signer=signer):
         return True
@@ -331,7 +358,7 @@ def is_protected_path(
     if any(has_ambiguous_component(f) for f in forms):
         return True
     return any(
-        _normalized_is_protected(normalize_windows_path(path, compat=c, collapse=k), ctx)
+        _normalized_is_protected(normalize_windows_path(path, compat=c, collapse=k), ctx, signer)
         for c in (True, False)
         for k in (True, False)
     )
@@ -372,6 +399,16 @@ _PROTECTED_PROCESS_NAMES = (
 )
 
 
+def is_system_process_name(name: str) -> bool:
+    """True if ``name`` is one of the names protected only at the expected location."""
+    return _process_key(name) in _PROTECTED_PROCESS_NAMES
+
+
+def is_no_image_process_name(name: str) -> bool:
+    """True for kernel pseudo-processes (System, Registry...) that have no file on disk."""
+    return _process_key(name) in _NO_IMAGE_PROCESSES
+
+
 def _process_key(name: str) -> str:
     key = _fold(name, compat=True).strip().replace("/", "\\").rpartition("\\")[2]
     key = key.strip().rstrip(" .")
@@ -395,6 +432,17 @@ def _expected_location(name: str, n_path: str, ctx: SystemContext) -> bool:
         system_root + "\\system32\\" + name,
         system_root + "\\syswow64\\" + name,
     )
+
+
+def is_bare_image_name(path: str, name: str) -> bool:
+    """True if ``path`` is just the process name with no separators (not a path at all).
+
+    psutil reports the literal string ``Registry`` as the executable of the Registry
+    process (recorded on windows-latest). Such a value means "no image file".
+    """
+    if "\\" in path or "/" in path:
+        return False
+    return _process_key(path) == _process_key(name)
 
 
 def _path_is_canonical(path: str) -> bool:
@@ -433,6 +481,9 @@ def is_protected_process(
     """
     if pid is not None and pid in ctx.own_pids:
         return True
+
+    if path and is_bare_image_name(path, name):
+        path = None
 
     keys = {_process_key(name)}
     if path:

@@ -31,6 +31,9 @@ dev = [
 # so "uv sync --locked" in CI does not install it. Use: uv sync --group mutation
 mutation = ["mutmut==3.8.0"]
 
+# Dev and release builds of the Windows executable (CI only).
+build = ["pyinstaller==6.22.3"]
+
 [tool.uv]
 default-groups = ["dev"]
 
@@ -69,4 +72,4 @@ markers = ["windows: runs only on real Windows (CI windows-latest)"]
 [tool.mutmut]
 source_paths = ["src/zerobirus/core/safety.py", "src/zerobirus/core/redact.py"]
 pytest_add_cli_args_test_selection = ["tests/unit/"]
-also_copy = ["tests/", "src/zerobirus/"]
+also_copy = ["tests/", "src/zerobirus/", "tools/"]

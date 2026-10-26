@@ -187,6 +187,10 @@ def _is_windows_backend(p: Path) -> bool:
     return p.relative_to(SRC).parts[:2] == ("platform", "windows")
 
 
+LOADER = "platform/loader.py"
+BACKEND_MODULE = "zerobirus.platform.windows"
+
+
 def test_source_files_found() -> None:
     assert len(PY_FILES) > 5
 
@@ -200,7 +204,56 @@ def test_no_shell(path: Path) -> None:
 def test_windows_apis_only_in_windows_backend(path: Path) -> None:
     if _is_windows_backend(path):
         return
-    assert windows_api_violations(path.read_text("utf-8")) == []
+    found = windows_api_violations(path.read_text("utf-8"))
+    if path.relative_to(SRC).as_posix() == LOADER:
+        # The loader is the single allowed place to name the backend; every other rule holds.
+        found = [v for v in found if v != "imports zerobirus.platform.windows"]
+    assert found == []
+
+
+def loader_import_is_guarded(source: str) -> bool:
+    """True if every mention of the backend module sits inside ``if sys.platform == "win32"``."""
+    tree = ast.parse(source)
+    guarded: set[int] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.If) and ast.unparse(node.test) == "sys.platform == 'win32'":
+            guarded.update(id(n) for stmt in node.body for n in ast.walk(stmt))
+    mentions = [
+        n for n in ast.walk(tree) if isinstance(n, ast.Constant) and n.value == BACKEND_MODULE
+    ]
+    return bool(mentions) and all(id(n) in guarded for n in mentions)
+
+
+def test_only_the_loader_names_the_windows_backend_and_it_is_guarded() -> None:
+    naming = [
+        p.relative_to(SRC).as_posix()
+        for p in PY_FILES
+        if not _is_windows_backend(p) and BACKEND_MODULE in p.read_text("utf-8")
+    ]
+    assert naming == [LOADER]
+    assert loader_import_is_guarded((SRC / LOADER).read_text("utf-8"))
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "import importlib\nimportlib.import_module(MOD)",
+        "import sys, importlib\nif sys.platform != 'win32':\n    importlib.import_module(MOD)",
+        "import sys, importlib\nif sys.platform == 'win32':\n    pass\nimportlib.import_module(MOD)",  # noqa: E501
+        "x = 1",
+    ],
+)
+def test_selftest_loader_guard_detector_rejects_unguarded_imports(source: str) -> None:
+    assert not loader_import_is_guarded(source.replace("MOD", repr(BACKEND_MODULE)))
+
+
+def test_selftest_loader_guard_detector_accepts_the_guarded_form() -> None:
+    source = (
+        "import sys, importlib\n"
+        "if sys.platform == 'win32':\n"
+        "    importlib.import_module('zerobirus.platform.windows')\n"
+    )
+    assert loader_import_is_guarded(source)
 
 
 @pytest.mark.parametrize(
@@ -210,6 +263,47 @@ def test_windows_apis_only_in_windows_backend(path: Path) -> None:
 )
 def test_read_only_code_does_not_import_remediator(path: Path) -> None:
     assert remediator_violations(path.read_text("utf-8")) == []
+
+
+def redact_violations(source: str) -> list[str]:
+    tree = ast.parse(source)
+    found = [f"imports {m}" for m in _imports(tree) if m.startswith("zerobirus.core.redact")]
+    found += [
+        f"string names {s!r}" for s in _strings(tree) if s.startswith("zerobirus.core.redact")
+    ]
+    return sorted(found)
+
+
+SCORING_SIDE = {"scanners", "platform"}
+SCORING_CORE = {"heuristics.py", "diagnosis.py", "scoring.py"}
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        p
+        for p in PY_FILES
+        if p.relative_to(SRC).parts[0] == "scanners"
+        or p.relative_to(SRC).parts[:2] == ("core", "rules")
+        or p.name in SCORING_CORE
+    ],
+    ids=_rel,
+)
+def test_scoring_never_imports_redact(path: Path) -> None:
+    """Scoring must see the original command line. Redaction is for output only."""
+    assert redact_violations(path.read_text("utf-8")) == []
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "from zerobirus.core.redact import redact",
+        "import zerobirus.core.redact",
+        "import importlib\nimportlib.import_module('zerobirus.core.redact')",
+    ],
+)
+def test_selftest_redact_detector_catches(source: str) -> None:
+    assert redact_violations(source)
 
 
 @pytest.mark.parametrize("path", PY_FILES, ids=_rel)

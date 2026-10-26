@@ -165,7 +165,7 @@ def test_context_is_kept_around_a_secret() -> None:
     assert redact(r"C:\x\miner.exe --password=hunter2 --threads=4") == (
         r"C:\x\miner.exe --password=" + REDACTED + " --threads=4"
     )
-    assert redact("https://u:pw@host.invalid/x") == f"https://u:{REDACTED}@host.invalid/x"
+    assert redact("https://u:pw@host.invalid/x") == f"https://{REDACTED}:{REDACTED}@host.invalid/x"
 
 
 def test_pem_block_is_removed_completely() -> None:

@@ -101,3 +101,11 @@ Registado também em `docs/STATUS.md`.
 - Sem confirmação em Windows real de nenhuma das hipóteses sobre o comportamento do Win32.
 - Sem fuzzing de longa duração. O perfil `deep` do Hypothesis e a sonda de oráculo correram uma vez, localmente.
 - O mutmut não corre no CI (dependência só local, grupo `mutation`).
+
+## Resultados no Windows real (CI windows-latest, 2026-10-26)
+
+Teste diferencial só de leitura (`tests/unit/test_windows_paths.py`) sobre `cmd.exe`, `kernel32.dll`, `drivers\etc\hosts`, `System32\config` e `explorer.exe`. Para cada grafia que o Windows abre e resolve para dentro de `SystemRoot` com `GetFinalPathNameByHandleW`, `is_protected_path` devolveu True para a grafia original. Nenhuma hipótese do audit foi contradita e não foi preciso corrigir o `safety`.
+
+- Resolvem: barras normais, `\\?\`, `\\.\`, maiúsculas, minúsculas, ponto e espaço finais, `..`, `.`, barra dupla, nome 8.3, `::$DATA`.
+- Não resolvem (erro 2, 3 ou 5): `ſ`, largura total (`ＷＩＮＤＯＷＳ`), `:$DATA` explícito e `config::$DATA`. O `CreateFileW` não faz essa dobra, por isso a dobra NFKC do `safety` é só margem de segurança contra camadas ANSI a jusante, não um comportamento observado do Windows.
+- psutil, dados reais: System (PID 4) vem com `path=None`. **Registry vem com `path='Registry'`**, que não é um caminho. Continua protegido porque um nome protegido com caminho não canónico falha fechado. Pinado em `tests/unit/test_safety_psutil_recorded.py`. Memory Compression não existe no runner (skip).

@@ -39,7 +39,8 @@ def _sub_value(m: re.Match[str]) -> str:
 
 
 def _sub_url(m: re.Match[str]) -> str:
-    return m.group("pre") + REDACTED + m.group("post")
+    """Non-stratum URL: both the user and the password may belong to the victim."""
+    return m.group("scheme") + (f"{REDACTED}:{REDACTED}" if m.group("pw") else REDACTED) + "@"
 
 
 def _sub_all(_: re.Match[str]) -> str:
@@ -74,11 +75,13 @@ _PATTERNS: tuple[tuple[re.Pattern[str], Callable[[re.Match[str]], str]], ...] = 
         ),
         _sub_all,
     ),
-    # URL credentials: scheme://user:pass@host (start anchored to the scheme's first letter).
+    # URL credentials of any other scheme: user and password both hidden (they may be the
+    # victim's). Stratum URLs were handled before: see ``_stash_stratum``.
     (
         re.compile(
-            r"(?<![A-Za-z0-9+.-])(?P<pre>[A-Za-z][A-Za-z0-9+.-]*://[^\s/:@]*:)"
-            r"[^\s/@]+(?P<post>@)"
+            r"(?<![A-Za-z0-9+.-])(?!(?i:stratum\d*\+(?:tcp|ssl|tls|udp)://))"
+            r"(?P<scheme>[A-Za-z][A-Za-z0-9+.-]*://)"
+            r"(?P<user>[^\s/:@]*)(?::(?P<pw>[^\s/@]*))?@"
         ),
         _sub_url,
     ),
@@ -179,8 +182,46 @@ _PATTERNS: tuple[tuple[re.Pattern[str], Callable[[re.Match[str]], str]], ...] = 
 )
 
 
+# Mining pool URLs. In ``stratum+tcp://WALLET:x@pool:3333`` the user (usually a wallet) is
+# the attacker's, and it is what an investigator needs, so it stays visible and is reported
+# as an indicator. The password is always hidden. Everything else that may be the victim's
+# is hidden.
+_STRATUM = re.compile(
+    r"(?<![A-Za-z0-9+.-])(?P<scheme>stratum\d*\+(?:tcp|ssl|tls|udp)://)"
+    r"(?P<user>[^\s/:@]*)(?::(?P<pw>[^\s/@]*))?@",
+    re.IGNORECASE,
+)
+_VISIBLE_USER = re.compile(r"[A-Za-z0-9._-]{1,256}")
+_OPEN, _CLOSE = "\ue000", "\ue001"
+_MARKER = re.compile(f"{_OPEN}(\\d+){_CLOSE}")
+
+
+def _stash_stratum(text: str, kept: list[str]) -> str:
+    """Replace the visible user of stratum URLs by a placeholder so no later pattern (the
+    Monero address one, hex and base64 blobs) can hide it, and hide the password now."""
+
+    def sub(m: re.Match[str]) -> str:
+        user = m.group("user")
+        if _VISIBLE_USER.fullmatch(user):
+            kept.append(user)
+            shown = f"{_OPEN}{len(kept) - 1}{_CLOSE}"
+        else:
+            shown = REDACTED if user else ""
+        pw = f":{REDACTED}" if m.group("pw") else ""
+        return m.group("scheme") + shown + pw + "@"
+
+    return _STRATUM.sub(sub, text)
+
+
 def redact(text: str) -> str:
-    """Return ``text`` with secrets replaced by ``[oculto]``."""
+    """Return ``text`` with secrets replaced by ``[oculto]``.
+
+    Idempotent. Pool-URL users stay visible (see above); nothing else that could belong to
+    the victim does.
+    """
+    text = text.replace(_OPEN, "\ufffd").replace(_CLOSE, "\ufffd")
+    kept: list[str] = []
+    text = _stash_stratum(text, kept)
     for pattern, handler in _PATTERNS:
         text = pattern.sub(handler, text)
-    return text
+    return _MARKER.sub(lambda m: kept[int(m.group(1))], text)

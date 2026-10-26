@@ -30,8 +30,11 @@ def test_secrets_are_hidden(raw: str, secret: str) -> None:
     assert REDACTED in out
 
 
-def test_url_keeps_user_and_host() -> None:
-    assert redact("https://user:pw@host.invalid/x") == f"https://user:{REDACTED}@host.invalid/x"
+def test_non_stratum_url_hides_user_and_password_and_keeps_host() -> None:
+    assert (
+        redact("https://user:pw@host.invalid/x") == f"https://{REDACTED}:{REDACTED}@host.invalid/x"
+    )
+    assert redact("ssh://git@host.invalid/x") == f"ssh://{REDACTED}@host.invalid/x"
 
 
 def test_plain_text_untouched() -> None:
