@@ -61,6 +61,9 @@ uv run mypy --platform win32           # tipos, plataforma Windows
 uv run pyright                         # tipos, pythonPlatform Windows (em pyproject.toml)
 uv run pytest                          # testes (sem rede; os marcados `windows` fazem skip em Linux)
 uv run zerobirus selftest              # verificação interna com o backend fake
+uv run zerobirus scan --demo           # verificação só de leitura com a fixture sintética (resumo em pt-PT)
+uv run zerobirus scan --json --out r.json  # relatório redigido e sem dados pessoais (em Windows: a máquina real)
+uv run python tools/report_to_fixture.py r.json NOME --kind false-positive  # relatório para fixture golden
 ```
 
 Uma tarefa só está terminada com lint, tipos (os dois mypy e o pyright) e pytest verdes. CI: `gh run watch` e `gh run view --log-failed`.

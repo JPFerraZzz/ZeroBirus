@@ -327,3 +327,19 @@ def test_the_scan_leaves_the_machine_as_it_found_it(inspector: Any, tmp_path: Pa
 
 def test_platform_is_windows() -> None:
     assert sys.platform == "win32"
+
+
+def test_cli_scan_out_with_the_real_backend_writes_a_shareable_report(tmp_path: Path) -> None:
+    """The exact command the manual test uses: ``zerobirus scan --json --out FILE``."""
+    from zerobirus.cli import main
+
+    out = tmp_path / "report.json"
+    assert main(["scan", "--json", "--out", str(out), "--timeout", "180"]) == 0
+    data = json.loads(out.read_text("utf-8"))
+    text = out.read_text("utf-8")
+    assert data["schema_version"] == 1
+    assert data["overall"] in {"OK", "CONFERIR", "SUSPEITO", "NAO_VERIFICADO"}
+    assert [c["check"] for c in data["checks"]][:2] == ["processes", "startup"]
+    assert all(c["seconds"] is not None for c in data["checks"])
+    assert os.environ["USERNAME"].lower() not in text.lower()
+    assert data["snapshot"]["processes"]

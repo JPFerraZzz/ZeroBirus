@@ -8,7 +8,7 @@ Três níveis de teste, nunca confundidos:
 
 ## Fase 0: base
 
-Estado: fase 0 mergeada (PR #1). Endurecimento e auditoria em curso no PR `chore/phase-0-hardening`, ver `docs/reviews/phase-0-audit.md`.
+Estado: fechada. Fase 0 (PR #1) e endurecimento com auditoria (PR #2) fundidos. Ver `docs/reviews/phase-0-audit.md`.
 
 ### Feito
 
@@ -19,7 +19,7 @@ Estado: fase 0 mergeada (PR #1). Endurecimento e auditoria em curso no PR `chore
 - CI Ubuntu e Windows, actions fixadas por SHA, permissões mínimas, Dependabot.
 - LICENSE, README.md, README.pt-PT.md, SECURITY.md.
 
-### Hardening e auditoria (branch chore/phase-0-hardening)
+### Hardening e auditoria (PR #2, fundido)
 
 - `SystemContext` com campos obrigatórios e validados; proteção de processos por nome mais caminho, nunca por assinatura.
 - Auditoria adversarial de `safety` e `redact` (relatório em `docs/reviews/phase-0-audit.md`): 32 problemas encontrados e corrigidos, incluindo um ReDoS quadrático em `redact`.
@@ -44,45 +44,104 @@ Nada disto foi testado em Windows real (só no runner windows-latest). Todo o `c
 
 - **Caminhos canónicos (obrigatório para o backend Windows, Fase 1)**: `core/safety` só compara strings. O backend tem de lhe entregar caminhos canónicos obtidos com `GetFinalPathNameByHandle` (resolve links, nomes 8.3 e maiúsculas), nunca o texto cru vindo de um processo ou do registo. Sem isto, as garantias de `safety` não valem.
 - **Decisão pendente do João: `C:\Windows\Temp`**: hoje fica inteiramente protegido (tudo sob `%SystemRoot%`), mas é onde o malware costuma cair. Decidir se há uma exceção explícita (por exemplo só ficheiros executáveis sem assinatura em `C:\Windows\Temp`), sabendo que o BRIEF §8 manda não mexer em `C:\Windows`.
-- **Assinatura inválida em binário de sistema**: a proteção de processos depende de nome mais caminho esperado, não da assinatura. Na Fase 1, um binário de sistema com assinatura inválida tem de gerar um Finding SUSPEITO a recomendar a Análise offline do Microsoft Defender, nunca uma ação de remoção.
+- **Assinatura inválida em binário de sistema**: feito na Fase 1 (Finding SUSPEITO que recomenda a Análise offline do Defender, nunca remoção).
 - **`SystemContext`**: todos os campos de localização são obrigatórios. `personal_folders` tem de vir de SHGetKnownFolderPath (OneDrive e nomes localizados como "Ambiente de Trabalho"); o `safety` não os adivinha, e há um teste a provar que sem eles a pasta NÃO fica protegida.
 
-- **Program Files (provisório)**: `is_protected_path` protege Program Files por inteiro. A regra definitiva (BRIEF §8) é por assinatura: só Microsoft ou fabricantes de antivírus. O parâmetro `signer` já existe mas é ignorado. O teste `test_unsigned_in_program_files_can_be_removed` está marcado `xfail(strict=True)` e descreve o comportamento final: um executável sem assinatura em Program Files tem de poder entrar num plano de remoção. Resolver na Fase 1, quando houver dados de assinatura do backend.
+- **Program Files**: resolvido na Fase 1 (protegido por assinatura, ver abaixo).
 - **Segmentos ambíguos**: caminhos com segmentos só de pontos ou espaços a meio (`C:\Windows\ \x`) são tratados como protegidos (falham fechado), porque o Windows é ambíguo. Encontrado por hypothesis.
 - **Nomes 8.3**: um caminho com `~N` num componente é tratado como protegido. O backend tem de resolver o nome longo antes.
 - **Redact**: hex puro de 64 caracteres sem nome ao lado não é redigido (é indistinguível de um SHA-256). Documentado em SECURITY.md.
 - **UNC e raízes de unidade**: sempre protegidos.
 - Ainda não existem: docs/ARCHITECTURE.md, DETECTION.md, DESIGN.md, WINDOWS_TEST_PLAN.md, modelos de issue, lock com hashes verificado em CI além de `--locked`.
-- `psutil` e PySide6 não estão nas dependências: entram na Fase 1 e na Fase 2.
+- `psutil` entrou na Fase 1. PySide6 entra na Fase 2.
 
-## Fase 1: leitura (em curso)
+## Fase 1: leitura
 
-PR #3 (rascunho), branch `phase-1/removable-suite`.
+Estado: **código completo e verde, à espera do teste manual do João**. PR #4 (rascunho, até ao fim da Fase 1). O PR #3 (preâmbulo: suíte removível, teste diferencial e dados reais do psutil) foi fundido pelo João a 2026-10-26.
 
-### Feito até agora
+### Feito
 
-- (a) Suíte "tem de ser removível": 24 casos, sem alterações ao `safety`.
-- (b) Teste diferencial Windows só de leitura (`tests/unit/test_windows_paths.py`, `platform/windows/paths.py` com `canonical_path` e `short_path`). Verde no CI Windows, sem contradizer o audit. Resultados em `docs/reviews/phase-0-audit.md`.
-- (c) Dados reais do psutil (`platform/windows/processes.py`, `tests/unit/test_windows_processes.py`). Verde no CI Windows. Descoberta: Registry vem com `path='Registry'`, protegido pela regra de falhar fechado; pinado em `tests/unit/test_safety_psutil_recorded.py`.
-- Dependências novas: `psutil==7.2.2`, `types-psutil==7.2.2.20260906` (versões confirmadas no PyPI).
+Preâmbulo (PR #3, fundido):
 
-### Skips no CI (e porquê)
+- (a) Suíte "tem de ser removível" (24 casos): sem alterações ao `safety`.
+- (b) Teste diferencial só de leitura no CI Windows (18 grafias exóticas de 5 ficheiros reais): nenhuma hipótese do audit foi contradita. Resultados em `docs/reviews/phase-0-audit.md`.
+- (c) Dados reais do psutil: System (PID 4) vem sem caminho; Registry vem com o texto `Registry`.
 
-| Teste | Onde | Motivo |
-| --- | --- | --- |
-| `test_windows_backend_not_imported_off_windows` | Windows | Só faz sentido fora do Windows. |
-| `test_kernel_pseudo_processes_...[Memory Compression]` | Windows | O processo não existe no runner windows-latest. |
-| Todos os marcados `windows` | Linux | Por desenho, só correm em Windows. |
-| `test_unsigned_in_program_files_can_be_removed` (xfail) | ambos | Regra de assinatura em Program Files ainda por implementar. |
+Ajustes pedidos nesta ronda:
 
-Previsível mais à frente: estado do Defender e exclusões ficam NAO_VERIFICADO no runner (Defender inativo, sem administrador garantido), e os testes respetivos têm de afirmar NAO_VERIFICADO e nunca OK.
+- **Registry**: um "caminho" igual ao nome do processo e sem separadores é tratado como "sem imagem" (`is_bare_image_name`), por isso a proteção vem da regra do nome e não do fallback de caminho não canónico. Teste com o dado gravado e prova de que o fallback não é consultado.
+- **Memory Compression**: `tests/fixtures/recorded/` e `tests/unit/test_recorded_machines.py` estão preparados para fixtures gravadas em máquinas reais. O teste faz skip até existir uma (ver skips).
+- **`scan --json --out ficheiro`**: o relatório sai redigido (segredos como `[oculto]`) e sem dados pessoais (nomes de utilizador, conteúdo de pastas pessoais), com a secção `snapshot` que serve de fixture. `docs/WINDOWS_TEST_PLAN.md` (versão da Fase 1) descreve a verificação em Windows real, o que anotar e como gerar fixtures golden com `tools/report_to_fixture.py`.
+
+Fase 1 propriamente dita:
+
+- `safety`: Program Files passa a ser protegido por assinatura (Microsoft ou fabricante de antivírus; assinatura desconhecida continua a falhar fechado; pastas do Defender e as geridas pelo Windows protegidas sempre). O `xfail` foi removido.
+- Modelos, `Snapshot` (esquema único para backend, fixtures e relatório), contrato do `Inspector` com `Observed` (o que se viu mais as lacunas), `RecordingInspector` (uma pergunta ao backend por pesquisa, mesmo com verificações em paralelo).
+- Pontuação aditiva e explicável com pesos em `core/rules/*.json`, heurísticas puras, diagnóstico (tipo de ameaça, certeza, por onde pode ter entrado, coisas normais que assustam). Regras do João: a pontuação usa sempre a linha de comando original e o `redact` só se aplica à saída. Teste a provar `stratum+tcp://utilizador:segredo@pool.exemplo:3333`: servidor e porta visíveis, palavra-passe oculta. Teste de política: nenhum módulo de pontuação importa `core.redact`.
+- Nove verificações (`scanners/`), cada uma com timeout próprio e em paralelo; falha ou excesso de tempo dão NAO_VERIFICADO com motivo.
+- CLI `scan [--json] [--out FILE] [--demo NOME] [--fixture FICHEIRO]`.
+- Backend Windows só de leitura: `winreg`, `psutil`, `ctypes`, e uma única ponte PowerShell (caminho absoluto, `-EncodedCommand`, dados como JSON em stdin, `PSModulePath` fixo). Parsers puros em `core/parsing.py`, testados em Linux.
+- Fixtures sintéticas (clean_pc, miner_pc, false_positives_pc, no_admin_pc) e golden tests com as expectativas escritas por extenso.
+- `tools/windows/make_test_artifacts.ps1` e `remove_test_artifacts.ps1` e o teste de integração só de deteção.
+- `docs/DETECTION.md` (tabela de sinais gerada e testada contra `scoring.json`).
+
+### O que o runner Windows real ensinou (corrigido, com teste Linux)
+
+Primeira corrida do backend real em windows-latest:
+
+1. O `PSModulePath` herdado do PowerShell 7 impedia o módulo de segurança de carregar: todas as assinaturas vinham desconhecidas. Corrigido com um `PSModulePath` fixo. Também fecha a porta a um `PSModulePath` hostil.
+2. Um processo a terminar durante a leitura fazia falhar a verificação inteira (`NoSuchProcess`). Passa a ser ignorado.
+3. Exclusões do Defender sobre unidades inteiras (`C:\`, `D:\`) marcavam todos os ficheiros e davam SUSPEITO a MsMpEng. Uma exclusão de unidade é agora um achado só, e o sinal forte exige pasta gravável.
+4. Pastas `{GUID}` de `ProgramData\Package Cache` contavam como "nome aleatório". Deixaram de contar. `.msi` deixou de ser candidato.
+5. Valores vazios do PowerShell (`['']`) eram lidos como exclusões. Filtrados.
+6. A pesquisa dirigida gastava os 25 s em ProgramData e nunca chegava a AppData: falhou a deteção do artefacto de teste. Agora cada pasta recebe uma parte justa do orçamento, as mais prováveis primeiro, e uma paragem antecipada diz qual pasta ficou por ver.
+7. O PowerShell deixa `__PSScriptPolicyTest_*.ps1` em Temp: ignorado, e documentado como efeito do Windows.
+8. Três coisas de redação: "Coisas normais que assustam" agrupa processos iguais; só se nomeia um tipo de ameaça com pelo menos um sinal forte ou três fracos; exclusão de unidade inteira tem texto próprio.
+
+Resultado numa máquina real limpa (runner): nenhum SUSPEITO. Os CONFERIR que sobram são legítimos do runner (serviços de desenvolvimento sem assinatura, tarefas do agente do GitHub em ProgramData, uma linha do hosts, Defender com tempo real desligado, exclusões de `C:\` e `D:\`).
 
 ### Onde foi testado
 
-(a): Linux verde. (b) e (c): Linux verde (skip) e CI Windows verde. Nada em Windows real (João).
+| Item | Linux | CI Windows (PR #4) | Manual (João) |
+| --- | --- | --- | --- |
+| ruff, mypy (linux e win32), pyright | verde | mypy verde (ruff e pyright só correm no Ubuntu) | não aplicável |
+| pytest unit e golden | verde (ver contagem abaixo) | verde | não testado |
+| testes marcados `windows` (42) | skipped por desenho | verde | não testado |
+| Backend Windows (registo, serviços, processos, ligações, tarefas, Defender, WMI, assinaturas, pesquisa de ficheiros) | só os parsers | verde no runner windows-latest | **não testado em Windows real** |
+| Artefactos inofensivos: deteção, nada alterado, limpeza | não aplicável | verde | não testado |
+| `zerobirus scan --json --out` com o backend real | não aplicável | verde | não testado |
+| Máquina com vários perfis, outro antivírus, jogos, Windows noutro idioma | não aplicável | não coberto (o runner é uma máquina limpa) | **por fazer, ver `docs/WINDOWS_TEST_PLAN.md`** |
+
+Auditorias locais depois das alterações ao `safety`: `mutmut` sobre `safety.py` e `redact.py`: 643 mutantes, 641 mortos, 2 sobreviventes, ambos equivalentes (`rstrip("XX .XX")` numa chave que nunca tem `X` maiúsculo, e `path = ""` em vez de `path = None`, que o código trata de igual maneira). Hypothesis com o perfil `deep` (5000 exemplos): sem contraexemplos.
+
+### Testes em skip no CI, e porquê
+
+| Teste | Onde | Motivo |
+| --- | --- | --- |
+| `test_recorded_kernel_pseudo_processes_are_protected[System]`, `[Registry]`, `[Memory Compression]` | ambos | Não há ainda nenhuma fixture de uma máquina real em `tests/fixtures/recorded/`. O João fornece-as no teste manual. |
+| `test_there_are_recorded_fixtures_to_replay` | ambos | O mesmo: nenhuma fixture `*.expected.json` gravada. |
+| `test_kernel_pseudo_processes_...[Memory Compression]` (psutil real) | Windows | O runner windows-latest não tem esse processo. |
+| `test_windows_backend_not_imported_off_windows`, `test_cli_scan_without_demo_refuses_off_windows` | Windows | Só fazem sentido fora do Windows. |
+| Todos os marcados `windows` | Linux | Por desenho, só correm em Windows. |
+
+Não há skips por Defender: no runner o Defender responde (tempo real desligado, com exclusões de `C:\\` e `D:\\`), por isso o estado e as exclusões foram lidos. O caso "Defender inativo ou ausente" é coberto em Linux com o backend fake (estado não lido dá NAO_VERIFICADO, nunca OK). No teste de integração, o Defender e a tarefa agendada de teste fazem skip se o runner não os deixar criar; não aconteceu.
+
+### Decisões e pontos em aberto
+
+- **URL com credenciais**: o `redact` da Fase 0 mantém o nome de utilizador de `utilizador:segredo@servidor` visível e esconde só a palavra-passe. Para URLs de pools o utilizador costuma ser a carteira. Se preferires esconder também o utilizador, diz-me; muda um padrão e um teste.
+- **Fontes dos indicadores de mineração**: as listas (nomes, marcas, portas, pools) vêm de conhecimento geral e **não foram confirmadas numa fonte online** nesta sessão. Estão assim declaradas em `docs/DETECTION.md`. Cada entrada precisa de ser verificada e referenciada antes da primeira release.
+- **Perfis sem sessão**: não se monta nenhum hive (seria alterar o registo). Em PCs com vários perfis a verificação de arranque fica NAO_VERIFICADO com o nome dos perfis por ler. Se achares isto demasiado ruidoso, a alternativa é só avisar.
+- **Cache de assinaturas**: só dentro de uma execução. A cache por caminho, data e tamanho do BRIEF §9 entre execuções fica para depois (nada a persistir na Fase 1).
+- **Ladrão de palavras-passe e publicidade**: ainda sem sinais próprios.
+- **PR #3 fundido antes do fim da fase**: o João fundiu-o (21:22 UTC) antes de eu receber o pedido para o manter em rascunho. O trabalho seguinte está no PR #4, em rascunho.
+
+### Pendentes que passam para a Fase 2 e 3
+
+- Docs ainda por escrever: ARCHITECTURE.md, DESIGN.md (Fase 2).
+- Fase 3: a regra de remoção tem de usar o `signer` real em Program Files; o Remediator revalida cada caminho contra o `safety` com os caminhos canónicos vindos de `platform/windows/paths.py`.
 
 ## Próximo passo
 
-Aguardam o OK do João: scoring, contrato do Inspector, backend fake, backend Windows, scanners, CLI `scan --json`, integração Windows. Regras: o scoring usa sempre a linha de comando original e o redact só se aplica à saída; verificação que não correu é `NAO_VERIFICADO`; este STATUS lista todos os skips do CI.
-
-Decisões do João: System e Registry ficam como estão. A exceção para `C:\Windows\Temp` fica para a Fase 3.
+1. **Teste manual do João** em Windows real ou VM, segundo `docs/WINDOWS_TEST_PLAN.md`: duas corridas (sem e com administrador), ler o relatório, gerar pelo menos uma fixture golden, e enviar-me o relatório ou a fixture.
+2. Depois do teu OK, tiro o PR #4 de rascunho e faço o merge com o CI verde.
+3. Fase 2 (DESIGN.md primeiro) só depois disto. Nenhum código da Fase 3 antes do teste manual.
