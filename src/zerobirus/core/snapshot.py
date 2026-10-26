@@ -105,11 +105,11 @@ def _decode(tp: Any, data: Any) -> Any:
             raise TypeError(f"expected a list, got {type(data).__name__}")
         return tuple(_decode(args[0], x) for x in _seq(data))
     if origin is frozenset:
-        return frozenset(_decode(args[0], x) for x in data)
+        return frozenset(_decode(args[0], x) for x in _seq(data))
     if origin is dict:
         if not isinstance(data, dict):
             raise TypeError(f"expected an object, got {type(data).__name__}")
-        return {_decode(args[0], k): _decode(args[1], v) for k, v in data.items()}
+        return {_decode(args[0], k): _decode(args[1], v) for k, v in _items(data)}
     if isinstance(tp, type) and issubclass(tp, Enum):
         return tp(data)
     if isinstance(tp, type) and is_dataclass(tp):
