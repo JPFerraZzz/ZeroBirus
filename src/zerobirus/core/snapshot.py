@@ -11,7 +11,7 @@ import types
 import typing
 from dataclasses import dataclass, field, fields, is_dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 from zerobirus.core.models import (
     AutorunEntry,
@@ -61,21 +61,22 @@ class Snapshot:
     files: tuple[FileCandidate, ...] = ()
     signatures: tuple[Signature, ...] = ()
     hashes: tuple[FileHash, ...] = ()
-    gaps: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    gaps: dict[str, tuple[str, ...]] = field(default_factory=dict[str, tuple[str, ...]])
 
 
-def to_jsonable(obj: Any) -> Any:
+def to_jsonable(obj: object) -> Any:
     """Dataclasses, enums and tuples to plain JSON types."""
     if is_dataclass(obj) and not isinstance(obj, type):
         return {f.name: to_jsonable(getattr(obj, f.name)) for f in fields(obj)}
     if isinstance(obj, Enum):
         return obj.value
     if isinstance(obj, (set, frozenset)):
-        return sorted(to_jsonable(x) for x in obj)
+        return sorted(to_jsonable(x) for x in cast("set[Any]", obj))
     if isinstance(obj, (tuple, list)):
-        return [to_jsonable(x) for x in obj]
+        return [to_jsonable(x) for x in cast("list[Any]", obj)]
     if isinstance(obj, dict):
-        return {str(k): to_jsonable(v) for k, v in obj.items()}
+        mapping: dict[Any, Any] = obj
+        return {str(k): to_jsonable(v) for k, v in mapping.items()}
     return obj
 
 
@@ -95,7 +96,8 @@ def _decode(tp: Any, data: Any) -> Any:
     if origin is tuple:
         if not isinstance(data, list):
             raise TypeError(f"expected a list, got {type(data).__name__}")
-        return tuple(_decode(args[0], x) for x in data)
+        items: list[Any] = data
+        return tuple(_decode(args[0], x) for x in items)
     if origin is frozenset:
         return frozenset(_decode(args[0], x) for x in data)
     if origin is dict:
@@ -109,18 +111,19 @@ def _decode(tp: Any, data: Any) -> Any:
             raise TypeError(f"expected an object for {tp.__name__}")
         hints = typing.get_type_hints(tp)
         known = {f.name for f in fields(tp)}
-        unknown = set(data) - known
+        raw = cast("dict[str, Any]", data)
+        unknown = set(raw) - known
         if unknown:
             raise TypeError(f"{tp.__name__}: unknown fields {sorted(unknown)}")
-        return tp(**{k: _decode(hints[k], v) for k, v in data.items()})
+        return tp(**{k: _decode(hints[k], v) for k, v in raw.items()})
     if tp is float and isinstance(data, int) and not isinstance(data, bool):
         return float(data)
     if tp is Any:
         return data
     if tp is not bool and isinstance(data, bool) and tp in (int, float):
-        raise TypeError(f"expected {tp.__name__}, got bool")
+        raise TypeError(f"expected {tp!r}, got bool")
     if not isinstance(data, tp):
-        raise TypeError(f"expected {tp.__name__}, got {type(data).__name__}")
+        raise TypeError(f"expected {tp!r}, got {type(data).__name__}")
     return data
 
 
