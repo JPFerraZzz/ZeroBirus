@@ -1,6 +1,6 @@
 import importlib.util
-from types import ModuleType
 from pathlib import Path
+from types import ModuleType
 
 PACKAGING = Path(__file__).resolve().parents[2] / "packaging"
 
