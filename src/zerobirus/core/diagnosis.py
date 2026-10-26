@@ -22,6 +22,13 @@ TASK_MANAGER_NOTE = (
     "Alguns mineradores param quando o Gestor de Tarefas abre. Por isso, o que liga "
     "sozinho com o Windows pesa tanto como o uso de processador."
 )
+UNCLASSIFIED_KIND = "nao_classificada"
+UNCLASSIFIED_NAME = "Ameaça não classificada"
+UNCLASSIFIED_NOTE = (
+    "Há achados SUSPEITO que nenhum destes tipos explica. Esta versão só distingue mineradores "
+    "e trojans ou portas dos fundos; não distingue ladrões de palavras-passe, publicidade nem "
+    "outros tipos, por isso não diz de que tipo são."
+)
 NO_VECTOR_TEXT = "Não dá para saber só com isto."
 
 
@@ -37,6 +44,7 @@ class ThreatAssessment:
     name: str
     certainty: str
     proofs: tuple[str, ...]
+    note: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,6 +106,28 @@ def _assess(rows: tuple[Row, ...]) -> tuple[ThreatAssessment, ...]:
             continue  # one or two weak signs are not enough to name a threat
         certainty = "alta" if strong >= 2 else "média"
         out.append(ThreatAssessment(kind, name, certainty, tuple(proofs)))
+
+    # A SUSPEITO that none of the named types explains is never forced into one of them.
+    named = {t.kind for t in out}
+    leftover = [
+        r.finding
+        for r in rows
+        if r.finding.level is Level.SUSPEITO
+        and not any(rules.signals[s.code].threat in named for s in r.finding.signals)
+    ]
+    if leftover:
+        proofs_left = tuple(
+            dict.fromkeys(s.text for f in leftover for s in f.signals if rules.is_strong(s))
+        )
+        out.append(
+            ThreatAssessment(
+                UNCLASSIFIED_KIND,
+                UNCLASSIFIED_NAME,
+                "indeterminada",
+                proofs_left,
+                UNCLASSIFIED_NOTE,
+            )
+        )
     return tuple(out)
 
 

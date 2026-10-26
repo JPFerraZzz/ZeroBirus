@@ -34,8 +34,8 @@ A tabela é gerada a partir de `scoring.json`; `tests/unit/test_detection_doc.py
 | `unsigned` | 15 | não |  | Não tem assinatura digital. |
 | `invalid_signature` | 40 | não |  | A assinatura digital é inválida. |
 | `valid_signature` | -30 | não |  | Tem assinatura digital válida (baixa a pontuação, não anula outras provas). |
-| `system_binary_bad_signature` | 100 | sim | trojan | Um ficheiro do sistema tem assinatura inválida ou foi alterado. |
-| `system_name_wrong_location` | 100 | sim | trojan | Tem o nome de um processo do Windows mas está fora da pasta onde esse processo vive. |
+| `system_binary_bad_signature` | 100 | sim |  | Um ficheiro do sistema tem assinatura inválida ou foi alterado. |
+| `system_name_wrong_location` | 100 | sim |  | Tem o nome de um processo do Windows mas está fora da pasta onde esse processo vive. |
 | `mining_port_writable` | 100 | sim | minerador | Liga a uma porta usada por pools de mineração a partir de uma pasta gravável pelo utilizador. |
 | `mining_port_other` | 30 | não | minerador | Liga a uma porta usada por pools de mineração. |
 | `persist_writable` | 35 | não |  | Arranca com o Windows a partir de uma pasta gravável pelo utilizador. |
@@ -63,6 +63,7 @@ A tabela é gerada a partir de `scoring.json`; `tests/unit/test_detection_doc.py
 | `defender_threat_history` | 40 | não |  | O Defender tem ameaças no histórico. |
 | `defender_exclusion_path_writable` | 50 | não |  | Exclusão do Defender sobre uma pasta gravável pelo utilizador. |
 | `defender_exclusion_whole_drive` | 50 | não |  | O Defender foi instruído a não analisar uma unidade inteira. |
+| `defender_whole_drive_exclusion_with_evidence` | 100 | sim |  | O Defender foi instruído a ignorar uma unidade inteira e há, ao mesmo tempo, outros sinais de infeção (arranque a partir de AppData ou Temp, ligação a porta de mineração ou linha de comando de mineração). |
 | `defender_exclusion_path` | 30 | não |  | Exclusão de pasta no Defender. |
 | `defender_exclusion_extension` | 40 | não |  | Exclusão de extensão de executáveis no Defender. |
 | `defender_exclusion_process` | 30 | não |  | Exclusão de processo no Defender. |
@@ -74,7 +75,7 @@ A tabela é gerada a partir de `scoring.json`; `tests/unit/test_detection_doc.py
 
 ### Tipo de ameaça e certeza
 
-Cada sinal pode apontar para um tipo de ameaça (minerador, trojan ou porta dos fundos). O diagnóstico só nomeia um tipo quando há pelo menos um sinal forte ou três fracos. Certeza alta: dois ou mais achados com sinais fortes desse tipo. Média: um achado forte, ou três fracos. Não há certeza baixa: com menos do que isto o diagnóstico não afirma nada. Ladrão de palavras-passe e publicidade ainda não têm sinais próprios (fica para depois da Fase 1).
+Cada sinal pode apontar para um tipo de ameaça (minerador, trojan ou porta dos fundos). O diagnóstico só nomeia um tipo quando há pelo menos um sinal forte ou três fracos. Certeza alta: dois ou mais achados com sinais fortes desse tipo. Média: um achado forte, ou três fracos. Não há certeza baixa: com menos do que isto o diagnóstico não afirma nada. Ladrão de palavras-passe e publicidade não têm sinais próprios nesta versão. Um achado SUSPEITO que nenhum dos dois tipos explica aparece como "Ameaça não classificada", com o aviso de que esta versão não distingue esses tipos; nunca é forçado a minerador nem a trojan. Os sinais `system_binary_bad_signature` e `system_name_wrong_location` não apontam para nenhum tipo pelo mesmo motivo.
 
 ### Por onde pode ter entrado
 
@@ -140,7 +141,7 @@ Limite documentado: mineradores também usam as portas 80 e 443 e pools com port
 
 Lê: PowerShell `Get-MpComputerStatus`, `Get-MpPreference` e `Get-MpThreat`: proteção em tempo real, proteção contra adulteração, modo (passivo quando há outro antivírus), idade das assinaturas, histórico de ameaças e exclusões de caminho, extensão, processo e IP.
 
-Regras: em modo passivo, "tempo real desligado" não é sinal. Sem administrador as exclusões e o histórico não são legíveis: NAO_VERIFICADO, nunca "sem exclusões". Valores vazios do PowerShell não são exclusões. Uma exclusão sobre uma unidade inteira tem sinal próprio.
+Regras: em modo passivo, "tempo real desligado" não é sinal. Sem administrador as exclusões e o histórico não são legíveis: NAO_VERIFICADO, nunca "sem exclusões". Valores vazios do PowerShell não são exclusões. Uma exclusão sobre uma unidade inteira (`C:\\`, `D:\\`) tem sinal próprio e sozinha é CONFERIR. Combinada com outra prova na mesma máquina, sobe para SUSPEITO: persistência a apontar para AppData ou Temp (e que já seja CONFERIR ou pior, por isso um programa conhecido e assinado não conta), ligação a porta de mineração, linha de comando com marcas de mineração ou programa com nome de minerador. Persistência em ProgramData sozinha não conta.
 
 Limites: se o Defender está desativado ou desinstalado, o estado não é lido (NAO_VERIFICADO com o motivo). Este projeto nunca altera o Defender nem outro antivírus. Os valores de `AMRunningMode` são nomes de enumeração do Windows, não texto traduzido.
 

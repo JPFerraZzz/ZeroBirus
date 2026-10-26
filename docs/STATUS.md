@@ -105,7 +105,7 @@ Resultado numa máquina real limpa (runner): nenhum SUSPEITO. Os CONFERIR que so
 | Item | Linux | CI Windows (PR #4) | Manual (João) |
 | --- | --- | --- | --- |
 | ruff, mypy (linux e win32), pyright | verde | mypy verde (ruff e pyright só correm no Ubuntu) | não aplicável |
-| pytest unit e golden | verde (1028 passed, 49 skipped) | verde (1069 passed, 8 skipped, run 40411973874) | não testado |
+| pytest unit e golden | verde (1046 passed, 49 skipped) | verde (1069 passed, 8 skipped, run 40411973874) | não testado |
 | testes marcados `windows` (44) | skipped por desenho | verde (43 passed, 1 skipped: Memory Compression) | não testado |
 | Backend Windows (registo, serviços, processos, ligações, tarefas, Defender, WMI, assinaturas, pesquisa de ficheiros) | só os parsers | verde no runner windows-latest | **não testado em Windows real** |
 | Artefactos inofensivos: deteção, nada alterado, limpeza | não aplicável | verde | não testado |
@@ -132,7 +132,8 @@ Não há skips por Defender: no runner o Defender responde (tempo real desligado
 - **Fontes dos indicadores de mineração**: as listas (nomes, marcas, portas, pools) vêm de conhecimento geral e **não foram confirmadas numa fonte online** nesta sessão. Estão assim declaradas em `docs/DETECTION.md`. Cada entrada precisa de ser verificada e referenciada antes da primeira release.
 - **Perfis sem sessão**: não se monta nenhum hive (seria alterar o registo). Em PCs com vários perfis a verificação de arranque fica NAO_VERIFICADO com o nome dos perfis por ler. Se achares isto demasiado ruidoso, a alternativa é só avisar.
 - **Cache de assinaturas**: só dentro de uma execução. A cache por caminho, data e tamanho do BRIEF §9 entre execuções fica para depois (nada a persistir na Fase 1).
-- **Ladrão de palavras-passe e publicidade**: ainda sem sinais próprios.
+- **Ladrão de palavras-passe e publicidade**: sem sinais próprios na v1. Um SUSPEITO que não é explicado por minerador nem por trojan aparece como "Ameaça não classificada", com o aviso de que esta versão não distingue esses tipos; nunca é forçado a uma categoria existente. Por isso `system_binary_bad_signature` e `system_name_wrong_location` deixaram de apontar para "trojan".
+- **Exclusão do Defender sobre unidade inteira**: sozinha é CONFERIR com texto próprio. Combinada, na mesma máquina, com persistência para AppData ou Temp (já CONFERIR ou pior, por isso um programa conhecido e assinado não conta), ligação a porta de mineração, linha de comando de mineração ou nome de minerador, sobe para SUSPEITO. Persistência em ProgramData sozinha não conta, para o runner de CI continuar em CONFERIR. Golden tests em `tests/golden/test_whole_drive_and_unclassified.py`.
 - **PR #3 fundido antes do fim da fase**: o João fundiu-o (21:22 UTC) antes de eu receber o pedido para o manter em rascunho. O trabalho seguinte está no PR #4, em rascunho.
 
 ### Pendentes que passam para a Fase 2 e 3

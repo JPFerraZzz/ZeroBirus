@@ -11,12 +11,52 @@ from zerobirus.core.models import CheckResult, DefenderState, Finding, Level, Si
 from zerobirus.core.rules import Rules, load_rules
 from zerobirus.core.safety import SystemContext, normalize_windows_path
 from zerobirus.platform.base import Inspector
+from zerobirus.scanners import network, processes, services, startup, tasks
 from zerobirus.scanners.common import finish, make_finding, merge_gaps
 
 CHECK = "defender"
 OLD_DAYS = 7
 VERY_OLD_DAYS = 30
 EXECUTABLE_EXTENSIONS = frozenset({"exe", "dll", "scr", "bat", "cmd", "ps1", "vbs", "js", "msi"})
+
+
+# Signs of infection that, next to a whole-drive exclusion, make it SUSPEITO. Persistence only
+# counts when it points to AppData or Temp (a legitimate tool in ProgramData does not).
+_CORROBORATING = frozenset(
+    {
+        "cmdline_miner_marker",
+        "cmdline_pool_domain",
+        "miner_process_name",
+        "mining_port_writable",
+        "mining_port_other",
+    }
+)
+_PERSISTENCE = frozenset(
+    {
+        "persist_writable",
+        "persist_unsigned_random_writable",
+        "task_from_writable",
+        "task_disguised_microsoft",
+        "service_from_writable",
+    }
+)
+_AT_RISK_PLACES = frozenset({"appdata", "temp"})
+
+
+def corroboration(inspector: Inspector, ctx: SystemContext) -> list[str]:
+    """Other evidence on this machine that points the same way as a whole-drive exclusion."""
+    found: list[str] = []
+    for scan_one in (processes.scan, startup.scan, tasks.scan, services.scan, network.scan):
+        for f in scan_one(inspector).findings:
+            if f.level is Level.OK:
+                continue
+            codes = {s.code for s in f.signals}
+            at_risk = (f.path is not None and location_kind(f.path, ctx) in _AT_RISK_PLACES) or any(
+                mentions_writable_env(e) for e in f.evidence
+            )
+            if codes & _CORROBORATING or (codes & _PERSISTENCE and at_risk):
+                found.append(f"{f.item} ({f.location})")
+    return list(dict.fromkeys(found))
 
 
 def _state_finding(s: DefenderState, rules: Rules) -> Finding:
@@ -53,10 +93,22 @@ def _state_finding(s: DefenderState, rules: Rules) -> Finding:
     )
 
 
-def _exclusion_findings(s: DefenderState, ctx: SystemContext, rules: Rules) -> list[Finding]:
+def _is_whole_drive(path: str) -> bool:
+    n = normalize_windows_path(path.rstrip("*\\/") or path)
+    return len(n) <= 3 and n[1:2] == ":"
+
+
+def _exclusion_findings(
+    s: DefenderState, ctx: SystemContext, rules: Rules, evidence: list[str]
+) -> list[Finding]:
     out: list[Finding] = []
 
     def add(kind: str, value: str, code: str, text: str) -> None:
+        signals = [rules.signal(code)]
+        proof: list[str] = []
+        if code == "defender_exclusion_whole_drive" and evidence:
+            signals.append(rules.signal("defender_whole_drive_exclusion_with_evidence"))
+            proof = [f"junto com: {e}" for e in evidence[:5]]
         out.append(
             make_finding(
                 CHECK,
@@ -64,16 +116,15 @@ def _exclusion_findings(s: DefenderState, ctx: SystemContext, rules: Rules) -> l
                 item=value,
                 location=f"Exclusão ({kind})",
                 rules=rules,
-                signals=(rules.signal(code),),
-                evidence=(value,),
+                signals=signals,
+                evidence=(value, *proof),
                 description=text,
                 path=value if kind == "pasta" else None,
             )
         )
 
     for p in s.exclusion_paths or ():
-        n = normalize_windows_path(p.rstrip("*\\/") or p)
-        whole_drive = len(n) <= 3 and n[1:2] == ":"
+        whole_drive = _is_whole_drive(p)
         writable = location_kind(p.rstrip("*"), ctx) is not None or mentions_writable_env(p)
         code = (
             "defender_exclusion_whole_drive"
@@ -134,7 +185,9 @@ def scan(inspector: Inspector) -> CheckResult:
             "exclusões do Defender não legíveis (" + ", ".join(unreadable) + "); "
             "sem administrador não é possível lê-las"
         )
-    findings += _exclusion_findings(s, ctx, rules)
+    whole_drive = [p for p in s.exclusion_paths or () if _is_whole_drive(p)]
+    proof = corroboration(inspector, ctx) if whole_drive else []
+    findings += _exclusion_findings(s, ctx, rules, proof)
     inspected = 1 + sum(
         len(v)
         for v in (s.exclusion_paths, s.exclusion_extensions, s.exclusion_processes, s.exclusion_ips)

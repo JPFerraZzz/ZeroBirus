@@ -160,7 +160,10 @@ def render_text(report: dict[str, Any]) -> str:
             if f["advice"]:
                 lines.append(f"      Conselho: {f['advice']}")
     for threat in diagnosis["threats"]:
-        lines += ["", f"Ameaça provável: {threat['name']} (certeza {threat['certainty']})"]
+        if threat["note"]:
+            lines += ["", f"{threat['name']}.", f"  {threat['note']}"]
+        else:
+            lines += ["", f"Ameaça provável: {threat['name']} (certeza {threat['certainty']})"]
     if diagnosis["entry_vector"]:
         lines += ["", f"Por onde pode ter entrado: {diagnosis['entry_vector']}"]
     if diagnosis["normal_things"]:
