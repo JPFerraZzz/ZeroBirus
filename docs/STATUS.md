@@ -55,18 +55,34 @@ Nada disto foi testado em Windows real (só no runner windows-latest). Todo o `c
 - Ainda não existem: docs/ARCHITECTURE.md, DETECTION.md, DESIGN.md, WINDOWS_TEST_PLAN.md, modelos de issue, lock com hashes verificado em CI além de `--locked`.
 - `psutil` e PySide6 não estão nas dependências: entram na Fase 1 e na Fase 2.
 
+## Fase 1: leitura (em curso)
+
+PR #3 (rascunho), branch `phase-1/removable-suite`.
+
+### Feito até agora
+
+- (a) Suíte "tem de ser removível": 24 casos, sem alterações ao `safety`.
+- (b) Teste diferencial Windows só de leitura (`tests/unit/test_windows_paths.py`, `platform/windows/paths.py` com `canonical_path` e `short_path`). Verde no CI Windows, sem contradizer o audit. Resultados em `docs/reviews/phase-0-audit.md`.
+- (c) Dados reais do psutil (`platform/windows/processes.py`, `tests/unit/test_windows_processes.py`). Verde no CI Windows. Descoberta: Registry vem com `path='Registry'`, protegido pela regra de falhar fechado; pinado em `tests/unit/test_safety_psutil_recorded.py`.
+- Dependências novas: `psutil==7.2.2`, `types-psutil==7.2.2.20260906` (versões confirmadas no PyPI).
+
+### Skips no CI (e porquê)
+
+| Teste | Onde | Motivo |
+| --- | --- | --- |
+| `test_windows_backend_not_imported_off_windows` | Windows | Só faz sentido fora do Windows. |
+| `test_kernel_pseudo_processes_...[Memory Compression]` | Windows | O processo não existe no runner windows-latest. |
+| Todos os marcados `windows` | Linux | Por desenho, só correm em Windows. |
+| `test_unsigned_in_program_files_can_be_removed` (xfail) | ambos | Regra de assinatura em Program Files ainda por implementar. |
+
+Previsível mais à frente: estado do Defender e exclusões ficam NAO_VERIFICADO no runner (Defender inativo, sem administrador garantido), e os testes respetivos têm de afirmar NAO_VERIFICADO e nunca OK.
+
+### Onde foi testado
+
+(a): Linux verde. (b) e (c): Linux verde (skip) e CI Windows verde. Nada em Windows real (João).
+
 ## Próximo passo
 
-A Fase 1 começa por três commits, antes de qualquer scanner.
-
-1. **Suíte "tem de ser removível"**: prova que NÃO são protegidos `Users\Public\x.exe`, `AppData\Roaming\<pasta aleatória>\x.exe`, `AppData\Local\Temp\x.exe`, `Downloads\crack.exe`, `ProgramData\<pasta aleatória>\x.exe`, as pastas de Arranque e um perfil fora de `users_dir`.
-2. **Teste diferencial no CI Windows, só leitura**: grafias exóticas de ficheiros de sistema reais, abertas com `CreateFileW` e resolvidas com `GetFinalPathNameByHandle`. Se resolvem para dentro de `SystemRoot`, `is_protected_path` tem de dar True para a grafia original. Falhas são bugs, não testes a desligar.
-3. **Teste Windows com dados reais do psutil**: System (PID 4), Registry e Memory Compression protegidos; `System.exe` numa pasta de AppData não protegido.
-
-Regras da Fase 1:
-
-- O scoring usa sempre a linha de comando original; o redact só se aplica à saída.
-- Verificação que não correu é `NAO_VERIFICADO`, nunca `OK`.
-- O STATUS.md lista tudo o que ficou em skip no CI e porquê.
+Aguardam o OK do João: scoring, contrato do Inspector, backend fake, backend Windows, scanners, CLI `scan --json`, integração Windows. Regras: o scoring usa sempre a linha de comando original e o redact só se aplica à saída; verificação que não correu é `NAO_VERIFICADO`; este STATUS lista todos os skips do CI.
 
 Decisões do João: System e Registry ficam como estão. A exceção para `C:\Windows\Temp` fica para a Fase 3.

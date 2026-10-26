@@ -34,7 +34,8 @@ REAL_FILES = (
 MUST_RESOLVE = {"plain", "forward-slashes", "extended-prefix", "upper", "lower", "dotdot", "short"}
 
 
-def _spellings(path: str, short: Callable[[str], str]) -> dict[str, str]:
+def _spellings(system_root: str, rel: str, short: Callable[[str], str]) -> dict[str, str]:
+    path = system_root + "\\" + rel
     head, _, tail = path.rpartition("\\")
     return {
         "plain": path,
@@ -47,9 +48,7 @@ def _spellings(path: str, short: Callable[[str], str]) -> dict[str, str]:
         "trailing-space": path + " ",
         "trailing-dots-spaces": path + ". . ",
         "dotdot": head + "\\..\\" + os.path.basename(head) + "\\" + tail,
-        "dotdot-from-temp": os.path.dirname(head)
-        + "\\Temp\\..\\"
-        + path[len(os.path.dirname(head)) + 1 :],
+        "dotdot-from-temp": system_root + "\\Temp\\..\\" + rel,
         "dot-segment": head + "\\.\\" + tail,
         "double-backslash": head + "\\\\" + tail,
         "short": short(path),
@@ -74,7 +73,7 @@ def test_windows_resolution_agrees_with_is_protected_path() -> None:
     for rel in REAL_FILES:
         base = system_root + "\\" + rel
         paths.canonical_path(base)  # the file itself must exist, or the test is meaningless
-        for label, spelling in _spellings(base, paths.short_path).items():
+        for label, spelling in _spellings(system_root, rel, paths.short_path).items():
             try:
                 final = paths.canonical_path(spelling)
             except OSError as exc:
