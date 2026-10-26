@@ -29,7 +29,7 @@ _CORROBORATING = frozenset(
         "miner_process_name",
         "mining_port_writable",
         "mining_port_other",
-    }
+    }  # only verified indicators: an unverified one never corroborates anything
 )
 _PERSISTENCE = frozenset(
     {

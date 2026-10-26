@@ -23,6 +23,20 @@ class SignalRule:
 
 
 @dataclass(frozen=True, slots=True)
+class Indicator:
+    """One mining indicator with its provenance (see docs/DETECTION.md).
+
+    An unverified indicator (no public source found) only ever feeds weak signals, so it can
+    never make something SUSPEITO on its own.
+    """
+
+    value: str
+    verified: bool
+    sources: tuple[str, ...]
+    note: str
+
+
+@dataclass(frozen=True, slots=True)
 class KnownGood:
     name: str
     publisher: str
@@ -36,11 +50,16 @@ class Rules:
     suspeito: int
     signals: dict[str, SignalRule]
     miner_names: frozenset[str]
+    miner_names_unverified: frozenset[str]
     strong_markers: tuple[str, ...]
+    strong_markers_unverified: tuple[str, ...]
     weak_markers: tuple[str, ...]
     weak_markers_needed: int
     mining_ports: frozenset[int]
+    mining_ports_unverified: frozenset[int]
     pool_domains: tuple[str, ...]
+    pool_domains_unverified: tuple[str, ...]
+    indicators: dict[str, tuple[Indicator, ...]]
     microsoft_orgs: tuple[str, ...]
     antivirus_orgs: tuple[str, ...]
     known_good: tuple[KnownGood, ...]
@@ -94,6 +113,21 @@ def load_rules() -> Rules:
     miners = _read("miners.json")
     pub = _read("publishers.json")
     hosts = _read("hosts.json")
+    indicators = {
+        kind: tuple(
+            Indicator(
+                str(i["value"]), bool(i["verified"]), tuple(i["sources"]), str(i.get("note", ""))
+            )
+            for i in miners[kind]
+        )
+        for kind in (
+            "process_names",
+            "strong_markers",
+            "weak_markers",
+            "ports",
+            "pool_domain_fragments",
+        )
+    }
     signals = {
         code: SignalRule(int(v["weight"]), bool(v["strong"]), v["threat"], str(v["text"]))
         for code, v in scoring["signals"].items()
@@ -102,12 +136,19 @@ def load_rules() -> Rules:
         conferir=int(scoring["thresholds"]["conferir"]),
         suspeito=int(scoring["thresholds"]["suspeito"]),
         signals=signals,
-        miner_names=frozenset(miners["process_names"]),
-        strong_markers=tuple(miners["strong_markers"]),
-        weak_markers=tuple(miners["weak_markers"]),
+        miner_names=frozenset(_values(indicators["process_names"], verified=True)),
+        miner_names_unverified=frozenset(_values(indicators["process_names"], verified=False)),
+        strong_markers=tuple(_values(indicators["strong_markers"], verified=True)),
+        strong_markers_unverified=tuple(_values(indicators["strong_markers"], verified=False)),
+        weak_markers=tuple(_values(indicators["weak_markers"], verified=True)),
         weak_markers_needed=int(miners["weak_markers_needed"]),
-        mining_ports=frozenset(int(p) for p in miners["ports"]),
-        pool_domains=tuple(miners["pool_domain_fragments"]),
+        mining_ports=frozenset(int(p) for p in _values(indicators["ports"], verified=True)),
+        mining_ports_unverified=frozenset(
+            int(p) for p in _values(indicators["ports"], verified=False)
+        ),
+        pool_domains=tuple(_values(indicators["pool_domain_fragments"], verified=True)),
+        pool_domains_unverified=tuple(_values(indicators["pool_domain_fragments"], verified=False)),
+        indicators=indicators,
         microsoft_orgs=tuple(pub["microsoft_organisations"]),
         antivirus_orgs=tuple(pub["antivirus_organisations"]),
         known_good=tuple(KnownGood(**k) for k in pub["known_good"]),
@@ -120,7 +161,17 @@ def load_rules() -> Rules:
     return rules
 
 
+def _values(items: tuple[Indicator, ...], *, verified: bool) -> list[str]:
+    return [i.value for i in items if i.verified is verified]
+
+
 def _validate(rules: Rules) -> None:
+    for kind, items in rules.indicators.items():
+        for i in items:
+            if i.verified and not i.sources:
+                raise ValueError(f"{kind}: verified indicator {i.value!r} has no source")
+            if not i.verified and i.sources:
+                raise ValueError(f"{kind}: unverified indicator {i.value!r} lists a source")
     if not 0 < rules.conferir < rules.suspeito:
         raise ValueError("thresholds must satisfy 0 < conferir < suspeito")
     for code, rule in rules.signals.items():

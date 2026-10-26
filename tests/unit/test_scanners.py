@@ -311,13 +311,25 @@ def conn(pid: int | None, addr: str, port: int, status: str = "ESTABLISHED") -> 
     return ConnectionInfo(pid, addr, port, status)
 
 
-def test_mining_port_from_a_writable_folder_is_suspect_and_other_is_conferir() -> None:
+def test_verified_mining_port_from_a_writable_folder_is_suspect_and_from_elsewhere_conferir() -> (
+    None
+):
     insp = inspector(
         processes=(proc(1, "a.exe", DROP), proc(2, "b.exe", r"C:\Program Files\B\b.exe")),
-        connections=(conn(1, "93.184.216.34", 3333), conn(2, "93.184.216.34", 4444)),
+        connections=(conn(1, "93.184.216.34", 3333), conn(2, "93.184.216.34", 3333)),
     )
     result = network.scan(insp)
     assert sorted(f.level for f in result.findings) == [Level.CONFERIR, Level.SUSPEITO]
+
+
+def test_unverified_mining_port_is_never_suspect_alone() -> None:
+    insp = inspector(
+        processes=(proc(1, "a.exe", DROP), proc(2, "b.exe", r"C:\Program Files\B\b.exe")),
+        connections=(conn(1, "93.184.216.34", 4444), conn(2, "93.184.216.34", 4444)),
+    )
+    result = network.scan(insp)
+    assert [f.level for f in result.findings] == [Level.CONFERIR]  # writable folder only
+    assert "mining_port_unverified_writable" in codes(result.findings[0])
 
 
 @pytest.mark.parametrize(

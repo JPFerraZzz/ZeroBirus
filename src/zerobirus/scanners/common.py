@@ -122,6 +122,11 @@ def command_signals(command: str, rules: Rules) -> list[Signal]:
         out.append(rules.signal("cmdline_miner_marker"))
     if any(d in low for d in rules.pool_domains):
         out.append(rules.signal("cmdline_pool_domain"))
+    if not out and (
+        any(m in low for m in rules.strong_markers_unverified)
+        or any(d in low for d in rules.pool_domains_unverified)
+    ):
+        out.append(rules.signal("cmdline_miner_unverified"))
     weak = sum(m in low for m in rules.weak_markers)
     if weak >= rules.weak_markers_needed:
         out.append(rules.signal("cmdline_miner_weak"))

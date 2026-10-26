@@ -1,3 +1,5 @@
+import subprocess
+import sys
 from pathlib import Path
 
 from zerobirus.core.rules import load_rules
@@ -25,5 +27,21 @@ def test_every_check_has_a_section() -> None:
         assert title in DOC
 
 
-def test_indicator_sources_are_declared_unconfirmed() -> None:
-    assert "Fontes: por confirmar" in DOC.replace("**", "")
+def test_the_generated_blocks_are_up_to_date() -> None:
+    tool = Path(__file__).resolve().parents[2] / "tools" / "update_detection_doc.py"
+    done = subprocess.run([sys.executable, str(tool), "--check"], check=False)  # noqa: S603
+    assert done.returncode == 0, "run: uv run python tools/update_detection_doc.py"
+
+
+def test_every_indicator_is_listed_with_its_status() -> None:
+    for items in load_rules().indicators.values():
+        for i in items:
+            assert (
+                f"| `{i.value}` | {'verificado' if i.verified else '**não verificado**'} |" in DOC
+            )
+
+
+def test_the_doc_states_the_unverified_rule() -> None:
+    assert "nunca dá SUSPEITO sozinho" in DOC
+    assert "2026-10-26" in DOC
+    assert "https://attack.mitre.org/techniques/T1496/" in DOC

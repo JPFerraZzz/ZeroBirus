@@ -183,6 +183,8 @@ def _judge(
     signals = command_signals(p.cmdline, rules)
     if _stem(p.name) in rules.miner_names:
         signals.append(rules.signal("miner_process_name"))
+    elif _stem(p.name) in rules.miner_names_unverified:
+        signals.append(rules.signal("miner_process_name_unverified"))
     if p.cpu_percent is not None and p.cpu_percent >= HIGH_CPU:
         signals.append(rules.signal("high_cpu"))
     if p.path and has_image:

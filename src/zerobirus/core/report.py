@@ -78,7 +78,8 @@ def _shareable_snapshot(snapshot: Snapshot) -> Snapshot:
     Connections: only those to mining ports are kept, because the rest is the person's
     browsing. The count of dropped ones is not recorded.
     """
-    ports = load_rules().mining_ports
+    rules = load_rules()
+    ports = rules.mining_ports | rules.mining_ports_unverified
     return replace(
         snapshot, connections=tuple(c for c in snapshot.connections if c.remote_port in ports)
     )

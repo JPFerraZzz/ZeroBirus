@@ -22,6 +22,7 @@ A pontuação é aditiva e explicável: cada Finding guarda a lista de sinais co
 
 A tabela é gerada a partir de `scoring.json`; `tests/unit/test_detection_doc.py` falha se um sinal faltar aqui.
 
+<!-- generated:signals:start -->
 | Código | Peso | Forte | Ameaça | Texto mostrado |
 | --- | --- | --- | --- | --- |
 | `cmdline_miner_marker` | 100 | sim | minerador | A linha de comando tem marcas típicas de mineração de criptomoeda. |
@@ -72,6 +73,11 @@ A tabela é gerada a partir de `scoring.json`; `tests/unit/test_detection_doc.py
 | `hosts_other` | 35 | não |  | Linha no ficheiro hosts que não é das predefinidas. |
 | `wmi_command_unknown` | 100 | sim | trojan | Assinatura WMI permanente que executa comandos e não é de um fabricante conhecido. |
 | `wmi_other` | 40 | não |  | Assinatura WMI permanente. |
+| `cmdline_miner_unverified` | 20 | não | minerador | A linha de comando tem uma marca ligada a mineração que ainda não está confirmada em fonte pública. |
+| `miner_process_name_unverified` | 20 | não | minerador | O nome do programa lembra o de um minerador, mas não está confirmado em fonte pública. |
+| `mining_port_unverified_writable` | 50 | não | minerador | Liga a uma porta que se diz usada por pools de mineração (ainda sem confirmação oficial) a partir de uma pasta gravável pelo utilizador. |
+| `mining_port_unverified_other` | 15 | não | minerador | Liga a uma porta que se diz usada por pools de mineração (ainda sem confirmação oficial). |
+<!-- generated:signals:end -->
 
 ### Tipo de ameaça e certeza
 
@@ -133,7 +139,7 @@ Limites: a pesquisa para ao atingir o tempo ou as entradas e diz qual pasta fico
 
 Lê: `psutil.net_connections` (ligações ativas ou a abrir, com o processo). Não resolve DNS e não faz nenhum pedido de rede.
 
-Portas de mineração: 3333, 3334, 4444, 5555, 7777, 14433, 14444, 45700. Uma ligação a estas portas, para um endereço público, de um programa numa pasta gravável, é forte; de outro programa é só CONFERIR. Endereços locais e privados e as portas 80 e 443 são ignorados.
+Portas de mineração: só a 3333 está verificada (porta de reserva do F2Pool, ver Indicadores de mineração). 3334, 4444, 5555, 7777, 14433, 14444 e 45700 estão listadas mas **não verificadas**: uma ligação a elas só dá sinais fracos (50 se o programa está numa pasta gravável, 15 caso contrário), nunca SUSPEITO sozinha. Uma ligação à 3333, para um endereço público, de um programa numa pasta gravável, é forte; de outro programa é só CONFERIR. Endereços locais e privados e as portas 80 e 443 são ignorados.
 
 Limite documentado: mineradores também usam as portas 80 e 443 e pools com portas diferentes, por isso a rede sozinha não chega. Nesse caso a deteção depende da persistência e das linhas de comando. Sem administrador a lista de ligações pode ser incompleta (NAO_VERIFICADO).
 
@@ -165,14 +171,115 @@ Limite: precisa de administrador; sem ele a verificação fica NAO_VERIFICADO.
 
 ## Indicadores de mineração
 
-Ficheiro: `src/zerobirus/core/rules/miners.json`.
+Ficheiro: `src/zerobirus/core/rules/miners.json`. Cada indicador tem o estado (verificado ou não verificado), as fontes públicas e a data de consulta. As tabelas abaixo são geradas por `tools/update_detection_doc.py` e um teste falha se estiverem desatualizadas.
 
-- Nomes de programas: xmrig, xmr-stak, xmrig-cuda, xmrig-notls, nbminer, t-rex, trex, phoenixminer e outros.
-- Marcas fortes na linha de comando: `stratum+tcp://`, `stratum+ssl://`, `stratum+tls://`, `stratum+udp://`, `stratum2+tcp://`, `--donate-level`, `--donate-over-proxy`, `randomx`, `cryptonight`, `--nicehash`.
-- Marcas fracas (precisam de 2 ou mais): `--algo`, `--coin`, `--threads`, `--cpu-priority`, `--rig-id`, `--tls`, `--keepalive`, `--url=`, `--user=`, `--pass=`, `--max-cpu-usage`, `--background`.
-- Domínios de pools: nanopool.org, supportxmr.com, minexmr.com, moneroocean.stream, 2miners.com, f2pool.com, ethermine.org, hashvault.pro, herominers.com, unmineable.com, nicehash.com, c3pool.com, xmrpool.eu, monerohash.com, miningpoolhub.com.
+**Regra:** um indicador sem fonte pública é "não verificado". Pesa menos (só alimenta sinais fracos: `cmdline_miner_unverified`, `miner_process_name_unverified`, `mining_port_unverified_writable`, `mining_port_unverified_other`) e nunca dá SUSPEITO sozinho. Um teste prova isto para cada indicador não verificado. Só os verificados alimentam os sinais fortes.
 
-**Fontes: por confirmar.** Estas listas vêm de conhecimento geral sobre mineradores de código aberto e dos nomes de pools públicos conhecidos. Nesta sessão não foi possível confirmar cada entrada numa fonte online, por isso cada uma tem de ser verificada e referenciada (documentação de cada pool ou do minerador) antes da primeira release. As marcas fracas (`--threads`, `--tls`, `--background`) existem também em programas legítimos, razão pela qual só contam em conjunto.
+Método e limites desta verificação (consulta a 2026-10-26): foram lidas páginas e repositórios públicos, sem descarregar nenhum binário nem amostra.
+
+- Documentação oficial do XMRig, linha de comando e algoritmos: <https://xmrig.com/docs/miner/command-line-options> e <https://xmrig.com/docs/algorithms>. Confirma as opções `--donate-level`, `--donate-over-proxy`, `--nicehash`, `--cpu-priority`, `--rig-id`, `--algo`, `--coin`, `--threads`, `--tls`, `--keepalive`, `--url`, `--user`, `--pass`, `--background`, `--cpu-max-threads-hint` e os algoritmos `rx/0` (RandomX) e `cn/...` (CryptoNight). Não lista `--max-cpu-usage` (removido) e não menciona URLs `stratum+tcp://`.
+- MITRE ATT&CK T1496, Resource Hijacking: <https://attack.mitre.org/techniques/T1496/> e T1496.001 Compute Hijacking: <https://attack.mitre.org/techniques/T1496/001/>. Nomeiam a mineração de criptomoeda. Não falam de Stratum.
+- Regra Sigma "Potential Crypto Mining Activity" (Florian Roth, 2021-10-26, modificada 2023-02-13, nível alto, tag `attack.t1496`): <https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_susp_crypto_mining_monero.yml>. A sua seleção de linha de comando contém ` --cpu-priority=`, `--donate-level=0`, ` -o pool.`, ` --nicehash`, ` --algo=rx/0 `, `stratum+tcp://`, `stratum+udp://` e variantes em base64 dessas cadeias (a deteção de variantes em base64 não está implementada). Falsos positivos que a regra indica: "uso legítimo de mineradores" e "algumas ferramentas de compilação".
+- Repositórios oficiais de cada minerador (ligações na tabela).
+- Pools: só os sites que puderam ser lidos confirmam que o domínio é de um pool. Nenhum site oficial listou as portas 3334, 4444, 5555, 7777, 14433, 14444 ou 45700. A porta 3333 aparece como porta de reserva (backup) do F2Pool para BTC em <https://f2pool.com/>. As restantes portas só aparecem em documentos de terceiros (por exemplo uma compilação de pesquisa de pools num repositório pessoal), por isso ficam não verificadas. Os esquemas `stratum+ssl://` e `stratum+tls://` vêm de um artigo do pool Kryptex (<https://pool.kryptex.com/en/articles/ssl-en>) e da documentação do ethminer (<https://github.com/ethereum-mining/ethminer/blob/master/docs/POOL_EXAMPLES_ETH.md>), vistos através de resultados de pesquisa e não de leitura direta das páginas.
+- Para os sites que não puderam ser lidos (supportxmr.com, minexmr.com, nicehash.com, c3pool.com, xmrpool.eu, monerohash.com) o estado fica não verificado até alguém os poder abrir.
+
+Marcas fracas (`--threads`, `--tls`, `--background`) existem também em programas legítimos, razão pela qual só contam em conjunto.
+
+<!-- generated:indicators:start -->
+#### Nomes de programas (sem `.exe`)
+
+| Indicador | Estado | Fonte (consultada em 2026-10-26) | Nota |
+| --- | --- | --- | --- |
+| `xmrig` | verificado | <https://github.com/xmrig/xmrig> |  |
+| `xmr-stak` | verificado | <https://github.com/fireice-uk/xmr-stak> |  |
+| `nbminer` | verificado | <https://github.com/NebuTech/NBMiner> |  |
+| `t-rex` | verificado | <https://github.com/trexminer/T-Rex> |  |
+| `ethminer` | verificado | <https://github.com/ethereum-mining/ethminer> |  |
+| `cpuminer` | verificado | <https://github.com/tpruvot/cpuminer-multi> |  |
+| `minerd` | verificado | <https://github.com/pooler/cpuminer> |  |
+| `cgminer` | verificado | <https://github.com/ckolivas/cgminer> |  |
+| `bfgminer` | verificado | <https://github.com/luke-jr/bfgminer> |  |
+| `lolminer` | verificado | <https://github.com/Lolliedieb/lolMiner-releases> |  |
+| `nanominer` | verificado | <https://github.com/nanopool/nanominer> |  |
+| `srbminer-multi` | verificado | <https://github.com/doktor83/SRBMiner-Multi> |  |
+| `teamredminer` | verificado | <https://github.com/todxx/teamredminer> |  |
+| `nicehashminer` | verificado | <https://github.com/nicehash/NiceHashMiner> |  |
+| `phoenixminer` | **não verificado** | nenhuma fonte encontrada | não verificado em fonte pública |
+| `claymore` | **não verificado** | nenhuma fonte encontrada | não verificado em fonte pública |
+| `gminer` | **não verificado** | nenhuma fonte encontrada | o repositório oficial chama ao executável 'miner', não 'gminer' |
+| `trex` | **não verificado** | nenhuma fonte encontrada | não verificado em fonte pública |
+| `cpuminer-multi` | **não verificado** | nenhuma fonte encontrada | não verificado em fonte pública |
+| `srbminer` | **não verificado** | nenhuma fonte encontrada | não verificado em fonte pública |
+| `nicehash` | **não verificado** | nenhuma fonte encontrada | não verificado em fonte pública |
+
+#### Marcas fortes na linha de comando
+
+| Indicador | Estado | Fonte (consultada em 2026-10-26) | Nota |
+| --- | --- | --- | --- |
+| `stratum+tcp://` | verificado | <https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_susp_crypto_mining_monero.yml> |  |
+| `stratum+udp://` | verificado | <https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_susp_crypto_mining_monero.yml> |  |
+| `stratum+ssl://` | verificado | <https://pool.kryptex.com/en/articles/ssl-en> |  |
+| `stratum+tls://` | verificado | <https://github.com/ethereum-mining/ethminer/blob/master/docs/POOL_EXAMPLES_ETH.md> |  |
+| `--donate-level` | verificado | <https://xmrig.com/docs/miner/command-line-options><br><https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_susp_crypto_mining_monero.yml> | a regra Sigma usa --donate-level=0; a opção existe na documentação do XMRig |
+| `--donate-over-proxy` | verificado | <https://xmrig.com/docs/miner/command-line-options> |  |
+| `--nicehash` | verificado | <https://xmrig.com/docs/miner/command-line-options><br><https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_susp_crypto_mining_monero.yml> |  |
+| `--cpu-priority=` | verificado | <https://xmrig.com/docs/miner/command-line-options><br><https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_susp_crypto_mining_monero.yml> |  |
+| `--algo=rx/0` | verificado | <https://xmrig.com/docs/algorithms><br><https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_susp_crypto_mining_monero.yml> |  |
+| ` -o pool.` | verificado | <https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_susp_crypto_mining_monero.yml> |  |
+| `stratum2+tcp://` | **não verificado** | nenhuma fonte encontrada | não verificado em fonte pública |
+| `randomx` | **não verificado** | nenhuma fonte encontrada | o texto aparece como nome de algoritmo (rx/0), não como opção |
+| `cryptonight` | **não verificado** | nenhuma fonte encontrada | o texto aparece como nome de algoritmo (cn/...), não como opção |
+
+#### Marcas fracas (precisam de duas ou mais)
+
+| Indicador | Estado | Fonte (consultada em 2026-10-26) | Nota |
+| --- | --- | --- | --- |
+| `--algo` | verificado | <https://xmrig.com/docs/miner/command-line-options> |  |
+| `--coin` | verificado | <https://xmrig.com/docs/miner/command-line-options> |  |
+| `--threads` | verificado | <https://xmrig.com/docs/miner/command-line-options> |  |
+| `--rig-id` | verificado | <https://xmrig.com/docs/miner/command-line-options> |  |
+| `--tls` | verificado | <https://xmrig.com/docs/miner/command-line-options> |  |
+| `--keepalive` | verificado | <https://xmrig.com/docs/miner/command-line-options> |  |
+| `--url=` | verificado | <https://xmrig.com/docs/miner/command-line-options> |  |
+| `--user=` | verificado | <https://xmrig.com/docs/miner/command-line-options> |  |
+| `--pass=` | verificado | <https://xmrig.com/docs/miner/command-line-options> |  |
+| `--background` | verificado | <https://xmrig.com/docs/miner/command-line-options> |  |
+| `--cpu-max-threads-hint` | verificado | <https://xmrig.com/docs/miner/command-line-options> |  |
+
+#### Portas de pools
+
+| Indicador | Estado | Fonte (consultada em 2026-10-26) | Nota |
+| --- | --- | --- | --- |
+| `3333` | verificado | <https://f2pool.com/> | listada como porta de reserva (backup) do F2Pool para BTC |
+| `3334` | **não verificado** | nenhuma fonte encontrada | só em fontes secundárias; a página oficial do pool não pôde ser lida |
+| `4444` | **não verificado** | nenhuma fonte encontrada | só em fontes secundárias; a página oficial do pool não pôde ser lida |
+| `5555` | **não verificado** | nenhuma fonte encontrada | só em fontes secundárias; a página oficial do pool não pôde ser lida |
+| `7777` | **não verificado** | nenhuma fonte encontrada | só em fontes secundárias; a página oficial do pool não pôde ser lida |
+| `14433` | **não verificado** | nenhuma fonte encontrada | só em fontes secundárias; a página oficial do pool não pôde ser lida |
+| `14444` | **não verificado** | nenhuma fonte encontrada | só em fontes secundárias; a página oficial do pool não pôde ser lida |
+| `45700` | **não verificado** | nenhuma fonte encontrada | só em fontes secundárias; a página oficial do pool não pôde ser lida |
+
+#### Domínios de pools
+
+| Indicador | Estado | Fonte (consultada em 2026-10-26) | Nota |
+| --- | --- | --- | --- |
+| `nanopool.org` | verificado | <https://nanopool.org/> | site do pool (em manutenção na data); portas não verificadas |
+| `moneroocean.stream` | verificado | <https://moneroocean.stream/> |  |
+| `2miners.com` | verificado | <https://2miners.com/> |  |
+| `f2pool.com` | verificado | <https://f2pool.com/> |  |
+| `herominers.com` | verificado | <https://herominers.com/> |  |
+| `unmineable.com` | verificado | <https://unmineable.com/> |  |
+| `miningpoolhub.com` | verificado | <https://miningpoolhub.com/> |  |
+| `ethermine.org` | verificado | <https://ethermine.org/> | só o título da página foi lido |
+| `hashvault.pro` | verificado | <https://hashvault.pro/> | só o modelo da página foi lido |
+| `supportxmr.com` | **não verificado** | nenhuma fonte encontrada | o site não pôde ser lido |
+| `minexmr.com` | **não verificado** | nenhuma fonte encontrada | o site não pôde ser lido |
+| `nicehash.com` | **não verificado** | nenhuma fonte encontrada | o site não pôde ser lido |
+| `c3pool.com` | **não verificado** | nenhuma fonte encontrada | o site não pôde ser lido |
+| `xmrpool.eu` | **não verificado** | nenhuma fonte encontrada | o site não pôde ser lido |
+| `monerohash.com` | **não verificado** | nenhuma fonte encontrada | o site não pôde ser lido |
+<!-- generated:indicators:end -->
 
 ## O que não é detetado (Fase 1)
 

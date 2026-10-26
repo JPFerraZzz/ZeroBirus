@@ -1,22 +1,522 @@
 {
-  "process_names": [
-    "xmrig", "xmr-stak", "xmrig-cuda", "xmrig-notls", "nbminer", "t-rex", "trex", "phoenixminer",
-    "ethminer", "cpuminer", "cpuminer-multi", "minerd", "cgminer", "bfgminer", "lolminer",
-    "gminer", "nanominer", "srbminer-multi", "claymore", "teamredminer", "nicehash", "randomx"
-  ],
-  "strong_markers": [
-    "stratum+tcp://", "stratum+ssl://", "stratum+tls://", "stratum+udp://", "stratum2+tcp://",
-    "--donate-level", "--donate-over-proxy", "randomx", "cryptonight", "--nicehash"
-  ],
-  "weak_markers": [
-    "--algo", "--coin", "--threads", "--cpu-priority", "--rig-id", "--tls", "--keepalive",
-    "--url=", "--user=", "--pass=", "--max-cpu-usage", "--background"
-  ],
-  "weak_markers_needed": 2,
-  "ports": [3333, 3334, 4444, 5555, 7777, 14433, 14444, 45700],
-  "pool_domain_fragments": [
-    "nanopool.org", "supportxmr.com", "minexmr.com", "moneroocean.stream", "2miners.com",
-    "f2pool.com", "ethermine.org", "hashvault.pro", "herominers.com", "unmineable.com",
-    "nicehash.com", "c3pool.com", "xmrpool.eu", "monerohash.com", "miningpoolhub.com"
-  ]
+ "checked_on": "2026-10-26",
+ "method": "páginas oficiais lidas, repositórios oficiais e regra Sigma; entradas sem fonte ficam como não verificadas",
+ "process_names": [
+  {
+   "value": "xmrig",
+   "verified": true,
+   "sources": [
+    "https://github.com/xmrig/xmrig"
+   ],
+   "note": ""
+  },
+  {
+   "value": "xmr-stak",
+   "verified": true,
+   "sources": [
+    "https://github.com/fireice-uk/xmr-stak"
+   ],
+   "note": ""
+  },
+  {
+   "value": "nbminer",
+   "verified": true,
+   "sources": [
+    "https://github.com/NebuTech/NBMiner"
+   ],
+   "note": ""
+  },
+  {
+   "value": "t-rex",
+   "verified": true,
+   "sources": [
+    "https://github.com/trexminer/T-Rex"
+   ],
+   "note": ""
+  },
+  {
+   "value": "ethminer",
+   "verified": true,
+   "sources": [
+    "https://github.com/ethereum-mining/ethminer"
+   ],
+   "note": ""
+  },
+  {
+   "value": "cpuminer",
+   "verified": true,
+   "sources": [
+    "https://github.com/tpruvot/cpuminer-multi"
+   ],
+   "note": ""
+  },
+  {
+   "value": "minerd",
+   "verified": true,
+   "sources": [
+    "https://github.com/pooler/cpuminer"
+   ],
+   "note": ""
+  },
+  {
+   "value": "cgminer",
+   "verified": true,
+   "sources": [
+    "https://github.com/ckolivas/cgminer"
+   ],
+   "note": ""
+  },
+  {
+   "value": "bfgminer",
+   "verified": true,
+   "sources": [
+    "https://github.com/luke-jr/bfgminer"
+   ],
+   "note": ""
+  },
+  {
+   "value": "lolminer",
+   "verified": true,
+   "sources": [
+    "https://github.com/Lolliedieb/lolMiner-releases"
+   ],
+   "note": ""
+  },
+  {
+   "value": "nanominer",
+   "verified": true,
+   "sources": [
+    "https://github.com/nanopool/nanominer"
+   ],
+   "note": ""
+  },
+  {
+   "value": "srbminer-multi",
+   "verified": true,
+   "sources": [
+    "https://github.com/doktor83/SRBMiner-Multi"
+   ],
+   "note": ""
+  },
+  {
+   "value": "teamredminer",
+   "verified": true,
+   "sources": [
+    "https://github.com/todxx/teamredminer"
+   ],
+   "note": ""
+  },
+  {
+   "value": "nicehashminer",
+   "verified": true,
+   "sources": [
+    "https://github.com/nicehash/NiceHashMiner"
+   ],
+   "note": ""
+  },
+  {
+   "value": "phoenixminer",
+   "verified": false,
+   "sources": [],
+   "note": "não verificado em fonte pública"
+  },
+  {
+   "value": "claymore",
+   "verified": false,
+   "sources": [],
+   "note": "não verificado em fonte pública"
+  },
+  {
+   "value": "gminer",
+   "verified": false,
+   "sources": [],
+   "note": "o repositório oficial chama ao executável 'miner', não 'gminer'"
+  },
+  {
+   "value": "trex",
+   "verified": false,
+   "sources": [],
+   "note": "não verificado em fonte pública"
+  },
+  {
+   "value": "cpuminer-multi",
+   "verified": false,
+   "sources": [],
+   "note": "não verificado em fonte pública"
+  },
+  {
+   "value": "srbminer",
+   "verified": false,
+   "sources": [],
+   "note": "não verificado em fonte pública"
+  },
+  {
+   "value": "nicehash",
+   "verified": false,
+   "sources": [],
+   "note": "não verificado em fonte pública"
+  }
+ ],
+ "strong_markers": [
+  {
+   "value": "stratum+tcp://",
+   "verified": true,
+   "sources": [
+    "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_susp_crypto_mining_monero.yml"
+   ],
+   "note": ""
+  },
+  {
+   "value": "stratum+udp://",
+   "verified": true,
+   "sources": [
+    "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_susp_crypto_mining_monero.yml"
+   ],
+   "note": ""
+  },
+  {
+   "value": "stratum+ssl://",
+   "verified": true,
+   "sources": [
+    "https://pool.kryptex.com/en/articles/ssl-en"
+   ],
+   "note": ""
+  },
+  {
+   "value": "stratum+tls://",
+   "verified": true,
+   "sources": [
+    "https://github.com/ethereum-mining/ethminer/blob/master/docs/POOL_EXAMPLES_ETH.md"
+   ],
+   "note": ""
+  },
+  {
+   "value": "--donate-level",
+   "verified": true,
+   "sources": [
+    "https://xmrig.com/docs/miner/command-line-options",
+    "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_susp_crypto_mining_monero.yml"
+   ],
+   "note": "a regra Sigma usa --donate-level=0; a opção existe na documentação do XMRig"
+  },
+  {
+   "value": "--donate-over-proxy",
+   "verified": true,
+   "sources": [
+    "https://xmrig.com/docs/miner/command-line-options"
+   ],
+   "note": ""
+  },
+  {
+   "value": "--nicehash",
+   "verified": true,
+   "sources": [
+    "https://xmrig.com/docs/miner/command-line-options",
+    "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_susp_crypto_mining_monero.yml"
+   ],
+   "note": ""
+  },
+  {
+   "value": "--cpu-priority=",
+   "verified": true,
+   "sources": [
+    "https://xmrig.com/docs/miner/command-line-options",
+    "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_susp_crypto_mining_monero.yml"
+   ],
+   "note": ""
+  },
+  {
+   "value": "--algo=rx/0",
+   "verified": true,
+   "sources": [
+    "https://xmrig.com/docs/algorithms",
+    "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_susp_crypto_mining_monero.yml"
+   ],
+   "note": ""
+  },
+  {
+   "value": " -o pool.",
+   "verified": true,
+   "sources": [
+    "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_susp_crypto_mining_monero.yml"
+   ],
+   "note": ""
+  },
+  {
+   "value": "stratum2+tcp://",
+   "verified": false,
+   "sources": [],
+   "note": "não verificado em fonte pública"
+  },
+  {
+   "value": "randomx",
+   "verified": false,
+   "sources": [],
+   "note": "o texto aparece como nome de algoritmo (rx/0), não como opção"
+  },
+  {
+   "value": "cryptonight",
+   "verified": false,
+   "sources": [],
+   "note": "o texto aparece como nome de algoritmo (cn/...), não como opção"
+  }
+ ],
+ "weak_markers": [
+  {
+   "value": "--algo",
+   "verified": true,
+   "sources": [
+    "https://xmrig.com/docs/miner/command-line-options"
+   ],
+   "note": ""
+  },
+  {
+   "value": "--coin",
+   "verified": true,
+   "sources": [
+    "https://xmrig.com/docs/miner/command-line-options"
+   ],
+   "note": ""
+  },
+  {
+   "value": "--threads",
+   "verified": true,
+   "sources": [
+    "https://xmrig.com/docs/miner/command-line-options"
+   ],
+   "note": ""
+  },
+  {
+   "value": "--rig-id",
+   "verified": true,
+   "sources": [
+    "https://xmrig.com/docs/miner/command-line-options"
+   ],
+   "note": ""
+  },
+  {
+   "value": "--tls",
+   "verified": true,
+   "sources": [
+    "https://xmrig.com/docs/miner/command-line-options"
+   ],
+   "note": ""
+  },
+  {
+   "value": "--keepalive",
+   "verified": true,
+   "sources": [
+    "https://xmrig.com/docs/miner/command-line-options"
+   ],
+   "note": ""
+  },
+  {
+   "value": "--url=",
+   "verified": true,
+   "sources": [
+    "https://xmrig.com/docs/miner/command-line-options"
+   ],
+   "note": ""
+  },
+  {
+   "value": "--user=",
+   "verified": true,
+   "sources": [
+    "https://xmrig.com/docs/miner/command-line-options"
+   ],
+   "note": ""
+  },
+  {
+   "value": "--pass=",
+   "verified": true,
+   "sources": [
+    "https://xmrig.com/docs/miner/command-line-options"
+   ],
+   "note": ""
+  },
+  {
+   "value": "--background",
+   "verified": true,
+   "sources": [
+    "https://xmrig.com/docs/miner/command-line-options"
+   ],
+   "note": ""
+  },
+  {
+   "value": "--cpu-max-threads-hint",
+   "verified": true,
+   "sources": [
+    "https://xmrig.com/docs/miner/command-line-options"
+   ],
+   "note": ""
+  }
+ ],
+ "weak_markers_needed": 2,
+ "ports": [
+  {
+   "value": 3333,
+   "verified": true,
+   "sources": [
+    "https://f2pool.com/"
+   ],
+   "note": "listada como porta de reserva (backup) do F2Pool para BTC"
+  },
+  {
+   "value": 3334,
+   "verified": false,
+   "sources": [],
+   "note": "só em fontes secundárias; a página oficial do pool não pôde ser lida"
+  },
+  {
+   "value": 4444,
+   "verified": false,
+   "sources": [],
+   "note": "só em fontes secundárias; a página oficial do pool não pôde ser lida"
+  },
+  {
+   "value": 5555,
+   "verified": false,
+   "sources": [],
+   "note": "só em fontes secundárias; a página oficial do pool não pôde ser lida"
+  },
+  {
+   "value": 7777,
+   "verified": false,
+   "sources": [],
+   "note": "só em fontes secundárias; a página oficial do pool não pôde ser lida"
+  },
+  {
+   "value": 14433,
+   "verified": false,
+   "sources": [],
+   "note": "só em fontes secundárias; a página oficial do pool não pôde ser lida"
+  },
+  {
+   "value": 14444,
+   "verified": false,
+   "sources": [],
+   "note": "só em fontes secundárias; a página oficial do pool não pôde ser lida"
+  },
+  {
+   "value": 45700,
+   "verified": false,
+   "sources": [],
+   "note": "só em fontes secundárias; a página oficial do pool não pôde ser lida"
+  }
+ ],
+ "pool_domain_fragments": [
+  {
+   "value": "nanopool.org",
+   "verified": true,
+   "sources": [
+    "https://nanopool.org/"
+   ],
+   "note": "site do pool (em manutenção na data); portas não verificadas"
+  },
+  {
+   "value": "moneroocean.stream",
+   "verified": true,
+   "sources": [
+    "https://moneroocean.stream/"
+   ],
+   "note": ""
+  },
+  {
+   "value": "2miners.com",
+   "verified": true,
+   "sources": [
+    "https://2miners.com/"
+   ],
+   "note": ""
+  },
+  {
+   "value": "f2pool.com",
+   "verified": true,
+   "sources": [
+    "https://f2pool.com/"
+   ],
+   "note": ""
+  },
+  {
+   "value": "herominers.com",
+   "verified": true,
+   "sources": [
+    "https://herominers.com/"
+   ],
+   "note": ""
+  },
+  {
+   "value": "unmineable.com",
+   "verified": true,
+   "sources": [
+    "https://unmineable.com/"
+   ],
+   "note": ""
+  },
+  {
+   "value": "miningpoolhub.com",
+   "verified": true,
+   "sources": [
+    "https://miningpoolhub.com/"
+   ],
+   "note": ""
+  },
+  {
+   "value": "ethermine.org",
+   "verified": true,
+   "sources": [
+    "https://ethermine.org/"
+   ],
+   "note": "só o título da página foi lido"
+  },
+  {
+   "value": "hashvault.pro",
+   "verified": true,
+   "sources": [
+    "https://hashvault.pro/"
+   ],
+   "note": "só o modelo da página foi lido"
+  },
+  {
+   "value": "supportxmr.com",
+   "verified": false,
+   "sources": [],
+   "note": "o site não pôde ser lido"
+  },
+  {
+   "value": "minexmr.com",
+   "verified": false,
+   "sources": [],
+   "note": "o site não pôde ser lido"
+  },
+  {
+   "value": "nicehash.com",
+   "verified": false,
+   "sources": [],
+   "note": "o site não pôde ser lido"
+  },
+  {
+   "value": "c3pool.com",
+   "verified": false,
+   "sources": [],
+   "note": "o site não pôde ser lido"
+  },
+  {
+   "value": "xmrpool.eu",
+   "verified": false,
+   "sources": [],
+   "note": "o site não pôde ser lido"
+  },
+  {
+   "value": "monerohash.com",
+   "verified": false,
+   "sources": [],
+   "note": "o site não pôde ser lido"
+  }
+ ],
+ "references": {
+  "MITRE ATT&CK T1496 (Resource Hijacking)": "https://attack.mitre.org/techniques/T1496/",
+  "MITRE ATT&CK T1496.001 (Compute Hijacking)": "https://attack.mitre.org/techniques/T1496/001/",
+  "Sigma: Potential Crypto Mining Activity": "https://github.com/SigmaHQ/sigma/blob/master/rules/windows/process_creation/proc_creation_win_susp_crypto_mining_monero.yml"
+ }
 }

@@ -31,13 +31,22 @@ def scan(inspector: Inspector) -> CheckResult:
     findings: list[Finding] = []
 
     for c in connections.items:
-        if c.status.upper() not in ACTIVE_STATES or c.remote_port not in rules.mining_ports:
+        verified = c.remote_port in rules.mining_ports
+        if c.status.upper() not in ACTIVE_STATES or not (
+            verified or c.remote_port in rules.mining_ports_unverified
+        ):
             continue
         if not _is_public(c.remote_address):
             continue
         proc = by_pid.get(c.pid) if c.pid is not None else None
         writable = bool(proc and proc.path and location_kind(proc.path, ctx))
-        signal = rules.signal("mining_port_writable" if writable else "mining_port_other")
+        code = {
+            (True, True): "mining_port_writable",
+            (True, False): "mining_port_other",
+            (False, True): "mining_port_unverified_writable",
+            (False, False): "mining_port_unverified_other",
+        }[(verified, writable)]
+        signal = rules.signal(code)
         name = proc.name if proc else "(processo desconhecido)"
         finding = make_finding(
             CHECK,
