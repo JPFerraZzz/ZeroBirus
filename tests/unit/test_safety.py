@@ -109,14 +109,6 @@ def test_microsoft_signed_in_program_files_is_protected() -> None:
     assert is_protected_path(path, CTX, signer=SignerKind.MICROSOFT)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Phase 0 protects all of Program Files. Final rule (BRIEF section 8): protected only "
-        "when signed by Microsoft or an antivirus vendor; an unsigned executable there must "
-        "be removable via a plan. Remove this marker when the rule is implemented."
-    ),
-)
 def test_unsigned_in_program_files_can_be_removed() -> None:
     path = r"C:\Program Files\SomeApp\dropper.exe"
     assert not is_protected_path(path, CTX, signer=SignerKind.UNSIGNED)
