@@ -13,6 +13,25 @@ Estado do que está provado e do que não está: o CI Windows (windows-latest) j
 - Efeito secundário do Windows, não nosso: o Windows PowerShell pode deixar na pasta Temp um ficheiro curto `__PSScriptPolicyTest_*.ps1`, que ele próprio cria ao arrancar. A verificação ignora-o.
 - Ainda não há executável (Fase 5). A verificação corre a partir do código-fonte com `uv`.
 
+## 0. Executável de desenvolvimento (artefacto do CI)
+
+Cada execução do CI em `phase-*` e em PRs constrói, no job "Windows dev build", uma pasta `--onedir` com `ZeroBirus.exe` (versão de consola da CLI), manifesto de administrador (`--uac-admin`), recursos de versão com fabricante "Ferraz" e uma soma SHA-256. O artefacto chama-se `zerobirus-dev-win64` e traz `ZeroBirus-dev-win64.zip`, `SHA256SUMS.txt` e os relatórios `demo.json` (fixture sintética) e `real.json` (a verificação real do runner). Para o descarregar: separador Actions do GitHub, a execução, secção Artifacts; ou `gh run download <id> -n zerobirus-dev-win64`. Não está assinado (só o build de release será assinado, e ainda sem assinatura de código).
+
+Para usar o ZIP em vez do código-fonte: compara o SHA-256 (`Get-FileHash ZeroBirus-dev-win64.zip` contra `SHA256SUMS.txt`), extrai tudo para uma pasta e corre `.\ZeroBirus\ZeroBirus.exe scan --json --out relatorio.json` num terminal. Como o manifesto pede administrador, o Windows mostra o pedido do UAC; para a corrida "sem administrador" do passo 2 usa o código-fonte com `uv`.
+
+O ZIP não está assinado, por isso o Windows pode mostrar o aviso do SmartScreen ("O Windows protegeu o seu PC"): "Mais informações" e "Executar mesmo assim", depois de confirmares o SHA-256.
+
+### O que observar com o PowerShell lançado pela ferramenta
+
+A verificação lança o `powershell.exe` do Windows (caminho absoluto, `-NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand`, ambiente construído de raiz) para tarefas, Defender, WMI, assinaturas e atalhos. Isto é uma forma de arranque que antivírus e EDRs vigiam. Decisão atual: manter `-EncodedCommand` (ver `docs/DECISIONS.md`, D-004). **Anota se houver qualquer reação**:
+
+- O Microsoft Defender mostra uma deteção, um alerta ou bloqueia o PowerShell filho (vê Segurança do Windows, Proteção contra vírus e ameaças, Histórico de proteção).
+- O SmartScreen ou o Controlo de Aplicações bloqueia o `ZeroBirus.exe`.
+- Um EDR ou outro antivírus (qual?) alerta ou põe a ferramenta em quarentena.
+- A verificação de tarefas, Defender, WMI ou assinaturas aparece como NAO_VERIFICADO com a razão "o PowerShell falhou" ou "excedeu".
+
+Se houver reação, a alternativa já decidida é mudar a ponte de `-EncodedCommand` para `-File` com os scripts a ficar no disco numa pasta só de leitura da aplicação e com verificação do hash de cada script antes de os lançar. Diz-me o produto e a mensagem exatos.
+
 ## 1. Preparar a máquina
 
 Usa uma VM com um snapshot, ou um PC que aceites ver analisado. Não instales nem desativeis nada: o objetivo é ver a máquina como ela é.
