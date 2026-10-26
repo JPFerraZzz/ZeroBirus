@@ -54,7 +54,6 @@ def to_process_info(proc: psutil.Process) -> ProcessInfo | None:
         cmdline=" ".join(_quote(a) for a in args),
         user=_safe(proc.username, ""),
         parent_pid=parent,
-        signed_by_microsoft=False,  # signature checks come with the Authenticode bridge
     )
 
 

@@ -26,7 +26,7 @@ def selftest(inspector: Inspector | None = None) -> list[str]:
     if is_protected_path(r"C:\Users\Demo\AppData\Local\Temp\x.exe", ctx):
         failures.append("safety: temp file wrongly protected")
 
-    procs = {p.pid: p for p in inspector.list_processes()}
+    procs = {p.pid: p for p in inspector.processes().items}
     if not procs:
         failures.append("inspector: no processes returned")
     for p in procs.values():
