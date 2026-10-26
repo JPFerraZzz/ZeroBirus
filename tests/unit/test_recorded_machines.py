@@ -14,7 +14,11 @@ from ctx_factory import typical_context
 
 from zerobirus.core.safety import is_protected_process
 
-RECORDED = sorted((Path(__file__).resolve().parents[1] / "fixtures" / "recorded").glob("*.json"))
+RECORDED = sorted(
+    p
+    for p in (Path(__file__).resolve().parents[1] / "fixtures" / "recorded").glob("*.json")
+    if not p.name.endswith(".expected.json")
+)
 KERNEL_PSEUDO = ("System", "Registry", "Memory Compression")
 
 

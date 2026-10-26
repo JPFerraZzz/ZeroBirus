@@ -91,3 +91,30 @@ class Anonymizer:
         if domain.upper() in SYSTEM_ACCOUNTS:
             return value
         return f"{MACHINE_PLACEHOLDER}\\{self._names.get(user.strip().lower(), user)}"
+
+
+_LEFTOVER_PATTERNS = (
+    (
+        "user folder that is not a placeholder",
+        re.compile(
+            r"(?i)\\users\\"
+            r"(?!(?:Utilizador\d+|Public|Default(?: User)?|All Users)(?:\\|$))"
+            r"[^\\\"'<>|*?\r\n]+"
+        ),
+    ),
+    ("e-mail address", re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")),
+    ("network share", re.compile(r"\\\\[\w.-]+\\[\w$.-]+")),
+    ("computer name", re.compile(r"(?i)\b(?:DESKTOP|LAPTOP|PC|NOTEBOOK)-[A-Z0-9]{4,}\b")),
+)
+
+
+def find_personal_leftovers(strings: Iterable[str]) -> list[str]:
+    """What still looks personal in text that was already anonymised (for the report-to-fixture
+    tool). A list of "reason: excerpt"; empty means nothing obvious was found. This is a
+    safety net, not a guarantee: read the file before sharing it."""
+    found: list[str] = []
+    for text in strings:
+        for reason, pattern in _LEFTOVER_PATTERNS:
+            for m in pattern.finditer(text):
+                found.append(f"{reason}: {m.group(0)[:80]}")
+    return list(dict.fromkeys(found))
