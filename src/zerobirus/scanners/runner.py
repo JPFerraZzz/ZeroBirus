@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import dataclasses
 import threading
+import time
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from zerobirus.core.models import CheckResult, Finding, Level
 from zerobirus.core.safety import normalize_windows_path
@@ -26,6 +27,7 @@ DEFAULT_TIMEOUT = 90.0
 class ScanResult:
     checks: tuple[CheckResult, ...]
     snapshot: Snapshot
+    seconds: dict[str, float] = field(default_factory=dict[str, float])
 
     @property
     def elevated(self) -> bool:
@@ -82,8 +84,12 @@ def run_scan(
     results: dict[str, CheckResult] = {}
     threads: dict[str, threading.Thread] = {}
 
+    seconds: dict[str, float] = {}
+
     def launch(name: str, scanner: Scanner) -> None:
+        started = time.monotonic()
         results[name] = _run_one(name, scanner, recording, timeout)
+        seconds[name] = round(time.monotonic() - started, 2)
 
     for name, scanner in chosen.items():
         t = threading.Thread(target=launch, args=(name, scanner), daemon=True)
@@ -93,4 +99,4 @@ def run_scan(
         t.join()
     checks = tuple(results[name] for name in chosen)
     checks = _with_hashes(recording, checks)
-    return ScanResult(checks=checks, snapshot=recording.snapshot())
+    return ScanResult(checks=checks, snapshot=recording.snapshot(), seconds=seconds)

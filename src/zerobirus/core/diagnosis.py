@@ -94,7 +94,9 @@ def _assess(rows: tuple[Row, ...]) -> tuple[ThreatAssessment, ...]:
                     weak += 1
         if not strong and not weak:
             continue
-        certainty = "alta" if strong >= 2 else "média" if strong == 1 or weak >= 3 else "baixa"
+        if strong == 0 and weak < 3:
+            continue  # one or two weak signs are not enough to name a threat
+        certainty = "alta" if strong >= 2 else "média"
         out.append(ThreatAssessment(kind, name, certainty, tuple(proofs)))
     return tuple(out)
 

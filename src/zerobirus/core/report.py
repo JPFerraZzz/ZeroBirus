@@ -8,6 +8,7 @@ golden fixture (see docs/WINDOWS_TEST_PLAN.md).
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterator
 from dataclasses import replace
 from typing import Any
@@ -115,6 +116,7 @@ def build_report(
                 "verified": c.verified,
                 "reason": c.reason,
                 "inspected": c.inspected,
+                "seconds": result.seconds.get(c.check),
                 "findings": [{**to_jsonable(f), "score": f.score} for f in c.findings],
             }
             for c in result.checks
@@ -163,8 +165,14 @@ def render_text(report: dict[str, Any]) -> str:
         lines += ["", f"Por onde pode ter entrado: {diagnosis['entry_vector']}"]
     if diagnosis["normal_things"]:
         lines += ["", "Coisas normais que assustam:"]
-        lines += [
-            f"  {by_id[i]['item']}: {by_id[i]['description']}" for i in diagnosis["normal_things"]
-        ]
+        groups: dict[tuple[str, str], int] = {}
+        for i in diagnosis["normal_things"]:
+            name = re.sub(r" \(PID \d+\)$", "", by_id[i]["item"])
+            groups[(name, by_id[i]["description"])] = (
+                groups.get((name, by_id[i]["description"]), 0) + 1
+            )
+        for (name, text), count in groups.items():
+            times = f" (x{count})" if count > 1 else ""
+            lines.append(f"  {name}{times}: {text}")
     lines += ["", *diagnosis["notes"]]
     return "\n".join(lines).rstrip() + "\n"

@@ -172,3 +172,40 @@ def test_render_text_mentions_not_verified_reasons() -> None:
     text = render_text(build_report(run_scan(FakeInspector("no_admin_pc"))))
     assert "não verificado" in text
     assert "sem administrador" in text.lower()
+
+
+def test_many_identical_normal_processes_are_grouped_in_the_text() -> None:
+    from scan_helpers import MS_SUBJECT, valid
+
+    path = r"C:\Windows\System32\svchost.exe"
+    procs = tuple(
+        ProcessInfo(100 + i, "svchost.exe", path, path, "NT AUTHORITY\\SYSTEM", None, 0.0)
+        for i in range(30)
+    )
+    text = render_text(
+        build_report(run_scan(inspector(processes=procs, signatures=(valid(path, MS_SUBJECT),))))
+    )
+    assert text.count("svchost.exe") == 1
+    assert "(x30)" in text
+
+
+def test_a_lone_weak_sign_does_not_name_a_threat() -> None:
+    from zerobirus.core.diagnosis import diagnose
+
+    result = run_scan(
+        inspector(processes=(ProcessInfo(1, "a.exe", DROP, "a.exe", "PC\\Ana", None, 90.0),))
+    )
+    assert diagnose(result.checks).threats == ()
+
+
+def test_whole_drive_exclusion_has_its_own_explanation() -> None:
+    from scan_helpers import levels
+
+    from zerobirus.core.models import DefenderState
+    from zerobirus.scanners import defender
+
+    state = DefenderState(True, True, False, 1, (), ("C:\\",), (), (), ())
+    result = defender.scan(inspector(defender=(state,)))
+    finding = next(f for f in result.findings if f.item == "C:\\")
+    assert "unidade inteira" in finding.signals[0].text
+    assert levels(result)["C:\\"] is Level.CONFERIR

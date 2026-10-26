@@ -38,6 +38,8 @@ MAX_SECONDS = 25.0
 MAX_HASH_BYTES = 200 * 1024 * 1024
 STARTUP_SUBPATH = r"AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
 _REPARSE = 0x400  # junctions and symlinks: never followed
+# Windows PowerShell drops this probe file in TEMP on start (our own bridge runs it).
+_OWN_NOISE_PREFIXES = ("__psscriptpolicytest_",)
 
 
 def _is_reparse(entry: os.DirEntry[str]) -> bool:
@@ -123,7 +125,11 @@ def search_roots(roots: Iterable[str]) -> Observed[FileCandidate]:
                         if entry.is_dir(follow_symlinks=False):
                             if depth < MAX_DEPTH:
                                 stack.append((entry.path, depth + 1))
-                        elif os.path.splitext(entry.name)[1].lower() in EXECUTABLE_EXTENSIONS:
+                        elif os.path.splitext(entry.name)[
+                            1
+                        ].lower() in EXECUTABLE_EXTENSIONS and not entry.name.lower().startswith(
+                            _OWN_NOISE_PREFIXES
+                        ):
                             st = entry.stat(follow_symlinks=False)
                             if stat.S_ISREG(st.st_mode) and len(found) < MAX_CANDIDATES:
                                 found.append(

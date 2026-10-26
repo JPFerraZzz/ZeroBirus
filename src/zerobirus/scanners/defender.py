@@ -74,15 +74,15 @@ def _exclusion_findings(s: DefenderState, ctx: SystemContext, rules: Rules) -> l
     for p in s.exclusion_paths or ():
         n = normalize_windows_path(p.rstrip("*\\/") or p)
         whole_drive = len(n) <= 3 and n[1:2] == ":"
-        risky = (
-            whole_drive or location_kind(p.rstrip("*"), ctx) is not None or mentions_writable_env(p)
+        writable = location_kind(p.rstrip("*"), ctx) is not None or mentions_writable_env(p)
+        code = (
+            "defender_exclusion_whole_drive"
+            if whole_drive
+            else "defender_exclusion_path_writable"
+            if writable
+            else "defender_exclusion_path"
         )
-        add(
-            "pasta",
-            p,
-            "defender_exclusion_path_writable" if risky else "defender_exclusion_path",
-            "O Defender não analisa esta pasta ou ficheiro.",
-        )
+        add("pasta", p, code, "O Defender não analisa esta pasta ou ficheiro.")
     for e in s.exclusion_extensions or ():
         code = "defender_exclusion_extension"
         add("extensão", e, code, "O Defender não analisa ficheiros com esta extensão.")
