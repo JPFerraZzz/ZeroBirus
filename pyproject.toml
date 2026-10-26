@@ -11,7 +11,7 @@ license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.12,<3.13"
 authors = [{ name = "João Ferraz" }]
-dependencies = []
+dependencies = ["psutil==7.2.2"]
 
 [project.scripts]
 zerobirus = "zerobirus.cli:main"
@@ -24,6 +24,7 @@ dev = [
     "pytest==9.1.1",
     "hypothesis==6.170.9",
     "pytest-socket==0.8.1",
+    "types-psutil==7.2.2.20260906",
 ]
 
 # Mutation testing is a local audit tool, not part of CI: it is not in the default groups,
