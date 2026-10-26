@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="ZeroBirus">
+  <title>ZeroBirus</title>
+  <!-- A thick ring, almost a zero, with a small square set into an opening of the stroke:
+       "zero", and "what was left outside the ring". Original mark: not a shield, no tick. -->
+  <circle cx="64" cy="64" r="44" fill="none" stroke="#1C1A17" stroke-width="16"
+          stroke-dasharray="246 30.46" stroke-linecap="butt"/>
+  <rect x="-10" y="-10" width="20" height="20" fill="#0B5C73"
+        transform="translate(105.7 50) rotate(-18.5)"/>
+</svg>

@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime
+from importlib import resources
 from pathlib import Path
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QResizeEvent
+from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QListWidget,
@@ -94,8 +96,12 @@ class MainWindow(QMainWindow):
         side_layout = QVBoxLayout(side)
         side_layout.setContentsMargins(TOKENS.space_4, TOKENS.space_5, 0, TOKENS.space_4)
         side_layout.setSpacing(TOKENS.space_3)
+        self.logo = QSvgWidget(str(resources.files("zerobirus.ui").joinpath("assets/logo.svg")))
+        self.logo.setFixedSize(40, 40)
+        self.logo.setAccessibleName("Sinal do ZeroBirus")
         self.brand = make_label(catalog.APP_NAME, "title", wrap=False, name="ZeroBirus")
         self.signature = make_label(catalog.SIGNATURE, "signature", wrap=False)
+        side_layout.addWidget(self.logo)
         side_layout.addWidget(self.brand)
         side_layout.addWidget(self.signature)
         side_layout.addWidget(make_rule())

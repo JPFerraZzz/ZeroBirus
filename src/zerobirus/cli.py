@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from collections.abc import Sequence
 from datetime import UTC, datetime
@@ -95,10 +96,48 @@ def gui(args: argparse.Namespace) -> int:
     return run_gui(inspector, demo=bool(args.demo or args.fixture))
 
 
+def screenshots(args: argparse.Namespace) -> int:
+    """Render the interface to PNG files (design review). Qt is imported only here.
+
+    Each scale runs in its own process: Qt reads ``QT_SCALE_FACTOR`` once, when the application
+    object is created, so one process cannot honestly render two scales.
+    """
+    scales: list[float] = args.scale
+    if len(scales) == 1 and len(args.fixture) == 1:
+        from zerobirus.ui.screenshots import capture
+
+        files = capture(Path(args.out), scale=scales[0], fixture=args.fixture[0])
+        print(f"{len(files)} capturas em {args.out}")
+        return 0
+    base = (
+        [sys.executable] if getattr(sys, "frozen", False) else [sys.executable, "-m", "zerobirus"]
+    )
+    for fixture in args.fixture:
+        for scale in scales:
+            done = subprocess.run(  # noqa: S603 - our own interpreter and arguments, no shell
+                [
+                    *base,
+                    "screenshots",
+                    "--out",
+                    str(args.out),
+                    "--scale",
+                    str(scale),
+                    "--fixture",
+                    fixture,
+                ],
+                check=False,
+            )
+            if done.returncode != 0:
+                return done.returncode
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     arguments = list(argv) if argv is not None else sys.argv[1:]
     if not arguments and getattr(sys, "frozen", False):
-        arguments = ["gui"]  # a double-clicked ZeroBirus.exe opens the window
+        # The console tool explains itself; a double-clicked ZeroBirus.exe opens the window.
+        is_cli = Path(sys.executable).stem.lower().endswith("-cli")
+        arguments = ["--help"] if is_cli else ["gui"]
     parser = argparse.ArgumentParser(prog="zerobirus")
     parser.add_argument("--version", action="version", version=f"ZeroBirus {__version__}")
     sub = parser.add_subparsers(dest="command")
@@ -125,7 +164,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--demo", nargs="?", const="miner_pc", choices=fixture_names(), metavar="NAME"
     )
     gui_parser.add_argument("--fixture", metavar="FILE_OR_NAME")
+    shots = sub.add_parser("screenshots", help="render the interface to PNG files (design review)")
+    shots.add_argument("--out", required=True, metavar="DIR")
+    shots.add_argument("--scale", type=float, action="append", default=None)
+    shots.add_argument("--fixture", action="append", default=None, choices=fixture_names())
     args = parser.parse_args(arguments)
+    if args.command == "screenshots":
+        args.scale = args.scale or [1.0, 1.5]
+        args.fixture = args.fixture or ["miner_pc"]
 
     if args.command == "version":
         print(f"ZeroBirus {__version__}")
@@ -140,6 +186,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return scan(args)
     if args.command == "gui":
         return gui(args)
+    if args.command == "screenshots":
+        return screenshots(args)
     parser.print_help()
     return 2
 

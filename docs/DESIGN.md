@@ -72,7 +72,7 @@ Ordem de tabulação igual à ordem visual. Todos os botões têm atalho Alt com
 
 ### 3.10 Identidade
 
-O nome é ZeroBirus, com a assinatura "by Ferraz" mais pequena e em tinta secundária. O sinal é original: um anel grosso, quase um zero, com um pequeno quadrado encaixado numa abertura do traço. Lê-se como "zero" e como "o que ficou de fora do anel". Não é um escudo, não tem visto, não imita marcas de antivírus. Está em `packaging/logo.svg`, e o ícone `packaging/zerobirus.ico` é gerado dele (`tools/make_icon.py`) em 16, 24, 32, 48, 64, 128 e 256 px.
+O nome é ZeroBirus, com a assinatura "by Ferraz" mais pequena e em tinta secundária. O sinal é original: um anel grosso, quase um zero, com um pequeno quadrado encaixado numa abertura do traço. Lê-se como "zero" e como "o que ficou de fora do anel". Não é um escudo, não tem visto, não imita marcas de antivírus. Está em `src/zerobirus/ui/assets/logo.svg`, e o ícone `packaging/zerobirus.ico` é gerado dele (`tools/make_icon.py`) em 16, 24, 32, 48, 64, 128 e 256 px.
 
 ## 4. Padrões a evitar (verificação)
 
