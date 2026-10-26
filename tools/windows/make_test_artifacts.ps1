@@ -31,6 +31,7 @@ $report.exe_created = Test-Path $exe
 
 # 2. Persistence: a Run value pointing to the program with a mining-like command line.
 $runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+if (-not (Test-Path $runKey)) { New-Item -Path $runKey -Force | Out-Null }
 Set-ItemProperty -Path $runKey -Name $Marker -Value ('"' + $exe + '" ' + $fakeMinerArgs)
 $report.run_key = $true
 
