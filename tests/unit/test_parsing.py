@@ -260,5 +260,5 @@ def test_ps_envelope_items_and_errors() -> None:
 
 @pytest.mark.parametrize("bad", ["not json", "[1,2]", '{"errors":[]}', "123"])
 def test_ps_envelope_rejects_other_shapes(bad: str) -> None:
-    with pytest.raises(ValueError, match="not JSON|unexpected shape"):
+    with pytest.raises(ValueError, match=r"not JSON|unexpected shape"):
         parse_ps_envelope(bad)
