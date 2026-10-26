@@ -404,6 +404,11 @@ def is_system_process_name(name: str) -> bool:
     return _process_key(name) in _PROTECTED_PROCESS_NAMES
 
 
+def is_no_image_process_name(name: str) -> bool:
+    """True for kernel pseudo-processes (System, Registry...) that have no file on disk."""
+    return _process_key(name) in _NO_IMAGE_PROCESSES
+
+
 def _process_key(name: str) -> str:
     key = _fold(name, compat=True).strip().replace("/", "\\").rpartition("\\")[2]
     key = key.strip().rstrip(" .")

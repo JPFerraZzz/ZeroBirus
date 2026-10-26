@@ -1,0 +1,283 @@
+{
+  "elevated": true,
+  "system": {
+    "system_root": "C:\\Windows",
+    "program_files": [
+      "C:\\Program Files",
+      "C:\\Program Files (x86)"
+    ],
+    "program_data": "C:\\ProgramData",
+    "users_dir": "C:\\Users",
+    "profile_roots": [
+      "C:\\Users\\Ana"
+    ],
+    "personal_folders": [
+      "C:\\Users\\Ana\\Documents",
+      "C:\\Users\\Ana\\Desktop",
+      "C:\\Users\\Ana\\Pictures"
+    ],
+    "own_pids": []
+  },
+  "processes": [
+    {
+      "pid": 4,
+      "name": "System",
+      "path": null,
+      "cmdline": "",
+      "user": "NT AUTHORITY\\SYSTEM",
+      "parent_pid": 0,
+      "cpu_percent": 0.2
+    },
+    {
+      "pid": 132,
+      "name": "Registry",
+      "path": "Registry",
+      "cmdline": "",
+      "user": "NT AUTHORITY\\SYSTEM",
+      "parent_pid": 4,
+      "cpu_percent": 0.0
+    },
+    {
+      "pid": 0,
+      "name": "System Idle Process",
+      "path": null,
+      "cmdline": "",
+      "user": "NT AUTHORITY\\SYSTEM",
+      "parent_pid": 0,
+      "cpu_percent": 92.0
+    },
+    {
+      "pid": 812,
+      "name": "svchost.exe",
+      "path": "C:\\Windows\\System32\\svchost.exe",
+      "cmdline": "C:\\Windows\\System32\\svchost.exe -k netsvcs",
+      "user": "NT AUTHORITY\\SYSTEM",
+      "parent_pid": 640,
+      "cpu_percent": 0.5
+    },
+    {
+      "pid": 4120,
+      "name": "explorer.exe",
+      "path": "C:\\Windows\\explorer.exe",
+      "cmdline": "C:\\Windows\\explorer.exe",
+      "user": "DESKTOP-A1\\Ana",
+      "parent_pid": null,
+      "cpu_percent": 1.0
+    },
+    {
+      "pid": 2201,
+      "name": "MsMpEng.exe",
+      "path": "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.24090.11-0\\MsMpEng.exe",
+      "cmdline": "\"C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.24090.11-0\\MsMpEng.exe\"",
+      "user": "NT AUTHORITY\\SYSTEM",
+      "parent_pid": 640,
+      "cpu_percent": 4.0
+    },
+    {
+      "pid": 7001,
+      "name": "Discord.exe",
+      "path": "C:\\Users\\Ana\\AppData\\Local\\Discord\\app-1.0.9170\\Discord.exe",
+      "cmdline": "\"C:\\Users\\Ana\\AppData\\Local\\Discord\\app-1.0.9170\\Discord.exe\" --type=renderer",
+      "user": "DESKTOP-A1\\Ana",
+      "parent_pid": 4120,
+      "cpu_percent": 8.0
+    },
+    {
+      "pid": 7002,
+      "name": "Spotify.exe",
+      "path": "C:\\Users\\Ana\\AppData\\Roaming\\Spotify\\Spotify.exe",
+      "cmdline": "\"C:\\Users\\Ana\\AppData\\Roaming\\Spotify\\Spotify.exe\"",
+      "user": "DESKTOP-A1\\Ana",
+      "parent_pid": 4120,
+      "cpu_percent": 3.0
+    },
+    {
+      "pid": 7003,
+      "name": "steam.exe",
+      "path": "C:\\Program Files (x86)\\Steam\\steam.exe",
+      "cmdline": "\"C:\\Program Files (x86)\\Steam\\steam.exe\"",
+      "user": "DESKTOP-A1\\Ana",
+      "parent_pid": 4120,
+      "cpu_percent": 2.0
+    },
+    {
+      "pid": 7004,
+      "name": "OneDrive.exe",
+      "path": "C:\\Users\\Ana\\AppData\\Local\\Microsoft\\OneDrive\\OneDrive.exe",
+      "cmdline": "\"C:\\Users\\Ana\\AppData\\Local\\Microsoft\\OneDrive\\OneDrive.exe\" /background",
+      "user": "DESKTOP-A1\\Ana",
+      "parent_pid": 4120,
+      "cpu_percent": 1.0
+    },
+    {
+      "pid": 901,
+      "name": "svchost.exe",
+      "path": null,
+      "cmdline": "",
+      "user": "NT AUTHORITY\\SYSTEM",
+      "parent_pid": 640,
+      "cpu_percent": 0.0
+    }
+  ],
+  "autoruns": [
+    {
+      "source": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+      "name": "Discord",
+      "command": "\"C:\\Users\\Ana\\AppData\\Local\\Discord\\Update.exe\" --processStart Discord.exe",
+      "user": "DESKTOP-A1\\Ana",
+      "kind": "run"
+    },
+    {
+      "source": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+      "name": "OneDrive",
+      "command": "\"C:\\Users\\Ana\\AppData\\Local\\Microsoft\\OneDrive\\OneDrive.exe\" /background",
+      "user": "DESKTOP-A1\\Ana",
+      "kind": "run"
+    },
+    {
+      "source": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+      "name": "Shell",
+      "command": "explorer.exe",
+      "user": "",
+      "kind": "winlogon"
+    },
+    {
+      "source": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+      "name": "Userinit",
+      "command": "C:\\Windows\\system32\\userinit.exe,",
+      "user": "",
+      "kind": "winlogon"
+    }
+  ],
+  "tasks": [
+    {
+      "folder": "\\",
+      "name": "GoogleUpdateTaskMachineCore",
+      "enabled": true,
+      "actions": [
+        {
+          "execute": "C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe",
+          "arguments": "/c"
+        }
+      ],
+      "triggers": [
+        "TimeTrigger"
+      ],
+      "repeat_minutes": 60
+    }
+  ],
+  "services": [
+    {
+      "name": "Dnscache",
+      "display_name": "DNS Client",
+      "image_command": "C:\\Windows\\System32\\svchost.exe -k NetworkService -p",
+      "start": "automatic",
+      "account": "NT AUTHORITY\\NetworkService"
+    },
+    {
+      "name": "AcmeBackup",
+      "display_name": "Acme Backup",
+      "image_command": "\"C:\\Program Files\\Acme Backup\\acmesvc.exe\"",
+      "start": "automatic",
+      "account": "LocalSystem"
+    }
+  ],
+  "connections": [],
+  "defender": [
+    {
+      "realtime": true,
+      "tamper_protection": true,
+      "passive_mode": false,
+      "signature_age_days": 1,
+      "threats": [],
+      "exclusion_paths": [],
+      "exclusion_extensions": [],
+      "exclusion_processes": [],
+      "exclusion_ips": []
+    }
+  ],
+  "hosts": [
+    "# Copyright (c) 1993-2009 Microsoft Corp.",
+    "#",
+    "127.0.0.1 localhost",
+    "::1 localhost"
+  ],
+  "wmi_bindings": [],
+  "files": [
+    {
+      "path": "C:\\Users\\Ana\\AppData\\Local\\Discord\\app-1.0.9170\\Discord.exe",
+      "size": 100000000,
+      "mtime": 1760000000
+    },
+    {
+      "path": "C:\\Users\\Ana\\AppData\\Local\\Discord\\Update.exe",
+      "size": 5000000,
+      "mtime": 1760000000
+    }
+  ],
+  "signatures": [
+    {
+      "path": "C:\\Windows\\System32\\svchost.exe",
+      "status": "valid",
+      "kind": "microsoft",
+      "subject": "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+    },
+    {
+      "path": "C:\\Windows\\explorer.exe",
+      "status": "valid",
+      "kind": "microsoft",
+      "subject": "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+    },
+    {
+      "path": "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.24090.11-0\\MsMpEng.exe",
+      "status": "valid",
+      "kind": "microsoft",
+      "subject": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+    },
+    {
+      "path": "C:\\Users\\Ana\\AppData\\Local\\Discord\\app-1.0.9170\\Discord.exe",
+      "status": "valid",
+      "kind": "other",
+      "subject": "CN=Discord Inc., O=Discord Inc., L=San Francisco, S=California, C=US"
+    },
+    {
+      "path": "C:\\Users\\Ana\\AppData\\Roaming\\Spotify\\Spotify.exe",
+      "status": "valid",
+      "kind": "other",
+      "subject": "CN=Spotify AB, O=Spotify AB, L=Stockholm, C=SE"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Steam\\steam.exe",
+      "status": "valid",
+      "kind": "other",
+      "subject": "CN=Valve Corp., O=Valve Corp., L=Bellevue, S=Washington, C=US"
+    },
+    {
+      "path": "C:\\Users\\Ana\\AppData\\Local\\Microsoft\\OneDrive\\OneDrive.exe",
+      "status": "valid",
+      "kind": "microsoft",
+      "subject": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+    },
+    {
+      "path": "C:\\Users\\Ana\\AppData\\Local\\Discord\\Update.exe",
+      "status": "valid",
+      "kind": "other",
+      "subject": "CN=Discord Inc., O=Discord Inc., L=San Francisco, S=California, C=US"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe",
+      "status": "valid",
+      "kind": "other",
+      "subject": "CN=Google LLC, O=Google LLC, L=Mountain View, S=California, C=US"
+    },
+    {
+      "path": "C:\\Program Files\\Acme Backup\\acmesvc.exe",
+      "status": "unsigned",
+      "kind": "unsigned",
+      "subject": ""
+    }
+  ],
+  "hashes": [],
+  "gaps": {},
+  "schema_version": 1
+}

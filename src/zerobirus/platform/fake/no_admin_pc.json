@@ -1,0 +1,135 @@
+{
+  "elevated": false,
+  "system": {
+    "system_root": "C:\\Windows",
+    "program_files": [
+      "C:\\Program Files",
+      "C:\\Program Files (x86)"
+    ],
+    "program_data": "C:\\ProgramData",
+    "users_dir": "C:\\Users",
+    "profile_roots": [
+      "C:\\Users\\Ana"
+    ],
+    "personal_folders": [
+      "C:\\Users\\Ana\\Documents",
+      "C:\\Users\\Ana\\Desktop",
+      "C:\\Users\\Ana\\Pictures"
+    ],
+    "own_pids": []
+  },
+  "processes": [
+    {
+      "pid": 4,
+      "name": "System",
+      "path": null,
+      "cmdline": "",
+      "user": "NT AUTHORITY\\SYSTEM",
+      "parent_pid": 0,
+      "cpu_percent": 0.2
+    },
+    {
+      "pid": 132,
+      "name": "Registry",
+      "path": "Registry",
+      "cmdline": "",
+      "user": "NT AUTHORITY\\SYSTEM",
+      "parent_pid": 4,
+      "cpu_percent": 0.0
+    },
+    {
+      "pid": 0,
+      "name": "System Idle Process",
+      "path": null,
+      "cmdline": "",
+      "user": "NT AUTHORITY\\SYSTEM",
+      "parent_pid": 0,
+      "cpu_percent": 92.0
+    },
+    {
+      "pid": 812,
+      "name": "svchost.exe",
+      "path": "C:\\Windows\\System32\\svchost.exe",
+      "cmdline": "C:\\Windows\\System32\\svchost.exe -k netsvcs",
+      "user": "NT AUTHORITY\\SYSTEM",
+      "parent_pid": 640,
+      "cpu_percent": 0.5
+    },
+    {
+      "pid": 4120,
+      "name": "explorer.exe",
+      "path": "C:\\Windows\\explorer.exe",
+      "cmdline": "C:\\Windows\\explorer.exe",
+      "user": "DESKTOP-A1\\Ana",
+      "parent_pid": null,
+      "cpu_percent": 1.0
+    },
+    {
+      "pid": 2201,
+      "name": "MsMpEng.exe",
+      "path": "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.24090.11-0\\MsMpEng.exe",
+      "cmdline": "\"C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.24090.11-0\\MsMpEng.exe\"",
+      "user": "NT AUTHORITY\\SYSTEM",
+      "parent_pid": 640,
+      "cpu_percent": 4.0
+    }
+  ],
+  "autoruns": [],
+  "tasks": [],
+  "services": [],
+  "connections": [],
+  "defender": [
+    {
+      "realtime": true,
+      "tamper_protection": true,
+      "passive_mode": false,
+      "signature_age_days": 1,
+      "threats": null,
+      "exclusion_paths": null,
+      "exclusion_extensions": null,
+      "exclusion_processes": null,
+      "exclusion_ips": null
+    }
+  ],
+  "hosts": [
+    "# Copyright (c) 1993-2009 Microsoft Corp.",
+    "#",
+    "127.0.0.1 localhost",
+    "::1 localhost"
+  ],
+  "wmi_bindings": [],
+  "files": [],
+  "signatures": [
+    {
+      "path": "C:\\Windows\\System32\\svchost.exe",
+      "status": "valid",
+      "kind": "microsoft",
+      "subject": "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+    },
+    {
+      "path": "C:\\Windows\\explorer.exe",
+      "status": "valid",
+      "kind": "microsoft",
+      "subject": "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+    },
+    {
+      "path": "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.24090.11-0\\MsMpEng.exe",
+      "status": "valid",
+      "kind": "microsoft",
+      "subject": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+    }
+  ],
+  "hashes": [],
+  "gaps": {
+    "wmi_bindings": [
+      "sem administrador não é possível ler root\\subscription"
+    ],
+    "autoruns": [
+      "o registo de outros utilizadores (HKEY_USERS) não é legível sem administrador"
+    ],
+    "connections": [
+      "sem administrador não se vê o programa de todas as ligações"
+    ]
+  },
+  "schema_version": 1
+}

@@ -150,14 +150,24 @@ class ProcessInfo:
     cpu_percent: float | None = None
 
 
+# Values of ``AutorunEntry.kind``.
+AUTORUN_KINDS = ("run", "runonce", "policies_run", "winlogon", "appinit", "ifeo", "startup_folder")
+
+
 @dataclass(frozen=True, slots=True)
 class AutorunEntry:
-    """Something that starts with Windows: registry value, startup shortcut, Winlogon..."""
+    """Something that starts with Windows: registry value, startup shortcut, Winlogon...
+
+    ``source`` is a human label (for example the registry key); ``kind`` is one of
+    ``AUTORUN_KINDS`` and is what the scanners use. For ``winlogon`` the ``name`` is the
+    value (``Shell`` or ``Userinit``); for ``ifeo`` it is the image name being debugged.
+    """
 
     source: str
     name: str
     command: str
     user: str = ""
+    kind: str = "run"
 
 
 @dataclass(frozen=True, slots=True)

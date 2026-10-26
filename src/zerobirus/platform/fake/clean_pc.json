@@ -9,12 +9,12 @@
     "program_data": "C:\\ProgramData",
     "users_dir": "C:\\Users",
     "profile_roots": [
-      "C:\\Users\\Demo"
+      "C:\\Users\\Ana"
     ],
     "personal_folders": [
-      "C:\\Users\\Demo\\Documents",
-      "C:\\Users\\Demo\\Desktop",
-      "C:\\Users\\Demo\\Pictures"
+      "C:\\Users\\Ana\\Documents",
+      "C:\\Users\\Ana\\Desktop",
+      "C:\\Users\\Ana\\Pictures"
     ],
     "own_pids": []
   },
@@ -25,7 +25,26 @@
       "path": null,
       "cmdline": "",
       "user": "NT AUTHORITY\\SYSTEM",
-      "parent_pid": 0
+      "parent_pid": 0,
+      "cpu_percent": 0.2
+    },
+    {
+      "pid": 132,
+      "name": "Registry",
+      "path": "Registry",
+      "cmdline": "",
+      "user": "NT AUTHORITY\\SYSTEM",
+      "parent_pid": 4,
+      "cpu_percent": 0.0
+    },
+    {
+      "pid": 0,
+      "name": "System Idle Process",
+      "path": null,
+      "cmdline": "",
+      "user": "NT AUTHORITY\\SYSTEM",
+      "parent_pid": 0,
+      "cpu_percent": 92.0
     },
     {
       "pid": 812,
@@ -33,37 +52,71 @@
       "path": "C:\\Windows\\System32\\svchost.exe",
       "cmdline": "C:\\Windows\\System32\\svchost.exe -k netsvcs",
       "user": "NT AUTHORITY\\SYSTEM",
-      "parent_pid": 640
+      "parent_pid": 640,
+      "cpu_percent": 0.5
     },
     {
       "pid": 4120,
       "name": "explorer.exe",
       "path": "C:\\Windows\\explorer.exe",
       "cmdline": "C:\\Windows\\explorer.exe",
-      "user": "DEMO\\Demo",
-      "parent_pid": null
-    }
-  ],
-  "schema_version": 1,
-  "signatures": [
-    {
-      "path": "C:\\Windows\\System32\\svchost.exe",
-      "status": "valid",
-      "kind": "microsoft",
-      "subject": "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+      "user": "DESKTOP-A1\\Ana",
+      "parent_pid": null,
+      "cpu_percent": 1.0
     },
     {
-      "path": "C:\\Windows\\explorer.exe",
-      "status": "valid",
-      "kind": "microsoft",
-      "subject": "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+      "pid": 2201,
+      "name": "MsMpEng.exe",
+      "path": "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.24090.11-0\\MsMpEng.exe",
+      "cmdline": "\"C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.24090.11-0\\MsMpEng.exe\"",
+      "user": "NT AUTHORITY\\SYSTEM",
+      "parent_pid": 640,
+      "cpu_percent": 4.0
     }
   ],
-  "hosts": [
-    "# Copyright (c) 1993-2009 Microsoft Corp.",
-    "127.0.0.1 localhost",
-    "::1 localhost"
+  "autoruns": [
+    {
+      "source": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+      "name": "Shell",
+      "command": "explorer.exe",
+      "user": "",
+      "kind": "winlogon"
+    },
+    {
+      "source": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+      "name": "Userinit",
+      "command": "C:\\Windows\\system32\\userinit.exe,",
+      "user": "",
+      "kind": "winlogon"
+    }
   ],
+  "tasks": [
+    {
+      "folder": "\\Microsoft\\Windows\\Defrag\\",
+      "name": "ScheduledDefrag",
+      "enabled": true,
+      "actions": [
+        {
+          "execute": "%windir%\\system32\\defrag.exe",
+          "arguments": "-c -h -o -$"
+        }
+      ],
+      "triggers": [
+        "TimeTrigger"
+      ],
+      "repeat_minutes": null
+    }
+  ],
+  "services": [
+    {
+      "name": "Dnscache",
+      "display_name": "DNS Client",
+      "image_command": "C:\\Windows\\System32\\svchost.exe -k NetworkService -p",
+      "start": "automatic",
+      "account": "NT AUTHORITY\\NetworkService"
+    }
+  ],
+  "connections": [],
   "defender": [
     {
       "realtime": true,
@@ -76,5 +129,43 @@
       "exclusion_processes": [],
       "exclusion_ips": []
     }
-  ]
+  ],
+  "hosts": [
+    "# Copyright (c) 1993-2009 Microsoft Corp.",
+    "#",
+    "127.0.0.1 localhost",
+    "::1 localhost"
+  ],
+  "wmi_bindings": [
+    {
+      "filter_name": "SCM Event Log Filter",
+      "consumer_name": "SCM Event Log Consumer",
+      "consumer_class": "NTEventLogEventConsumer",
+      "command": ""
+    }
+  ],
+  "files": [],
+  "signatures": [
+    {
+      "path": "C:\\Windows\\System32\\svchost.exe",
+      "status": "valid",
+      "kind": "microsoft",
+      "subject": "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+    },
+    {
+      "path": "C:\\Windows\\explorer.exe",
+      "status": "valid",
+      "kind": "microsoft",
+      "subject": "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+    },
+    {
+      "path": "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.24090.11-0\\MsMpEng.exe",
+      "status": "valid",
+      "kind": "microsoft",
+      "subject": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+    }
+  ],
+  "hashes": [],
+  "gaps": {},
+  "schema_version": 1
 }
