@@ -156,6 +156,20 @@ def test_wmi_subscriptions_are_read_or_reported(inspector: Any) -> None:
     assert observed.items or observed.gaps or observed.items == ()
 
 
+def test_raw_signature_rows_for_diagnosis() -> None:
+    """Prints what Get-AuthenticodeSignature really returns, to read the shape in the log."""
+    ps = mod("ps")
+    root = os.environ["SYSTEMROOT"]
+    paths = [
+        os.path.join(root, "System32", "cmd.exe"),
+        os.path.join(root, "System32", "kernel32.dll"),
+        os.path.join(root, "explorer.exe"),
+    ]
+    rows = ps.run_json("signatures", {"paths": paths}, system_root=root)
+    _show("raw signature rows", rows)
+    assert len(rows) == 3
+
+
 def test_signatures_valid_microsoft_unknown_for_text_and_nothing_made_up(
     inspector: Any, tmp_path: Path
 ) -> None:

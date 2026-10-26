@@ -216,3 +216,24 @@ def test_expand_vars_uses_the_given_profile_and_leaves_unknown_names() -> None:
     assert expand_vars(r"%appdata%\a", env) == r"C:\Users\Bob\AppData\Roaming\a"
     assert expand_vars(r"%NOPE%\a", env) == r"%NOPE%\a"
     assert expand_vars(r"%TEMP%\a", env) == r"C:\Users\Bob\AppData\Local\Temp\a"
+
+
+def test_empty_strings_from_powershell_are_not_exclusions() -> None:
+    """On a real runner PowerShell gave [''] for properties that had no values."""
+    raw: dict[str, object] = {
+        "realtime": True,
+        "tamper": True,
+        "amrunning": "Normal",
+        "sigage": 1,
+        "threats": [],
+        "excl_paths": ["C:\\", "D:\\"],
+        "excl_ext": [""],
+        "excl_proc": [""],
+        "excl_ip": [""],
+        "errors": [],
+    }
+    state = parse_defender(raw, elevated=True).items[0]
+    assert state.exclusion_paths == ("C:\\", "D:\\")
+    assert state.exclusion_extensions == ()
+    assert state.exclusion_processes == ()
+    assert state.exclusion_ips == ()

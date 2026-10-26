@@ -74,19 +74,24 @@ def to_process_info(proc: psutil.Process, cpu_percent: float | None = None) -> P
     try:
         pid = proc.pid
         name = proc.name()
-    except (psutil.NoSuchProcess, *_READ_ERRORS):
+        args: list[str] = _safe(proc.cmdline, [])
+        exe = _safe(proc.exe, "")
+        user = _safe(proc.username, "")
+        parent: int | None
+        try:
+            parent = proc.ppid()
+        except _READ_ERRORS:
+            parent = None
+    except psutil.NoSuchProcess:
+        return None  # it ended while we were reading it
+    except _READ_ERRORS:
         return None
-    args: list[str] = _safe(proc.cmdline, [])
-    try:
-        parent: int | None = proc.ppid()
-    except (psutil.NoSuchProcess, *_READ_ERRORS):
-        parent = None
     return ProcessInfo(
         pid=pid,
         name=name,
-        path=_canonical(_safe(proc.exe, "")),
+        path=_canonical(exe),
         cmdline=" ".join(_quote(a) for a in args),
-        user=_safe(proc.username, ""),
+        user=user,
         parent_pid=parent,
         cpu_percent=cpu_percent,
     )

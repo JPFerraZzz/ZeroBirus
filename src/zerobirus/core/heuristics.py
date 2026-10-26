@@ -28,12 +28,19 @@ SHELLS = frozenset(
 _CRACK_WORDS = ("crack", "keygen", "kmspico", "activator")
 
 
+_GUID_NAME = re.compile(
+    r"^\{?[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}\}?(?:v[0-9.]+)?$", re.IGNORECASE
+)
+
+
 def looks_random(name: str) -> bool:
     """True for names that look machine-generated (``kzqpx``, ``Qw3rTy``, ``a1b2c3d4``).
 
     A weak signal on its own; it never decides anything. Real words have vowels in
     ordinary proportion, so names such as ``Discord``, ``Spotify`` and ``Python312`` pass.
     """
+    if _GUID_NAME.match(name.strip()):
+        return False  # installer caches (ProgramData\Package Cache\{GUID}) are not droppers
     core = re.sub(r"[^a-z0-9]", "", name.lower())
     if len(core) < 5:
         return False

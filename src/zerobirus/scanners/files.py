@@ -39,8 +39,22 @@ def persistence_targets(inspector: Inspector) -> set[str]:
     return out
 
 
+def _narrow_exclusions(exclusions: tuple[str, ...]) -> list[str]:
+    """Absolute folder or file exclusions, without wildcards and without whole drives.
+
+    A whole-drive exclusion is already one finding in the Defender check; counting it
+    against every file on the disk would bury everything else.
+    """
+    out: list[str] = []
+    for e in exclusions:
+        n = normalize_windows_path(e.rstrip("*"))
+        if e[1:3] == ":\\" and len(n) > 3 and "*" not in e.rstrip("*"):
+            out.append(e.rstrip("*"))
+    return out
+
+
 def _excluded(path: str, exclusions: tuple[str, ...]) -> bool:
-    return under_any(path, [e for e in exclusions if e[1:3] == ":\\"])
+    return under_any(path, _narrow_exclusions(exclusions))
 
 
 def judge(
@@ -55,6 +69,8 @@ def judge(
 ) -> Finding | None:
     n = normalize_windows_path(f.path)
     signals: list[Signal] = location_signals(f.path, ctx, rules, code="file_in_writable")
+    if not signals:
+        return None  # not in a user-writable place (for example the Defender platform folder)
     signals += crack_signals(f.path, rules)
     is_persisted = n in persisted
     is_excluded = _excluded(f.path, exclusions)
@@ -62,7 +78,8 @@ def judge(
         signals.append(rules.signal("referenced_by_persistence"))
     if n in running:
         signals.append(rules.signal("running_from_file"))
-    if is_excluded and is_persisted:
+    in_writable = any(s.code == "file_in_writable" for s in signals)
+    if is_excluded and is_persisted and in_writable:
         signals.append(rules.signal("defender_exclusion_and_persistence"))
     elif is_excluded:
         signals.append(rules.signal("defender_exclusion_covers"))

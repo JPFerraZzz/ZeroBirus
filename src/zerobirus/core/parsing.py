@@ -135,7 +135,7 @@ def _opt_list(value: Any, *, readable: bool) -> tuple[str, ...] | None:
     """A list from PowerShell. ``None`` (and "N/A: ..." markers) mean "could not be read"."""
     if not readable or value is None:
         return None
-    items = [v for v in _list(value) if isinstance(v, str)]
+    items = [v for v in _list(value) if isinstance(v, str) and v.strip()]
     if any(v.upper().startswith("N/A:") for v in items):
         return None
     return tuple(items)

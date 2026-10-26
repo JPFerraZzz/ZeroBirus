@@ -29,7 +29,7 @@
     "shell_command": {"weight": 25, "strong": false, "threat": null, "text": "Executa através de uma consola de comandos ou de um interpretador de scripts."},
     "file_in_writable": {"weight": 15, "strong": false, "threat": null, "text": "Executável numa pasta gravável pelo utilizador."},
     "referenced_by_persistence": {"weight": 40, "strong": false, "threat": "trojan", "text": "Algo no arranque do Windows aponta para este ficheiro."},
-    "defender_exclusion_covers": {"weight": 30, "strong": false, "threat": null, "text": "O Microsoft Defender tem uma exclusão que cobre este ficheiro."},
+    "defender_exclusion_covers": {"weight": 10, "strong": false, "threat": null, "text": "O Microsoft Defender tem uma exclusão que cobre este ficheiro."},
     "defender_exclusion_and_persistence": {"weight": 100, "strong": true, "threat": "trojan", "text": "O Defender foi instruído a ignorar uma pasta com um executável que também arranca com o Windows."},
     "running_from_file": {"weight": 20, "strong": false, "threat": null, "text": "Está a correr neste momento."},
     "crack_folder": {"weight": 20, "strong": false, "threat": null, "text": "Está numa pasta com nome de crack, keygen ou ativador."},

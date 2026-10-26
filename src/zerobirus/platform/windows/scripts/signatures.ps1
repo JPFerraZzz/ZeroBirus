@@ -5,8 +5,8 @@ $result = foreach ($p in @($Params.paths)) {
         $s = Get-AuthenticodeSignature -LiteralPath $p
         $subject = ''
         if ($s.SignerCertificate) { $subject = [string]$s.SignerCertificate.Subject }
-        [pscustomobject]@{ path = [string]$p; status = [int]$s.Status; subject = $subject }
+        [pscustomobject]@{ path = [string]$p; status = [int]$s.Status; subject = $subject; detail = [string]$s.StatusMessage }
     } catch {
-        [pscustomobject]@{ path = [string]$p; status = -1; subject = '' }
+        [pscustomobject]@{ path = [string]$p; status = -1; subject = ''; detail = [string]$_.Exception.Message }
     }
 }

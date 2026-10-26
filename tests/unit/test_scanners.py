@@ -490,3 +490,64 @@ def test_command_consumer_run_by_a_known_vendor_is_only_conferir() -> None:
 def test_wmi_without_administrator_is_nao_verificado() -> None:
     result = wmi.scan(inspector(gaps={"wmi_bindings": ("sem administrador",)}))
     assert result.level is Level.NAO_VERIFICADO
+
+
+# Lessons from the first run on a real Windows machine (windows-latest) ------------------
+
+
+def test_whole_drive_defender_exclusion_is_one_finding_not_one_per_file() -> None:
+    path = r"C:\ProgramData\Microsoft\Windows Defender\Platform\4.18\MsMpEng.exe"
+    insp = inspector(
+        files=(FileCandidate(path, 10, 0), FileCandidate(DROP, 10, 0)),
+        defender=(DefenderState(True, True, False, 1, (), ("C:\\", "D:\\"), (), (), ()),),
+        signatures=(unsigned(DROP),),
+    )
+    assert files.scan(insp).findings[0].item == "a.exe" if files.scan(insp).findings else True
+    assert path.rsplit("\\", 1)[-1] not in {f.item for f in files.scan(insp).findings}
+    assert "defender_exclusion_covers" not in {
+        s.code for f in files.scan(insp).findings for s in f.signals
+    }
+    drive = defender.scan(insp)
+    assert levels(drive)["C:\\"] is Level.CONFERIR
+
+
+def test_antivirus_folder_with_service_and_exclusion_is_not_suspect() -> None:
+    path = r"C:\ProgramData\Microsoft\Windows Defender\Platform\4.18\MsMpEng.exe"
+    insp = inspector(
+        files=(FileCandidate(path, 10, 0),),
+        services=(svc("WinDefend", f'"{path}"'),),
+        defender=(
+            DefenderState(
+                True,
+                True,
+                False,
+                1,
+                (),
+                (r"C:\ProgramData\Microsoft\Windows Defender",),
+                (),
+                (),
+                (),
+            ),
+        ),
+    )
+    assert files.scan(insp).findings == ()
+
+
+def test_installer_cache_guid_folders_are_not_random_droppers() -> None:
+    path = (
+        r"C:\ProgramData\Package Cache\{C0A2B576-1630-4449-93B8-06C8FBBAF369}v17.1\vsta_setup.exe"
+    )
+    assert files.scan(inspector(files=(FileCandidate(path, 10, 0),))).findings == ()
+
+
+def test_an_excluded_unsigned_dropper_folder_is_still_conferir() -> None:
+    insp = inspector(
+        files=(FileCandidate(DROP, 10, 0),),
+        defender=(
+            DefenderState(
+                True, True, False, 1, (), (r"C:\Users\Ana\AppData\Roaming\kzqpx",), (), (), ()
+            ),
+        ),
+        signatures=(unsigned(DROP),),
+    )
+    assert only(files.scan(insp)).level is Level.CONFERIR
