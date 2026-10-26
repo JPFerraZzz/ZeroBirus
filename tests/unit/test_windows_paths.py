@@ -88,8 +88,8 @@ def test_windows_resolution_agrees_with_is_protected_path() -> None:
                 if not protected:
                     failures.append(f"{label}: {spelling!r} -> {final!r} NOT protected")
 
-    print("\n".join(report))
-    print("did not resolve (ignored):\n" + "\n".join(unresolved))
+    print(ascii("\n".join(report)))
+    print(ascii("did not resolve (ignored):\n" + "\n".join(unresolved)))
     missing = MUST_RESOLVE - resolved_labels
     assert not missing, f"vacuous test, these spellings never resolved: {sorted(missing)}"
     assert not failures, "\n".join(failures)

@@ -23,7 +23,7 @@ def test_system_pid_4_is_listed_and_protected() -> None:
     ctx = typical_context(system_root=os.environ["SYSTEMROOT"])
     by_pid = {p.pid: p for p in _listing()}
     system = by_pid[4]
-    print(f"PID 4 as produced by the backend: {system!r}")
+    print(f"PID 4 as produced by the backend: {system!a}")
     assert system.name == "System"
     assert is_protected_process(system.name, system.path, ctx, pid=system.pid)
 
@@ -35,7 +35,7 @@ def test_kernel_pseudo_processes_are_protected_as_the_backend_produces_them(name
     if not found:
         pytest.skip(f"{name} is not listed on this runner")
     for p in found:
-        print(f"{name} as produced by the backend: {p!r}")
+        print(f"{name} as produced by the backend: {p!a}")
         assert is_protected_process(p.name, p.path, ctx, pid=p.pid)
 
 
