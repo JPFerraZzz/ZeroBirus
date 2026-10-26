@@ -100,6 +100,9 @@ def test_report_keeps_only_mining_port_connections_in_the_snapshot() -> None:
 def test_report_is_deterministic_and_marks_unverified_checks() -> None:
     a = build_report(run_scan(FakeInspector("no_admin_pc")), generated_at="t")
     b = build_report(run_scan(FakeInspector("no_admin_pc")), generated_at="t")
+    for report in (a, b):  # timings are measurements, the only part that is not deterministic
+        for check in report["checks"]:
+            check.pop("seconds")
     assert a == b
     unverified = {c["check"] for c in a["checks"] if not c["verified"]}
     assert unverified == {"startup", "network", "defender", "wmi_bindings"}
