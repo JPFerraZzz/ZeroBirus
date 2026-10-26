@@ -138,9 +138,7 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
       - run: uv sync --locked
-      - name: Render the interface (offscreen) for four machines at both scales
-        env:
-          QT_QPA_PLATFORM: offscreen
+      - name: Render the interface for four machines at both scales (native Windows platform)
         run: >
           uv run zerobirus screenshots --out screenshots
           --fixture miner_pc --fixture false_positives_pc --fixture no_admin_pc --fixture clean_pc

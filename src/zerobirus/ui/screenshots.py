@@ -10,6 +10,7 @@ points, the case the design has to survive.
 from __future__ import annotations
 
 import os
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -20,8 +21,11 @@ STAGES = ("context", "verify", "diagnosis", "authorize")
 
 def capture(out_dir: Path, *, scale: float, fixture: str) -> list[Path]:
     """Write ``<fixture>-<scale>-<n>-<stage>.png`` files and return their paths."""
-    # Must be set before the QApplication exists.
-    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    # Must be set before the QApplication exists. Off Windows there is no screen to draw on, so
+    # render offscreen. On Windows the native platform is used unless the caller chose one: the
+    # offscreen plugin there finds no system fonts and draws empty boxes instead of text.
+    if sys.platform != "win32":
+        os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     os.environ["QT_SCALE_FACTOR"] = str(scale)
     from zerobirus.platform.fake import FakeInspector
     from zerobirus.ui.app import build_window, make_application
