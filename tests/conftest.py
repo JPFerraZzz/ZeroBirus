@@ -4,6 +4,9 @@ import sys
 import pytest
 from hypothesis import settings
 
+# The interface tests run without a screen (BRIEF section 2, layer 3).
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
 # "ci" is the default. "deep" is for occasional local audits:
 #   HYPOTHESIS_PROFILE=deep uv run pytest tests/unit
 settings.register_profile("ci", max_examples=300, deadline=None)

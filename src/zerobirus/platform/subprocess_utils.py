@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import subprocess
 import threading
 import time
@@ -105,6 +106,9 @@ def run_limited(
             proc.wait()
         for t in readers:
             t.join(2)
+        for pipe in (proc.stdout, proc.stderr, proc.stdin):
+            with contextlib.suppress(OSError):
+                pipe.close()
     if out_over.is_set():
         raise OutputTooLarge(f"output above {max_stdout} bytes")
     return Completed(code, b"".join(out), b"".join(err), err_over.is_set())

@@ -83,7 +83,22 @@ def scan(args: argparse.Namespace) -> int:
     return 0
 
 
+def gui(args: argparse.Namespace) -> int:
+    """Open the window. Qt is imported here so the other commands never need it."""
+    try:
+        inspector = _inspector_for(args)
+    except BackendUnavailable as exc:
+        print(f"Erro: {exc}", file=sys.stderr)
+        return 3
+    from zerobirus.ui.app import run_gui
+
+    return run_gui(inspector, demo=bool(args.demo or args.fixture))
+
+
 def main(argv: Sequence[str] | None = None) -> int:
+    arguments = list(argv) if argv is not None else sys.argv[1:]
+    if not arguments and getattr(sys, "frozen", False):
+        arguments = ["gui"]  # a double-clicked ZeroBirus.exe opens the window
     parser = argparse.ArgumentParser(prog="zerobirus")
     parser.add_argument("--version", action="version", version=f"ZeroBirus {__version__}")
     sub = parser.add_subparsers(dest="command")
@@ -105,7 +120,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     scan_parser.add_argument(
         "--no-snapshot", action="store_true", help="leave the replayable snapshot out of the report"
     )
-    args = parser.parse_args(argv)
+    gui_parser = sub.add_parser("gui", help="open the window")
+    gui_parser.add_argument(
+        "--demo", nargs="?", const="miner_pc", choices=fixture_names(), metavar="NAME"
+    )
+    gui_parser.add_argument("--fixture", metavar="FILE_OR_NAME")
+    args = parser.parse_args(arguments)
 
     if args.command == "version":
         print(f"ZeroBirus {__version__}")
@@ -118,6 +138,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1 if failures else 0
     if args.command == "scan":
         return scan(args)
+    if args.command == "gui":
+        return gui(args)
     parser.print_help()
     return 2
 

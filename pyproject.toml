@@ -54,6 +54,7 @@ select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF", "PT"]
 "tests/**" = ["S101"]
 # The style sheet is CSS text; wrapping its lines would make it harder to read.
 "src/zerobirus/ui/theme.py" = ["E501"]
+"src/zerobirus/ui/catalog.py" = ["E501"]
 
 [tool.mypy]
 strict = true

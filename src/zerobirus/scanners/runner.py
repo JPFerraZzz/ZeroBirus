@@ -10,7 +10,7 @@ from __future__ import annotations
 import dataclasses
 import threading
 import time
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 
 from zerobirus.core.models import CheckResult, Finding, Level
@@ -73,12 +73,27 @@ def _with_hashes(
     )
 
 
+class ScanCancelled(Exception):
+    """The person cancelled. Checks are read-only, so nothing is left half done."""
+
+
+ProgressCallback = Callable[[str, CheckResult], None]
+
+
 def run_scan(
     inspector: Inspector,
     *,
     timeout: float = DEFAULT_TIMEOUT,
     scanners: Mapping[str, Scanner] | None = None,
+    on_check_done: ProgressCallback | None = None,
+    cancel: threading.Event | None = None,
 ) -> ScanResult:
+    """Run every check in parallel.
+
+    ``on_check_done`` is called from a worker thread as each check ends (the interface uses
+    it for the progress bar). Setting ``cancel`` makes the call raise ``ScanCancelled`` as soon
+    as possible; running checks are abandoned (they only read).
+    """
     recording = RecordingInspector(inspector)
     chosen = dict(scanners if scanners is not None else SCANNERS)
     results: dict[str, CheckResult] = {}
@@ -88,15 +103,26 @@ def run_scan(
 
     def launch(name: str, scanner: Scanner) -> None:
         started = time.monotonic()
-        results[name] = _run_one(name, scanner, recording, timeout)
+        result = _run_one(name, scanner, recording, timeout)
+        results[name] = result
         seconds[name] = round(time.monotonic() - started, 2)
+        if on_check_done is not None and not (cancel is not None and cancel.is_set()):
+            try:
+                on_check_done(name, result)
+            except Exception:  # a progress listener that went away must not break a check
+                return
 
     for name, scanner in chosen.items():
         t = threading.Thread(target=launch, args=(name, scanner), daemon=True)
         threads[name] = t
         t.start()
-    for t in threads.values():
-        t.join()
+    while any(t.is_alive() for t in threads.values()):
+        if cancel is not None and cancel.is_set():
+            raise ScanCancelled
+        for t in threads.values():
+            t.join(0.05)
+    if cancel is not None and cancel.is_set():
+        raise ScanCancelled
     checks = tuple(results[name] for name in chosen)
     checks = _with_hashes(recording, checks)
     return ScanResult(checks=checks, snapshot=recording.snapshot(), seconds=seconds)

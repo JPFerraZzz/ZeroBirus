@@ -461,3 +461,31 @@ def render_plan_text(
     chosen = [i for i in plan.items if i.id in approved]
     lines.append(f"Itens autorizados: {len(chosen)} de {len(plan.items)}.")
     return "\n".join(lines) + "\n"
+
+
+def plan_to_dict(plan: Plan, approved_ids: Iterable[str]) -> dict[str, object]:
+    """The plan as JSON-ready data, for ``plan.json`` in the session folder."""
+    approved = set(approved_ids)
+    return {
+        "schema_version": PLAN_SCHEMA_VERSION,
+        "items": [
+            {
+                "id": i.id,
+                "action": i.action.value,
+                "target": i.target,
+                "params": dict(i.params),
+                "level": i.level.value,
+                "why": i.why,
+                "finding_id": i.finding_id,
+                "sha256": i.sha256,
+                "default_selected": i.default_selected,
+                "approved": i.id in approved,
+            }
+            for i in plan.items
+        ],
+        "not_plannable": [
+            {"finding_id": n.finding_id, "item": n.item, "reason": n.reason}
+            for n in plan.not_plannable
+        ],
+        "digest_of_approved": digest(i for i in plan.items if i.id in approved),
+    }

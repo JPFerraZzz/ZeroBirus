@@ -27,3 +27,27 @@ def create_inspector() -> Inspector:
     raise BackendUnavailable(
         "A verificação real só funciona em Windows 10 e 11. Neste sistema usa --demo."
     )
+
+
+def relaunch_elevated() -> bool:
+    """Ask Windows to start this program again as administrator. True if it was launched."""
+    if sys.platform == "win32":
+        module: Any = importlib.import_module("zerobirus.platform.windows")
+        return bool(module.relaunch_elevated())
+    return False
+
+
+def high_contrast_active() -> bool:
+    """True when Windows high-contrast mode is on (the interface then uses the system palette)."""
+    if sys.platform == "win32":
+        module: Any = importlib.import_module("zerobirus.platform.windows")
+        return bool(module.high_contrast_active())
+    return False
+
+
+def animations_enabled() -> bool:
+    """False when the person asked Windows to reduce animations. Always True off Windows."""
+    if sys.platform == "win32":
+        module: Any = importlib.import_module("zerobirus.platform.windows")
+        return bool(module.animations_enabled())
+    return True

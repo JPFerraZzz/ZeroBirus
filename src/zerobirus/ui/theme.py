@@ -184,7 +184,8 @@ QLineEdit, QPlainTextEdit, QTextBrowser, QTableView, QTreeView, QListView {{
 }}
 QLineEdit:focus, QPlainTextEdit:focus, QTextBrowser:focus, QTableView:focus, QTreeView:focus,
 QListView:focus {{ border: {fw}px solid {t.accent}; }}
-QTableView {{ gridline-color: {t.rule_soft}; alternate-background-color: {t.surface}; }}
+QTableView {{ gridline-color: {t.rule_soft}; alternate-background-color: {t.surface}; outline: 0; }}
+QTableView::item:focus {{ border: none; outline: none; }}
 QTableView::item {{ padding: {t.space_1}px {t.space_2}px; border-bottom: 1px solid {t.rule_soft}; }}
 QTableView::item:selected, QTreeView::item:selected {{ background: {t.selection}; color: {t.ink}; }}
 QHeaderView::section {{
@@ -203,6 +204,12 @@ QProgressBar {{
 }}
 QProgressBar::chunk {{ background: {t.accent}; }}
 
+QScrollArea {{ background: transparent; border: none; }}
+QScrollArea > QWidget > QWidget {{ background: transparent; }}
+QTabWidget::pane {{ border: 1px solid {t.rule}; background: {t.surface}; top: -1px; }}
+QTabBar::tab {{ background: {t.paper}; border: 1px solid {t.rule}; padding: {t.space_2}px {t.space_4}px; margin-right: 2px; }}
+QTabBar::tab:selected {{ background: {t.surface}; border-bottom-color: {t.surface}; font-weight: 600; }}
+QTabBar::tab:focus {{ border: {t.focus_width}px solid {t.accent}; }}
 QFrame[role="rule"] {{ background: {t.rule}; max-height: 1px; min-height: 1px; border: none; }}
 QSplitter::handle {{ background: {t.rule_soft}; }}
 QSplitter::handle:hover {{ background: {t.rule}; }}
