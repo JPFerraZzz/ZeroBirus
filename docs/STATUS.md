@@ -57,7 +57,7 @@ Nada disto foi testado em Windows real (só no runner windows-latest). Todo o `c
 
 ## Fase 1: leitura
 
-Estado: **código completo e verde, à espera do teste manual do João**. PR #4 (rascunho, até ao fim da Fase 1). O PR #3 (preâmbulo: suíte removível, teste diferencial e dados reais do psutil) foi fundido pelo João a 2026-10-26.
+Estado: **fechada no código; falta só o teste manual do João** (`docs/WINDOWS_TEST_PLAN.md`). PR #4 fundido em main depois do CI verde (Ubuntu, Windows e build do executável). O PR #3 (preâmbulo: suíte removível, teste diferencial e dados reais do psutil) foi fundido pelo João a 2026-10-26.
 
 ### Feito
 
@@ -85,6 +85,14 @@ Fase 1 propriamente dita:
 - `tools/windows/make_test_artifacts.ps1` e `remove_test_artifacts.ps1` e o teste de integração só de deteção.
 - `docs/DETECTION.md` (tabela de sinais gerada e testada contra `scoring.json`).
 
+### Ronda de endurecimento (autonomia total)
+
+- **URLs no redact:** política única (D-001 em `docs/DECISIONS.md`). Utilizador ou carteira de URLs stratum ficam visíveis e vão para `indicators` no relatório; palavras-passe sempre ocultas; utilizador e palavra-passe de outros esquemas ocultos.
+- **Indicadores de mineração:** verificados contra fontes públicas (XMRig, MITRE T1496, regra Sigma, repositórios dos mineradores, sites dos pools) com URL e data em `docs/DETECTION.md`. Sem fonte: "não verificado", sinais fracos, nunca SUSPEITO sozinho. Só a porta 3333 ficou verificada; as outras portas de pools ficam não verificadas.
+- **Perfis sem sessão:** uma linha agrupada NAO_VERIFICADO; issue #5 para ler hives offline na v1.1.
+- **Ponte PowerShell:** ambiente construído de raiz, `system_root` só de `GetSystemWindowsDirectoryW`, scripts com erro por item, saída limitada a 32 MB, stderr redigido, lotes de 200 (D-004). `-EncodedCommand` mantido; o que observar no teste manual está no plano.
+- **Build de desenvolvimento:** job "Windows dev build" do CI (PyInstaller `--onedir`, `--uac-admin`, versão com fabricante Ferraz, ZIP e SHA-256 como artefacto, smoke test do `.exe`).
+
 ### O que o runner Windows real ensinou (corrigido, com teste Linux)
 
 Primeira corrida do backend real em windows-latest:
@@ -105,8 +113,8 @@ Resultado numa máquina real limpa (runner): nenhum SUSPEITO. Os CONFERIR que so
 | Item | Linux | CI Windows (PR #4) | Manual (João) |
 | --- | --- | --- | --- |
 | ruff, mypy (linux e win32), pyright | verde | mypy verde (ruff e pyright só correm no Ubuntu) | não aplicável |
-| pytest unit e golden | verde (1046 passed, 49 skipped) | verde (1069 passed, 8 skipped, run 40411973874) | não testado |
-| testes marcados `windows` (44) | skipped por desenho | verde (43 passed, 1 skipped: Memory Compression) | não testado |
+| pytest unit e golden | verde (1205 passed, 52 skipped) | verde (1249 passed, 8 skipped, run 40416781291) | não testado |
+| testes marcados `windows` (47) | skipped por desenho | verde (46 passed, 1 skipped: Memory Compression) | não testado |
 | Backend Windows (registo, serviços, processos, ligações, tarefas, Defender, WMI, assinaturas, pesquisa de ficheiros) | só os parsers | verde no runner windows-latest | **não testado em Windows real** |
 | Artefactos inofensivos: deteção, nada alterado, limpeza | não aplicável | verde | não testado |
 | `zerobirus scan --json --out` com o backend real | não aplicável | verde | não testado |
@@ -119,7 +127,7 @@ Auditorias locais depois das alterações ao `safety`: `mutmut` sobre `safety.py
 | Teste | Onde | Motivo |
 | --- | --- | --- |
 | `test_recorded_kernel_pseudo_processes_are_protected[System]`, `[Registry]`, `[Memory Compression]` | ambos | Não há ainda nenhuma fixture de uma máquina real em `tests/fixtures/recorded/`. O João fornece-as no teste manual. |
-| `test_there_are_recorded_fixtures_to_replay` | ambos | O mesmo: nenhuma fixture `*.expected.json` gravada. |
+| `test_there_are_recorded_fixtures_to_replay` e `test_recorded_machine_gives_the_recorded_verdicts` (conjunto de parâmetros vazio) | ambos | O mesmo: nenhuma fixture `*.expected.json` gravada. |
 | `test_kernel_pseudo_processes_...[Memory Compression]` (psutil real) | Windows | O runner windows-latest não tem esse processo. |
 | `test_windows_backend_not_imported_off_windows`, `test_cli_scan_without_demo_refuses_off_windows` | Windows | Só fazem sentido fora do Windows. |
 | Todos os marcados `windows` | Linux | Por desenho, só correm em Windows. |
