@@ -21,7 +21,7 @@ from zerobirus.platform.recording import RecordingInspector
 from zerobirus.scanners import SCANNERS, Scanner
 from zerobirus.scanners.crosscheck import apply_cross_checks
 
-DEFAULT_TIMEOUT = 90.0
+DEFAULT_TIMEOUT = 240.0
 
 
 @dataclass(frozen=True, slots=True)

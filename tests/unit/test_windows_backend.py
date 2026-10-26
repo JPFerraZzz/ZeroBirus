@@ -237,6 +237,12 @@ def test_registry_expansion_never_uses_the_process_environment(
     assert variables["SystemRoot"].lower().endswith("windows")
 
 
+def test_powershell_processes_are_limited_to_two_at_a_time_with_a_long_enough_timeout() -> None:
+    ps = mod("ps")
+    assert ps.MAX_CONCURRENT == 2
+    assert ps.DEFAULT_TIMEOUT >= 120
+
+
 def test_a_script_reports_per_item_errors_and_keeps_the_good_items() -> None:
     ps = mod("ps")
     root = mod("inspector").windows_directory()
