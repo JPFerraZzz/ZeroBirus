@@ -1,0 +1,22 @@
+{
+  "process_names": [
+    "xmrig", "xmr-stak", "xmrig-cuda", "xmrig-notls", "nbminer", "t-rex", "trex", "phoenixminer",
+    "ethminer", "cpuminer", "cpuminer-multi", "minerd", "cgminer", "bfgminer", "lolminer",
+    "gminer", "nanominer", "srbminer-multi", "claymore", "teamredminer", "nicehash", "randomx"
+  ],
+  "strong_markers": [
+    "stratum+tcp://", "stratum+ssl://", "stratum+tls://", "stratum+udp://", "stratum2+tcp://",
+    "--donate-level", "--donate-over-proxy", "randomx", "cryptonight", "--nicehash"
+  ],
+  "weak_markers": [
+    "--algo", "--coin", "--threads", "--cpu-priority", "--rig-id", "--tls", "--keepalive",
+    "--url=", "--user=", "--pass=", "--max-cpu-usage", "--background"
+  ],
+  "weak_markers_needed": 2,
+  "ports": [3333, 3334, 4444, 5555, 7777, 14433, 14444, 45700],
+  "pool_domain_fragments": [
+    "nanopool.org", "supportxmr.com", "minexmr.com", "moneroocean.stream", "2miners.com",
+    "f2pool.com", "ethermine.org", "hashvault.pro", "herominers.com", "unmineable.com",
+    "nicehash.com", "c3pool.com", "xmrpool.eu", "monerohash.com", "miningpoolhub.com"
+  ]
+}

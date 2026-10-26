@@ -1,0 +1,17 @@
+{
+  "microsoft_organisations": ["microsoft corporation", "microsoft windows"],
+  "antivirus_organisations": [
+    "kaspersky", "avast", "avg technologies", "bitdefender", "eset", "malwarebytes", "mcafee",
+    "norton", "symantec", "gen digital", "sophos", "trend micro", "f-secure", "avira",
+    "panda security", "g data", "webroot", "comodo", "emsisoft", "crowdstrike", "sentinelone",
+    "cylance"
+  ],
+  "known_good": [
+    {"name": "discord.exe", "publisher": "discord", "where": "\\appdata\\local\\discord\\", "label": "Discord"},
+    {"name": "spotify.exe", "publisher": "spotify", "where": "\\appdata\\roaming\\spotify\\", "label": "Spotify"},
+    {"name": "steam.exe", "publisher": "valve", "where": "\\steam\\", "label": "Steam"},
+    {"name": "steamwebhelper.exe", "publisher": "valve", "where": "\\steam\\", "label": "Steam"},
+    {"name": "onedrive.exe", "publisher": "microsoft", "where": "\\appdata\\local\\microsoft\\onedrive\\", "label": "OneDrive"}
+  ],
+  "scary_system_names": ["system idle process", "msmpeng.exe", "svchost.exe", "system", "registry", "memory compression"]
+}
