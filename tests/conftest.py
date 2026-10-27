@@ -1,5 +1,6 @@
 import os
 import sys
+from collections.abc import Iterator
 
 import pytest
 from hypothesis import settings
@@ -21,3 +22,22 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     for item in items:
         if "windows" in item.keywords:
             item.add_marker(skip)
+
+
+@pytest.fixture(autouse=True)
+def finish_background_threads() -> Iterator[None]:
+    """A QThread destroyed while it still runs aborts the whole process. After every test,
+    let each interface window's worker threads finish before the window is torn down."""
+    yield
+    if "PySide6.QtWidgets" not in sys.modules:
+        return
+    from PySide6.QtWidgets import QApplication
+
+    from zerobirus.ui.main_window import MainWindow
+
+    if not isinstance(QApplication.instance(), QApplication):
+        return
+    for widget in QApplication.topLevelWidgets():
+        if isinstance(widget, MainWindow):
+            widget.scan_page.cancel()
+            widget.wait_all()

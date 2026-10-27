@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QResizeEvent
+from PySide6.QtGui import QCloseEvent, QResizeEvent
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -429,6 +429,12 @@ class MainWindow(QMainWindow):
             return purge_session_work(session) if session is not None else []
 
         self.after_page.configure(lines, save, purge)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """Never destroy a running worker (a removal in progress finishes first)."""
+        self.scan_page.cancel()
+        self.wait_all()
+        super().closeEvent(event)
 
     def wait_all(self) -> None:
         """Wait for every background thread (tests and shutdown)."""
