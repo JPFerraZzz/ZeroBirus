@@ -162,7 +162,11 @@ def test_temp_cleaning_goes_to_quarantine_and_deleting_it_asks_first(
 
     answers: list[QMessageBox.StandardButton] = [QMessageBox.StandardButton.No]
     setter: Callable[..., None] = getattr(monkeypatch, "setattr")  # noqa: B009
-    setter(QMessageBox, "question", lambda *a, **k: answers[0])
+
+    def fake_question(*_args: object, **_kw: object) -> QMessageBox.StandardButton:
+        return answers[0]
+
+    setter(QMessageBox, "question", fake_question)
     window.removal_page.delete_button.click()
     assert not any(c.startswith("delete:") for c in ops.calls)  # "No" deletes nothing
     answers[0] = QMessageBox.StandardButton.Yes

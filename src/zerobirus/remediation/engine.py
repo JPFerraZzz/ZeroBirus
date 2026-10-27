@@ -160,6 +160,10 @@ class Remediation:
         self._is_protected: Callable[[str], bool] = is_protected or self._default_guard
         self._hosts_lines = hosts_lines
 
+    @property
+    def session(self) -> Session:
+        return self._session
+
     def _default_guard(self, path: str) -> bool:
         return is_protected_path(path, self._ctx)
 

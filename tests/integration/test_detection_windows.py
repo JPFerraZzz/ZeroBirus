@@ -54,6 +54,9 @@ def _powershell(script: str) -> str:
     return out
 
 
+powershell = _powershell  # public name for the other integration tests
+
+
 def _run_value() -> str | None:
     winreg: Any = importlib.import_module("winreg")
     try:
