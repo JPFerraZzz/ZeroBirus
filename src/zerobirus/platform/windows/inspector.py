@@ -111,6 +111,12 @@ class WindowsInspector:
             own_pids=own_and_parent_pids(),
         )
 
+    def desktop_folder(self) -> str:
+        try:
+            return _canon(knownfolders.known_folder(knownfolders.DESKTOP))
+        except OSError:
+            return ""
+
     # --- registry and file system -------------------------------------------------------
 
     def processes(self) -> Observed[ProcessInfo]:

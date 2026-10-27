@@ -34,6 +34,35 @@ def test_numeric_version_pads_and_ignores_suffixes() -> None:
 
 def test_spec_requests_the_administrator_manifest_and_onedir() -> None:
     spec = (PACKAGING / "zerobirus.spec").read_text("utf-8")
-    assert "uac_admin=True" in spec
+    assert spec.count("uac_admin=True") == 2  # both executables ask for administrator
+    assert "console=False" in spec  # the window opens without a console
+    assert 'name="zerobirus-cli"' in spec
     assert "exclude_binaries=True" in spec  # onedir, not onefile
     assert "COLLECT(" in spec
+
+
+def test_icon_is_a_valid_multi_size_ico_made_from_the_logo() -> None:
+    import struct
+
+    data = (PACKAGING / "zerobirus.ico").read_bytes()
+    reserved, kind, count = struct.unpack_from("<HHH", data)
+    assert (reserved, kind, count) == (0, 1, 7)
+    sizes: list[int] = []
+    for i in range(count):
+        w, _h, _c, _r, planes, bpp, size, offset = struct.unpack_from("<BBBBHHII", data, 6 + 16 * i)
+        sizes.append(w or 256)
+        assert (planes, bpp) == (1, 32)
+        assert data[offset : offset + 8] == b"\x89PNG\r\n\x1a\n"
+        assert offset + size <= len(data)
+    assert sizes == [16, 24, 32, 48, 64, 128, 256]
+
+
+def test_logo_is_original_flat_and_uses_only_theme_colours() -> None:
+    from zerobirus.ui.theme import TOKENS
+
+    svg = (PACKAGING.parent / "src" / "zerobirus" / "ui" / "assets" / "logo.svg").read_text("utf-8")
+    low = svg.lower()
+    for banned in ("gradient", "filter", "shadow", "<text", "<image", "opacity"):
+        assert banned not in low
+    colours = set(__import__("re").findall(r"#[0-9a-fA-F]{6}", svg))
+    assert {c.upper() for c in colours} <= {TOKENS.ink.upper(), TOKENS.accent.upper()}

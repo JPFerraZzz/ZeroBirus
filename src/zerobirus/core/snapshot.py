@@ -50,6 +50,7 @@ class Snapshot:
 
     elevated: bool
     system: SystemContext
+    desktop: str = ""  # the user's Desktop (OneDrive redirection resolved), empty if unknown
     processes: tuple[ProcessInfo, ...] = ()
     autoruns: tuple[AutorunEntry, ...] = ()
     tasks: tuple[TaskInfo, ...] = ()

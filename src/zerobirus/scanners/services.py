@@ -59,6 +59,7 @@ def judge(
         signals=signals,
         evidence=(svc.image_command,),
         path=image,
+        subject=(("kind", "service"), ("name", svc.name), ("image", image or "")),
         description=f"Serviço {svc.name} (arranque: {svc.start}).",
     )
     return finding if finding.level is not Level.OK else None

@@ -66,7 +66,7 @@ uv run zerobirus scan --json --out com-admin.json
 
 Esperado: a segunda dá menos NAO_VERIFICADO do que a primeira (Defender, WMI, tarefas e ligações precisam de administrador). Se a primeira disser OK em alguma dessas, é um erro: anota.
 
-Tempo esperado: de 30 s a poucos minutos. Cada verificação tem um limite de 90 s e acaba como NAO_VERIFICADO se o ultrapassar. O relatório guarda os segundos de cada uma.
+Tempo esperado: de 30 s a poucos minutos. Cada verificação tem um limite de 240 s (cada chamada ao PowerShell, 120 s, com no máximo duas em simultâneo) e acaba como NAO_VERIFICADO se o ultrapassar. O relatório guarda os segundos de cada uma.
 
 Sem `--json` o comando imprime um resumo em português no ecrã.
 

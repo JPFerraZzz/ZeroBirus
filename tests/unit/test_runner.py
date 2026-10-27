@@ -1,11 +1,13 @@
 import threading
 import time
 
+import pytest
+
 from zerobirus.core.models import CheckResult, Level
 from zerobirus.platform.base import Inspector
 from zerobirus.platform.fake import FakeInspector
 from zerobirus.scanners import Scanner
-from zerobirus.scanners.runner import run_scan
+from zerobirus.scanners.runner import ScanCancelled, run_scan
 
 
 def ok(inspector: Inspector) -> CheckResult:
@@ -69,3 +71,56 @@ def test_the_backend_is_asked_once_per_question_even_with_parallel_checks() -> N
 
     run_scan(Counting("clean_pc"), scanners={f"c{i}": ask for i in range(6)})
     assert calls == ["processes"]
+
+
+def test_progress_is_reported_per_check_and_cancelling_raises() -> None:
+    done: list[str] = []
+    run_scan(
+        FakeInspector("clean_pc"),
+        scanners={"a": named("a"), "b": named("b")},
+        on_check_done=lambda name, _result: done.append(name),
+    )
+    assert sorted(done) == ["a", "b"]
+
+    release = threading.Event()
+
+    def slow(inspector: Inspector) -> CheckResult:
+        release.wait(5)
+        return CheckResult(check="slow")
+
+    cancel = threading.Event()
+    timer = threading.Timer(0.2, cancel.set)
+    timer.start()
+    try:
+        with pytest.raises(ScanCancelled):
+            run_scan(FakeInspector("clean_pc"), scanners={"slow": slow}, cancel=cancel)
+    finally:
+        release.set()
+        timer.cancel()
+
+
+def test_concurrent_requests_for_the_same_signature_wait_for_the_one_fetch() -> None:
+    """A second check asking for a path that is being fetched must get the answer, not nothing."""
+    from zerobirus.core.models import Observed, Signature, SignatureStatus
+    from zerobirus.platform.recording import RecordingInspector
+
+    calls: list[list[str]] = []
+    path = r"C:\x\a.exe"
+
+    class Slow(FakeInspector):
+        def signatures(self, paths):  # type: ignore[no-untyped-def]
+            calls.append(list(paths))
+            time.sleep(0.3)
+            return Observed((Signature(path, SignatureStatus.UNSIGNED),))
+
+    rec = RecordingInspector(Slow("clean_pc"))
+    results: list[Observed[Signature]] = []
+    threads = [
+        threading.Thread(target=lambda: results.append(rec.signatures([path]))) for _ in range(4)
+    ]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert len(calls) == 1
+    assert all(len(r.items) == 1 and r.items[0].status is SignatureStatus.UNSIGNED for r in results)

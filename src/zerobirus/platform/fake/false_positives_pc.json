@@ -121,14 +121,14 @@
   ],
   "autoruns": [
     {
-      "source": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+      "source": "HKU\\S-1-5-21-1111111111-2222222222-3333333333-1001\\Software\\Microsoft\\Windows\\CurrentVersion\\Run (64)",
       "name": "Discord",
       "command": "\"C:\\Users\\Ana\\AppData\\Local\\Discord\\Update.exe\" --processStart Discord.exe",
       "user": "DESKTOP-A1\\Ana",
       "kind": "run"
     },
     {
-      "source": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+      "source": "HKU\\S-1-5-21-1111111111-2222222222-3333333333-1001\\Software\\Microsoft\\Windows\\CurrentVersion\\Run (64)",
       "name": "OneDrive",
       "command": "\"C:\\Users\\Ana\\AppData\\Local\\Microsoft\\OneDrive\\OneDrive.exe\" /background",
       "user": "DESKTOP-A1\\Ana",

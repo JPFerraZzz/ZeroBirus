@@ -89,6 +89,15 @@ def judge(
         signals=signals,
         evidence=(entry.command,),
         path=target,
+        subject=(
+            ("kind", "autorun"),
+            ("autorun_kind", entry.kind),
+            ("source", entry.source),
+            ("name", entry.name),
+            ("user", entry.user),
+            ("command", entry.command),
+            ("path", entry.path),
+        ),
     )
     return finding if finding.level is not Level.OK else None
 

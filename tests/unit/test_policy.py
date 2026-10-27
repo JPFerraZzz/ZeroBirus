@@ -306,6 +306,30 @@ def test_selftest_redact_detector_catches(source: str) -> None:
     assert redact_violations(source)
 
 
+def qt_violations(source: str) -> list[str]:
+    tree = ast.parse(source)
+    found = [f"imports {m}" for m in _imports(tree) if m.split(".")[0] in {"PySide6", "shiboken6"}]
+    found += [f"string names {s!r}" for s in _strings(tree) if s.startswith("PySide6")]
+    return sorted(found)
+
+
+@pytest.mark.parametrize(
+    "path", [p for p in PY_FILES if p.relative_to(SRC).parts[0] != "ui"], ids=_rel
+)
+def test_logic_never_depends_on_qt(path: Path) -> None:
+    """BRIEF section 7: the logic has no Qt dependency; only ``ui/`` and the CLI's lazy hooks."""
+    allowed = path.relative_to(SRC).as_posix() == "cli.py"  # imports ui lazily, inside functions
+    found = qt_violations(path.read_text("utf-8"))
+    assert allowed or found == []
+
+
+@pytest.mark.parametrize(
+    "source", ["import PySide6", "from PySide6.QtWidgets import QLabel", "import shiboken6"]
+)
+def test_selftest_qt_detector_catches(source: str) -> None:
+    assert qt_violations(source)
+
+
 @pytest.mark.parametrize("path", PY_FILES, ids=_rel)
 def test_no_network_modules(path: Path) -> None:
     assert network_violations(path.read_text("utf-8")) == []

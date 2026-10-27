@@ -26,6 +26,7 @@ import base64
 import json
 import os
 import sys
+import threading
 from dataclasses import dataclass
 from importlib import resources
 from typing import Any
@@ -39,7 +40,10 @@ if sys.platform != "win32":  # pragma: no cover
     raise ImportError("zerobirus.platform.windows only works on Windows")
 
 CREATE_NO_WINDOW = 0x08000000
-DEFAULT_TIMEOUT = 60.0
+DEFAULT_TIMEOUT = 120.0  # a cold start on a slow or busy PC can take a minute
+MAX_CONCURRENT = (
+    2  # PowerShell processes at once: the checks run in parallel, a slow PC must not drown
+)
 MAX_OUTPUT_BYTES = 32 * 1024 * 1024
 MAX_STDERR_BYTES = 8 * 1024
 MAX_MESSAGE_CHARS = 300
@@ -61,6 +65,9 @@ $out = [ordered]@{
 }
 ConvertTo-Json -InputObject $out -Depth 6 -Compress
 """
+
+
+_SLOTS = threading.BoundedSemaphore(MAX_CONCURRENT)
 
 
 class PowerShellError(RuntimeError):
@@ -117,16 +124,17 @@ def run_json(
     ]
     stdin = json.dumps(params if params is not None else {}, ensure_ascii=True).encode("ascii")
     try:
-        done = run_limited(
-            args,
-            stdin=stdin,
-            timeout=timeout,
-            max_stdout=MAX_OUTPUT_BYTES,
-            max_stderr=MAX_STDERR_BYTES,
-            cwd=os.path.join(system_root, "System32"),
-            env=child_environment(system_root),
-            creationflags=CREATE_NO_WINDOW,
-        )
+        with _SLOTS:
+            done = run_limited(
+                args,
+                stdin=stdin,
+                timeout=timeout,
+                max_stdout=MAX_OUTPUT_BYTES,
+                max_stderr=MAX_STDERR_BYTES,
+                cwd=os.path.join(system_root, "System32"),
+                env=child_environment(system_root),
+                creationflags=CREATE_NO_WINDOW,
+            )
     except TimedOut as exc:
         raise PowerShellError(f"o PowerShell excedeu {timeout:.0f} s ({script})") from exc
     except OutputTooLarge as exc:

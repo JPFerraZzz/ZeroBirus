@@ -18,3 +18,12 @@ def create_inspector() -> Inspector:
     from zerobirus.platform.windows.inspector import WindowsInspector
 
     return WindowsInspector()
+
+
+from zerobirus.platform.windows.uiprefs import (  # noqa: E402
+    animations_enabled,
+    high_contrast_active,
+    relaunch_elevated,
+)
+
+__all__ = ["animations_enabled", "create_inspector", "high_contrast_active", "relaunch_elevated"]

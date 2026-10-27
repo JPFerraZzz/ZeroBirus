@@ -58,6 +58,13 @@ class Finding:
     path: str | None = None
     sha256: str | None = None
     advice: str = ""
+    # What the finding is about, as structured facts (for example ``("kind", "task")``,
+    # ``("folder", "\\")``, ``("name", "T")``). The plan is built from these, never by parsing
+    # the display text.
+    subject: tuple[tuple[str, str], ...] = ()
+
+    def subject_get(self, key: str, default: str = "") -> str:
+        return next((v for k, v in self.subject if k == key), default)
 
     @property
     def score(self) -> int:
@@ -168,6 +175,7 @@ class AutorunEntry:
     command: str
     user: str = ""
     kind: str = "run"
+    path: str = ""  # the shortcut or file itself, for ``startup_folder`` entries
 
 
 @dataclass(frozen=True, slots=True)

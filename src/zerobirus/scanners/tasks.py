@@ -78,6 +78,7 @@ def judge(
         signals=signals,
         evidence=evidence,
         path=first_target,
+        subject=(("kind", "task"), ("folder", task.folder), ("name", task.name)),
         description="Tarefa agendada" + ("" if task.enabled else " (desativada)") + ".",
     )
     return finding if finding.level is not Level.OK else None

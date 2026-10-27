@@ -36,6 +36,7 @@ def scan(inspector: Inspector) -> CheckResult:
             rules=rules,
             signals=(signal,),
             evidence=(raw.strip(),),
+            subject=(("kind", "hosts_line"), ("line", raw.strip())),
             description="Linha no ficheiro hosts que redireciona um nome.",
         )
         if finding.level is not Level.OK:

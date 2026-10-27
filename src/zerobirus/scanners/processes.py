@@ -102,6 +102,7 @@ def _judge(
     p: ProcessInfo, ctx: SystemContext, rules: Rules, sig: Signature | None
 ) -> Finding | None:
     key = f"{p.pid}:{p.name}"
+    subject = (("kind", "process"), ("pid", str(p.pid)), ("name", p.name), ("path", p.path or ""))
     where = p.path or "(sem caminho)"
     label = f"{p.name} (PID {p.pid})"
     has_image = bool(p.path) and not is_bare_image_name(p.path or "", p.name)
@@ -134,6 +135,7 @@ def _judge(
                     location=where,
                     rules=rules,
                     path=p.path,
+                    subject=subject,
                     description="Ficheiro do Windows com assinatura inválida ou em falta.",
                     signals=(rules.signal("system_binary_bad_signature"),),
                     advice=(
@@ -149,6 +151,7 @@ def _judge(
                     location=where,
                     rules=rules,
                     path=p.path,
+                    subject=subject,
                     description="Processo normal do Windows, confirmado por assinatura e pasta.",
                     signals=(),
                     level=Level.OK,
@@ -161,6 +164,7 @@ def _judge(
             location=where,
             rules=rules,
             path=p.path,
+            subject=subject,
             description="Tem o nome de um processo do Windows mas corre de fora da sua pasta.",
             signals=[rules.signal("system_name_wrong_location"), *signature_signals(sig, rules)],
             evidence=(p.cmdline,),
@@ -175,6 +179,7 @@ def _judge(
             location=where,
             rules=rules,
             path=p.path,
+            subject=subject,
             description=f"{good.label}: programa conhecido, confirmado por assinatura e pasta.",
             signals=(),
             level=Level.OK,
@@ -199,6 +204,7 @@ def _judge(
         location=where,
         rules=rules,
         path=p.path,
+        subject=subject,
         description="Programa em execução.",
         signals=signals,
         evidence=(p.cmdline,),

@@ -62,6 +62,9 @@ class FakeInspector:
     def system_context(self) -> SystemContext:
         return self._snap.system
 
+    def desktop_folder(self) -> str:
+        return self._snap.desktop
+
     def processes(self) -> Observed[ProcessInfo]:
         return self._observed("processes", self._snap.processes)
 
