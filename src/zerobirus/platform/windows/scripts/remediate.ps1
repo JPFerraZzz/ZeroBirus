@@ -40,7 +40,7 @@ function Get-Props($o) {
 }
 function Get-FwRules($addr) {
     # Looked up by its exact display name: -Group does not match custom group names reliably.
-    @(Get-NetFirewallRule -DisplayName ('ZeroBirus block ' + $addr) -ErrorAction SilentlyContinue | Where-Object { [string]$_.Action -eq 'Block' -and [string]$_.Direction -eq 'Outbound' })
+    @(Get-NetFirewallRule -DisplayName ('ZeroBirus block ' + $addr) -ErrorAction SilentlyContinue | Where-Object { [int]$_.Action -eq 4 -and [int]$_.Direction -eq 2 })  # 4 = Block, 2 = Outbound (CIM returns numbers)
 }
 
 $a = [string]$Params.action

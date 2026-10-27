@@ -4,7 +4,7 @@
 
 A portable tool for Windows 10 and 11 (x64) that guides you step by step through detecting and removing crypto miners, trojans and other malware. It is designed to run from a repair USB stick, with no installation and no internet connection.
 
-**Status: release candidate, not yet released. All seven stages work (context, scan, diagnosis, authorisation, removal with undo, confirmation, what next). It has been tested on a Windows CI runner only; the owner's manual test on real Windows is still pending (see `docs/WINDOWS_TEST_PLAN.md`). No release has been published.**
+**Status: Alpha 1.0, the first official release. All seven stages work. It was tested on a Windows CI runner and by one manual run on a real Windows PC (Temp cleaning: quarantine, undo, permanent delete). The firewall block, the Defender scan and the post-restart check have not been tried on real Windows. Next: a simpler cleaning and optimisation mode for gamers, see `docs/ROADMAP.md`.**
 
 ## How it works
 

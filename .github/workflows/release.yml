@@ -94,5 +94,5 @@ jobs:
           ZIP: ${{ needs.build.outputs.zip }}
         run: |
           gh release create "$TAG" "$ZIP" SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" \
-            --draft --title "ZeroBirus $TAG" \
-            --notes "Unsigned build. Verify the SHA-256 against SHA256SUMS.txt (and the provenance attestation) before running. See LEIA-ME.txt inside the ZIP."
+            --draft --prerelease --title "ZeroBirus Alpha ${TAG}" \
+            --notes "ALPHA. Unsigned build. Verify the SHA-256 against SHA256SUMS.txt (and the provenance attestation) before running. See LEIA-ME.txt inside the ZIP."

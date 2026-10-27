@@ -41,3 +41,11 @@ O ZeroBirus nunca liga nem desliga antivírus ou proteções. Fica para depois, 
 ## D-010 Release em rascunho
 
 O workflow de release cria sempre um rascunho; publicar é manual. Ensaio: `workflow_dispatch`.
+
+## D-011 Primeira release: Alpha 1.0
+
+A pedido do João, depois do primeiro teste em Windows real, a versão atual é publicada como pré-release "ZeroBirus Alpha" com a tag v1.0.0. É um alpha: o que não foi provado em Windows real está dito no README e no STATUS. Se estiver errado: a release despublica-se ou apaga-se.
+
+## D-012 Firewall: verificação por números
+
+O `Get-NetFirewallRule` devolve `Action` e `Direction` como números (4 e 2) no runner; a verificação comparava com texto e nunca confirmava, apesar de a regra ser criada. Passou a comparar números. Encontrado pelo teste de integração e pelo diagnóstico no log do CI.

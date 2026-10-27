@@ -190,6 +190,10 @@ Estado: implementada; não testada em Windows real.
 
 Estado: pronto exceto o teste manual. Versão 0.1.0; `packaging/LEIA-ME.txt`; `packaging/make_zip.ps1`; `.github/workflows/release.yml` (só tag `vX.Y.Z`, cria **rascunho** de release, atestado de proveniência; `workflow_dispatch` é um ensaio sem publicar). Nenhuma tag, nenhuma release.
 
+## Alpha 1.0 (primeira release)
+
+Versão 1.0.0, publicada como pré-release "ZeroBirus Alpha". Testes: CI Windows verde nas Fases 0 a 5; teste manual em Windows real **só** da limpeza de temporários (remover para a quarentena, desfazer, apagar a quarentena). Por provar em Windows real: firewall, análise do Defender, verificação pós-reinício, remoção de artefactos de malware.
+
 ## Próximo passo
 
-**Pronto para release, à espera do teste manual do João** (`docs/WINDOWS_TEST_PLAN.md`, capítulos 8 e 9). Depois do OK: fundir o PR #7, tag `v0.1.0`, publicar o rascunho.
+Plano novo em `docs/ROADMAP.md` (modo simples de limpeza e otimização). Começa pela Fase 6 (ecrã inicial, tema, Autorização com grupos) depois de o João decidir as três questões em aberto desse documento.
