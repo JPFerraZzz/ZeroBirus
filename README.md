@@ -16,7 +16,7 @@ A portable tool for Windows 10 and 11 (x64) that guides you step by step through
 6. **Confirmation**: repeat the scan and see the difference; follow a Microsoft Defender full scan (end detected from Defender events); restart check.
 7. **After**: password and reformat advice, final report, optional cleanup of the work folder.
 
-Run the built version from a ZIP (see `LEIA-ME.txt` inside it), or from source: `uv sync --locked`, `uv run zerobirus` (window), `uv run zerobirus scan --demo` (synthetic data, works on Linux).
+Run the built version from a ZIP (see `LEIA-ME.txt` inside it), or from source: `uv sync --locked`, `uv run zerobirus gui` (window), `uv run zerobirus scan --demo` (synthetic data, works on Linux).
 
 ## Principles
 

@@ -16,7 +16,7 @@ Ferramenta portátil para Windows 10 e 11 (x64) que guia, etapa a etapa, na dete
 6. **Confirmação**: repetir a verificação e ver a diferença; seguir uma análise completa do Defender (o fim vem dos eventos do Defender); verificação pós-reinício.
 7. **Depois**: conselhos (palavras-passe, formatar), relatório final, limpeza opcional da pasta de trabalho.
 
-Usa a versão compilada a partir do ZIP (ver o `LEIA-ME.txt` lá dentro), ou do código: `uv sync --locked`, `uv run zerobirus` (janela), `uv run zerobirus scan --demo` (dados sintéticos, funciona em Linux).
+Usa a versão compilada a partir do ZIP (ver o `LEIA-ME.txt` lá dentro), ou do código: `uv sync --locked`, `uv run zerobirus gui` (janela), `uv run zerobirus scan --demo` (dados sintéticos, funciona em Linux).
 
 ## Princípios
 

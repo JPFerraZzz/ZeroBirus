@@ -61,7 +61,7 @@ jobs:
   package:
     name: Windows dev build (PyInstaller onedir)
     runs-on: windows-latest
-    needs: [ubuntu, windows]
+    needs: [ubuntu]  # the exe is built even while the slow Windows integration tests run
     permissions:
       contents: read
     steps:
