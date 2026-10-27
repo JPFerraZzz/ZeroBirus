@@ -212,6 +212,7 @@ class _Builder:
         self.snapshot = snapshot
         self.items: dict[str, PlanItem] = {}
         self.refused: list[NotPlannable] = []
+        self.registry_seen: set[tuple[str, str, str]] = set()
 
     def add(self, item: PlanItem) -> None:
         self.items.setdefault(item.id, item)
@@ -274,6 +275,12 @@ class _Builder:
             return self.refuse(f, "não foi possível identificar a chave de registo")
         value_name = "Debugger" if kind == "ifeo" else name
         key = m.group("path") if kind != "ifeo" else m.group("path") + "\\" + name
+        # The Run keys are shared by the 64 and 32 bit views: one value, one item (the 64 view
+        # wins), otherwise the second removal finds it already gone.
+        same = (m.group("root").lower(), key.lower(), value_name.lower())
+        if same in self.registry_seen and m.group("view") == "32":
+            return None
+        self.registry_seen.add(same)
         self.add(
             _item(
                 ActionType.REMOVE_REGISTRY_VALUE,

@@ -251,7 +251,7 @@ def test_firewall_block_is_added_verified_and_undone(engine: Remediation) -> Non
 def test_old_temp_entries_are_listed_quarantined_and_restored(
     inspector: Any, engine: Remediation
 ) -> None:
-    temp = Path(os.environ["TEMP"])
+    temp = Path(os.environ["TEMP"]).resolve()  # TEMP may use 8.3 short names
     folder = temp / (MARKER + "_tmp_dir")
     folder.mkdir(exist_ok=True)
     (folder / "a.tmp").write_bytes(b"temporary")
@@ -275,18 +275,22 @@ def test_old_temp_entries_are_listed_quarantined_and_restored(
         powershell("remove_removal_extras.ps1")
 
 
-def test_a_second_run_on_the_same_artifacts_finds_nothing_left_to_do(
+def test_after_the_removal_the_program_and_its_file_are_really_gone(
     artifacts: dict[str, Any], inspector: Any, engine: Remediation
 ) -> None:
     result = run_scan(inspector, timeout=180.0)
     plan = build_plan(result.checks, result.snapshot.system, result.snapshot)
     ours = [i for i in plan.items if marked(i)]
     run_plan(engine, plan, [i.id for i in ours])
+    state = _state()
+    assert not state["process"]
+    assert not state["exe"]
+    assert not state["run_value"]
     again = run_scan(inspector, timeout=180.0)
-    plan2 = build_plan(again.checks, again.snapshot.system, again.snapshot)
-    leftovers = [
-        i
-        for i in plan2.items
-        if marked(i) and i.action in (ActionType.KILL_PROCESS, ActionType.QUARANTINE_FILE)
+    names = [
+        f.item + f.location
+        for c in again.checks
+        if c.check in ("processes", "startup", "files")
+        for f in c.findings
     ]
-    assert not leftovers, leftovers
+    assert not any("zbtest" in n.lower() or MARKER.lower() in n.lower() for n in names), names

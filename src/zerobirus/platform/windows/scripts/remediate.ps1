@@ -32,14 +32,15 @@ function Get-Wmi($filter, $consumer, $class) {
 function Get-Props($o) {
     $h = @{}
     foreach ($p in $o.CimInstanceProperties) {
-        if ($p.Name -notlike '__*' -and $null -ne $p.Value -and $p.Value -isnot [System.Array]) { $h[$p.Name] = $p.Value }
+        # Strings and booleans only: numbers come back from JSON with another CIM type and make
+        # the re-creation fail ("Type mismatch"); the numeric ones are defaults.
+        if ($p.Name -notlike '__*' -and ($p.Value -is [string] -or $p.Value -is [bool])) { $h[$p.Name] = $p.Value }
     }
     $h
 }
 function Get-FwRules($addr) {
-    @(Get-NetFirewallRule -Group 'ZeroBirus' -ErrorAction SilentlyContinue | Where-Object {
-        @((Get-NetFirewallAddressFilter -AssociatedNetFirewallRule $_).RemoteAddress) -contains $addr
-    })
+    # Looked up by its exact display name: -Group does not match custom group names reliably.
+    @(Get-NetFirewallRule -DisplayName ('ZeroBirus block ' + $addr) -ErrorAction SilentlyContinue | Where-Object { [string]$_.Action -eq 'Block' -and [string]$_.Direction -eq 'Outbound' })
 }
 
 $a = [string]$Params.action

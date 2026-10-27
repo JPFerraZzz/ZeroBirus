@@ -17,7 +17,7 @@ $state = [ordered]@{
     wmi_binding = [bool](Get-CimInstance -Namespace $ns -ClassName __FilterToConsumerBinding | Where-Object { $_.Filter.Name -eq ($Marker + 'Filter') })
     service_start = [string]$svc.StartMode
     service_state = [string]$svc.State
-    firewall_rules = @(Get-NetFirewallRule -Group 'ZeroBirus').Count
-    hosts_lines = @(Get-Content -Path $hosts | Where-Object { $_ -match 'zerobirus-test\.invalid' })
+    firewall_rules = @(Get-NetFirewallRule -DisplayName 'ZeroBirus block *').Count
+    hosts_lines = @(Get-Content -Path $hosts | Where-Object { $_ -match 'zerobirus-test\.invalid' } | ForEach-Object { [string]$_ })
 }
 ConvertTo-Json -InputObject $state -Compress

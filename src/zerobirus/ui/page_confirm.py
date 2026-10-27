@@ -202,6 +202,8 @@ class ConfirmPage(Page):
         scanner = self._get_scanner()
         if self.session is None or scanner is None:
             return
+        if self._status_worker is not None and self._status_worker.isRunning():
+            return  # a slow read is still going; never replace a running thread
         try:
             saved: Any = json.loads((self.session.folder / SCAN_FILE).read_text("utf-8"))
         except (OSError, ValueError):

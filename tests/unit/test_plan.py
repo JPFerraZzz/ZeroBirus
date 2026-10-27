@@ -283,3 +283,30 @@ def test_the_plan_text_marks_what_was_authorised_and_says_nothing_changed_yet() 
     assert "[ ] " in text  # CONFERIR items stay unticked
     assert f"Itens autorizados: {len(chosen)} de {len(plan.items)}." in text
     assert "—" not in text
+
+
+def test_a_run_value_seen_in_both_registry_views_is_one_item() -> None:
+    src = r"HKU\S-1-5-21-1-2-3-1001\Software\Microsoft\Windows\CurrentVersion\Run"
+    both = CheckResult(
+        check="startup",
+        findings=tuple(
+            Finding(
+                id=f"f{view}",
+                item="Evil",
+                location="x",
+                level=Level.SUSPEITO,
+                description="d",
+                subject=(
+                    ("kind", "autorun"),
+                    ("autorun_kind", "run"),
+                    ("source", f"{src} ({view})"),
+                    ("name", "Evil"),
+                ),
+            )
+            for view in ("64", "32")
+        ),
+    )
+    plan = build_plan([both], CTX)
+    items = by_action(plan, ActionType.REMOVE_REGISTRY_VALUE)
+    assert len(items) == 1
+    assert items[0].param("view") == "64"

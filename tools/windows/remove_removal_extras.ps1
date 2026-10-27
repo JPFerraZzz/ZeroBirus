@@ -7,7 +7,7 @@ Get-CimInstance -Namespace $ns -ClassName CommandLineEventConsumer -ErrorAction 
 Get-CimInstance -Namespace $ns -ClassName __EventFilter -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq ($Marker + 'Filter') } | Remove-CimInstance -ErrorAction SilentlyContinue
 $sc = Join-Path $env:SystemRoot 'System32\sc.exe'
 if (Get-Service -Name ($Marker + 'Svc') -ErrorAction SilentlyContinue) { & $sc delete ($Marker + 'Svc') | Out-Null }
-Get-NetFirewallRule -Group 'ZeroBirus' -ErrorAction SilentlyContinue | Remove-NetFirewallRule -ErrorAction SilentlyContinue
+Get-NetFirewallRule -DisplayName 'ZeroBirus block *' -ErrorAction SilentlyContinue | Remove-NetFirewallRule -ErrorAction SilentlyContinue
 $hosts = Join-Path $env:SystemRoot 'System32\drivers\etc\hosts'
 if (Test-Path $hosts) {
     $keep = @(Get-Content -Path $hosts | Where-Object { $_ -notmatch 'zerobirus-test\.invalid' })
