@@ -22,6 +22,7 @@ from zerobirus.core.models import (
     Finding,
     Level,
     SignatureStatus,
+    TempEntry,
 )
 from zerobirus.core.safety import (
     SignerKind,
@@ -50,6 +51,8 @@ class ActionType(StrEnum):
     REMOVE_HOSTS_LINE = "remove_hosts_line"
     ADD_HOSTS_BLOCK = "add_hosts_block"
     ADD_FIREWALL_BLOCK = "add_firewall_block"
+    CLEAN_TEMP_FILE = "clean_temp_file"
+    CLEAN_TEMP_FOLDER = "clean_temp_folder"
 
 
 # Groups in the order of BRIEF section 5 stage 3, with the text shown to the person (pt-PT).
@@ -64,6 +67,10 @@ GROUPS: tuple[tuple[str, tuple[ActionType, ...]], ...] = (
     ("Exclusões do Defender", (ActionType.REMOVE_DEFENDER_EXCLUSION,)),
     ("Entradas do ficheiro hosts", (ActionType.REMOVE_HOSTS_LINE, ActionType.ADD_HOSTS_BLOCK)),
     ("Bloqueios de firewall", (ActionType.ADD_FIREWALL_BLOCK,)),
+    (
+        "Ficheiros temporários (opcional)",
+        (ActionType.CLEAN_TEMP_FILE, ActionType.CLEAN_TEMP_FOLDER),
+    ),
 )
 ACTION_VERB = {
     ActionType.KILL_PROCESS: "Terminar o processo",
@@ -78,7 +85,19 @@ ACTION_VERB = {
     ActionType.REMOVE_HOSTS_LINE: "Remover a linha do ficheiro hosts",
     ActionType.ADD_HOSTS_BLOCK: "Bloquear no ficheiro hosts o nome",
     ActionType.ADD_FIREWALL_BLOCK: "Bloquear na firewall o endereço",
+    ActionType.CLEAN_TEMP_FILE: "Mover para a quarentena o ficheiro temporário",
+    ActionType.CLEAN_TEMP_FOLDER: "Mover para a quarentena a pasta temporária",
 }
+
+# Labels the Defender scanner puts in ``exclusion_kind`` (pt-PT) to the names Defender uses.
+EXCLUSION_KINDS = {"pasta": "path", "extensão": "extension", "processo": "process", "IP": "ip"}
+
+TEMP_MIN_AGE_DAYS = 2
+TEMP_MAX_ITEMS = 200
+TEMP_WHY = (
+    "Ficheiro temporário que nenhum programa mexeu há mais de {days} dias. É seguro mover para "
+    "a quarentena: dá para desfazer, e só se apaga de vez se pedires."
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -329,8 +348,40 @@ class _Builder:
             )
 
 
+def temp_items(entries: Iterable[TempEntry], ctx: SystemContext) -> list[PlanItem]:
+    """Optional cleaning of old Temp entries. Never pre-selected; protected paths are skipped.
+
+    Same quarantine path as everything else: nothing is deleted. Biggest entries first, capped,
+    so the list stays readable; the rest simply stays where it is.
+    """
+    out: list[PlanItem] = []
+    for e in sorted(entries, key=lambda x: -x.size):
+        if e.age_days < TEMP_MIN_AGE_DAYS or is_protected_path(e.path, ctx):
+            continue
+        action = ActionType.CLEAN_TEMP_FOLDER if e.is_dir else ActionType.CLEAN_TEMP_FILE
+        pairs = (("path", e.path),)
+        out.append(
+            PlanItem(
+                id=item_id(action, pairs),
+                action=action,
+                target=e.path,
+                params=pairs,
+                level=Level.OK,
+                why=TEMP_WHY.format(days=TEMP_MIN_AGE_DAYS),
+                finding_id="temp",
+                default_selected=False,
+            )
+        )
+        if len(out) >= TEMP_MAX_ITEMS:
+            break
+    return out
+
+
 def build_plan(
-    checks: Iterable[CheckResult], ctx: SystemContext, snapshot: Snapshot | None = None
+    checks: Iterable[CheckResult],
+    ctx: SystemContext,
+    snapshot: Snapshot | None = None,
+    temp_entries: Iterable[TempEntry] = (),
 ) -> Plan:
     """Turn findings that deserve action into proposed plan items.
 
@@ -360,6 +411,8 @@ def build_plan(
                     b.refuse(f, "este tipo de achado não tem ação automática")
                 continue
             handler(f)
+    for item in temp_items(temp_entries, ctx):
+        b.add(item)
     return Plan(tuple(b.items.values()), tuple(b.refused))
 
 

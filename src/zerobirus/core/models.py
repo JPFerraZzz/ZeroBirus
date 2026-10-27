@@ -239,3 +239,17 @@ class FileCandidate:
     path: str
     size: int
     mtime: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class TempEntry:
+    """A top-level entry of the user's Temp folder that looks safe to move away.
+
+    ``age_days`` is the time since the last change anywhere inside; ``size`` is a bounded
+    estimate for folders. Neither is a verdict: the plan treats them as optional cleaning.
+    """
+
+    path: str
+    is_dir: bool
+    size: int
+    age_days: int
