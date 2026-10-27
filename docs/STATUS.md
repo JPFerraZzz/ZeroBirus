@@ -169,7 +169,27 @@ Estado: etapas 0 a 3 (contexto, verificação, diagnóstico, autorização) pron
 | pytest (1403 passed, 53 skipped; UI com `QT_QPA_PLATFORM=offscreen`) | verde | verde (run 40423024969, antes da correção da barra lateral) | não testado |
 | Capturas de ecrã | não aplicável | verde, revistas | não testado em Windows real |
 
+## Fase 3: remoção (PR #7)
+
+Estado: implementada; **não testada em Windows real**. Ver `docs/reviews/phase-3-audit.md`.
+
+- `remediation/engine.py`: só aceita um `AuthorizedPlan`; revalida cada item contra o `safety` e o estado real; ordem fixa (ponto de restauro, informação para desfazer, processos, persistência, ficheiros, Defender, hosts, firewall); resultado só depois de verificação independente; desfazer por item e por sessão; apagar a quarentena só a pedido.
+- Backend Windows (`platform/windows/remediator.py`, `scripts/remediate.ps1`): `winreg`, `psutil`, ficheiro hosts em Python, resto pelo PowerShell com parâmetros em JSON.
+- Limpeza opcional de temporários: passa pela quarentena como tudo o resto, desmarcada por omissão.
+- Etapa 4 da interface com escolha explícita quando não há ponto de restauro.
+- Testes: `tests/unit/test_remediation.py` (47), `tests/ui/test_removal.py`, `tests/integration/test_removal_windows.py` (CI Windows, artefactos marcados e inofensivos, incluindo desfazer e rejeição de ação fora do plano).
+
+## Fase 4: confirmação e depois
+
+Estado: implementada; não testada em Windows real.
+
+- `core/compare.py` (diferença entre verificações, base guardada em `baseline.json`), `core/defender_scan.py` (fim da análise decidido só por eventos 1000, 1001, 1002, 1005 e pelo processo; nunca por tempo), `core/after.py` (conselhos e relatório final), `remediation/cleanup.py`.
+- Páginas das etapas 5 e 6; análise do Defender num processo destacado que sobrevive à janela; retoma após reinício sem criar entradas de arranque.
+
+## Fase 5: empacotamento
+
+Estado: pronto exceto o teste manual. Versão 0.1.0; `packaging/LEIA-ME.txt`; `packaging/make_zip.ps1`; `.github/workflows/release.yml` (só tag `vX.Y.Z`, cria **rascunho** de release, atestado de proveniência; `workflow_dispatch` é um ensaio sem publicar). Nenhuma tag, nenhuma release.
+
 ## Próximo passo
 
-1. Fundir o PR #6 com o CI verde.
-2. Fase 3 (remoção), depois Fases 4 e 5. Teste manual do João em Windows real ou VM segundo `docs/WINDOWS_TEST_PLAN.md` antes de qualquer release.
+**Pronto para release, à espera do teste manual do João** (`docs/WINDOWS_TEST_PLAN.md`, capítulos 8 e 9). Depois do OK: fundir o PR #7, tag `v0.1.0`, publicar o rascunho.

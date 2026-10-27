@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "zerobirus"
-version = "0.0.0"
+version = "0.1.0"
 description = "Portable Windows tool that detects and removes crypto miners, trojans and other malware."
 readme = "README.md"
 license = "MIT"

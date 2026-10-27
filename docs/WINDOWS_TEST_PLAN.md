@@ -1,8 +1,6 @@
-# Plano de teste em Windows real (versão da Fase 1: só leitura)
+# Plano de teste em Windows real
 
-Para o João, numa máquina Windows real ou numa VM. Esta versão cobre só a verificação de leitura da Fase 1. O plano completo (remoção, desfazer, executável) é escrito na Fase 5.
-
-Este teste manual é obrigatório antes de qualquer código da Fase 3 (remoção).
+Para o João, numa máquina Windows real ou numa VM. Os capítulos 1 a 7 são a verificação só de leitura. Os capítulos 8 e 9 cobrem a remoção, o desfazer, a limpeza de temporários, a confirmação e o executável. Nenhuma release (tag) antes de este plano estar feito e confirmado por ti.
 
 Estado do que está provado e do que não está: o CI Windows (windows-latest) já corre a verificação inteira e os artefactos inofensivos (ver `docs/STATUS.md`). Nada foi testado em Windows real: um runner de CI é uma máquina limpa, sem Discord, sem jogos, sem vários perfis, sem outro antivírus e sem malware. É exatamente isso que este teste vem acrescentar.
 
@@ -154,3 +152,32 @@ As fixtures com processos reais de sistema também alimentam `tests/unit/test_re
 ## 7. O que ainda não é coberto
 
 Este plano não testa: remoção, quarentena, desfazer, ponto de restauro, o executável, a interface, a Análise do Defender nem o relatório final. Também não testa o comportamento com o Windows noutro idioma além do que a máquina tiver: a verificação não depende de texto traduzido (usa campos, códigos e enumerações), mas só uma máquina em outro idioma o prova. Se tiveres uma VM em inglês, é um teste útil.
+
+
+## 8. Demo na pen: remover temporários e artefactos inofensivos (Fases 3 a 5)
+
+**Usa uma VM ou uma máquina descartável a primeira vez.** O programa move para a quarentena e dá para desfazer, mas é a primeira vez em Windows real.
+
+1. Descarrega o artefacto `zerobirus-dev-win64` do último CI verde da branch (`gh run download <id> -n zerobirus-dev-win64`). Confirma o SHA-256 contra `SHA256SUMS.txt`. Copia o ZIP para a pen e extrai-o.
+2. Abre `ZeroBirus\ZeroBirus.exe` (aceita o UAC; SmartScreen: "Mais informações", "Executar mesmo assim").
+3. Etapas 0 a 2: segue até ao diagnóstico. Anota o que aparece como SUSPEITO num PC normal (possíveis falsos positivos).
+4. **Temporários**: na Autorização, o grupo "Ficheiros temporários (opcional)" vem desmarcado. Marca 2 ou 3 itens, lê o resumo, marca a caixa e remove. Esperado: "Em quarentena" para cada um, a pasta `%TEMP%` com menos esses itens.
+5. **Desfazer**: carrega "Desfazer" num item e confirma que voltou ao sítio original; depois "Desfazer tudo".
+6. Repete o passo 4 e usa "Apagar a quarentena de vez...": responde Não (nada acontece) e depois Sim (os itens desaparecem da quarentena e já não dá para desfazer).
+7. **Artefactos inofensivos** (só em VM): corre `tools\windows\make_test_artifacts.ps1` e `make_removal_extras.ps1` num PowerShell com administrador; repete a verificação; devem aparecer como SUSPEITO o programa `zbtest.exe`, o valor Run, a tarefa e a exclusão do Defender. Autoriza só esses; remove; confirma com `tools\windows\check_state.ps1` que desapareceram; desfaz; confirma que voltaram. Limpa com `remove_removal_extras.ps1` e `remove_test_artifacts.ps1`.
+8. **Ponto de restauro**: se a proteção do sistema estiver desligada, o programa tem de parar e perguntar antes de continuar sem ele. Verifica que "Parar" não altera nada.
+9. **Em uso**: abre um ficheiro temporário num programa (por exemplo um .txt no Bloco de Notas, dentro de `%TEMP%`), tenta remover esse ficheiro: esperado "Falhou" com o passo seguinte, nunca "feito".
+10. **Antivírus**: anota qualquer alerta do Defender ou do SmartScreen durante estes passos.
+
+## 9. Confirmação e depois (Fase 4)
+
+1. Etapa Confirmação: "Repetir a verificação". Esperado: lista do que desapareceu, do que continua e do que voltou; "tudo verificado" só quando não há SUSPEITO nem verificações por completar.
+2. "Analisar com o Microsoft Defender": a análise completa corre sem janela; fecha o ZeroBirus e volta a abri-lo (etapa Confirmação) e confirma que o estado continua a ser seguido. O fim só aparece como concluído quando o Defender o regista (Visualizador de Eventos, Windows Defender, Operational, ID 1001). Anota se aparecer "Não foi possível saber como terminou": é o comportamento certo quando o registo não é legível.
+3. "Reiniciar o PC...": confirma o aviso (30 s; `shutdown /a` cancela). Depois de reiniciar, ao abrir o ZeroBirus deve aparecer "Verificação pós-reinício"; carrega e confirma que compara com a verificação anterior. Confirma que não ficou nenhuma entrada de arranque criada pelo ZeroBirus (Gestor de Tarefas, Arranque).
+4. Etapa Depois: lê os conselhos, "Guardar o relatório final" (ficheiro no Ambiente de trabalho, sem segredos nem nome de utilizador), "Apagar a pasta de trabalho..." (confirma que a quarentena e o desfazer desaparecem e os relatórios ficam).
+
+## 10. O que ainda não está provado
+
+- Nada disto foi corrido em Windows real. O CI Windows corre a remoção sobre artefactos marcados e inofensivos (`tests/integration/test_removal_windows.py`); a recriação de uma assinatura WMI no desfazer e a criação do ponto de restauro dependem do runner e são os pontos mais prováveis de diferença.
+- Reativar o que o malware desligou (por exemplo o Defender) não está implementado: o ZeroBirus nunca liga nem desliga proteções por si.
+- O ID de evento 1005 (análise falhada) só está confirmado por uma resposta da comunidade, não pela documentação oficial da Microsoft.

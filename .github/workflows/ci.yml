@@ -107,12 +107,8 @@ jobs:
           $text = [System.Text.Encoding]::ASCII.GetString($bytes)
           if ($text -notmatch "requireAdministrator") { throw "no administrator manifest" }
           "company: $($item.VersionInfo.CompanyName), description: $($item.VersionInfo.FileDescription)"
-      - name: Zip and checksum
-        run: |
-          Compress-Archive -Path dist\ZeroBirus -DestinationPath ZeroBirus-dev-win64.zip
-          $hash = (Get-FileHash ZeroBirus-dev-win64.zip -Algorithm SHA256).Hash.ToLower()
-          "$hash  ZeroBirus-dev-win64.zip" | Out-File -Encoding ascii SHA256SUMS.txt
-          Get-Content SHA256SUMS.txt
+      - name: Zip (with LEIA-ME.txt) and checksum
+        run: ./packaging/make_zip.ps1 -ZipName ZeroBirus-dev-win64.zip
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: zerobirus-dev-win64

@@ -1,0 +1,40 @@
+ZeroBirus (by Ferraz)
+
+Ferramenta portátil para Windows 10 e 11 (64 bits) que ajuda a encontrar e a remover
+mineradores de criptomoeda, trojans e outro malware. Corre da pen, sem instalar nada e
+sem internet. Não substitui um antivírus.
+
+1. COMO ABRIR
+   Copia a pasta ZeroBirus para o PC (ou corre-a da pen) e faz duplo clique em ZeroBirus.exe.
+   Segue as etapas pela ordem. A pasta do programa nunca é alterada.
+   Se o Windows impedir a execução pelo nome, renomeia ZeroBirus.exe para outro nome
+   (por exemplo Verificador.exe) e abre-o de novo.
+
+2. AVISO DO WINDOWS (SmartScreen)
+   O programa ainda não tem assinatura digital, por isso o Windows pode mostrar "O Windows
+   protegeu o seu PC". Antes de continuar, confirma que o ficheiro é o certo: no PowerShell,
+   Get-FileHash ZeroBirus-...-win64.zip -Algorithm SHA256 tem de dar o mesmo valor que o
+   SHA256SUMS.txt. Depois: "Mais informações" e "Executar mesmo assim".
+
+3. PORQUE PEDE ADMINISTRADOR
+   Sem administrador não consegue ler o Microsoft Defender, as assinaturas WMI nem todas as
+   tarefas agendadas, e remover algumas coisas falha. Diz sempre o que ficou por verificar.
+
+4. ONDE FICAM OS RELATÓRIOS E O QUE É GUARDADO
+   - Relatórios e o plano autorizado: no Ambiente de trabalho (ZeroBirus-plano-....txt e
+     ZeroBirus-relatorio-final-....txt).
+   - Quarentena e informação para desfazer: C:\ProgramData\ZeroBirus\Sessions\<data-hora>\
+   Nada é enviado para a internet e não há telemetria.
+
+5. COMO DESFAZER
+   Remover é mover para a quarentena, nunca apagar. Na etapa Remoção há "Desfazer" por item
+   e "Desfazer tudo". Também podes usar o ponto de restauro que o programa tenta criar antes
+   de mexer em qualquer coisa. Só a opção "Apagar a quarentena de vez" apaga definitivamente,
+   e pede confirmação.
+
+O QUE NÃO FAZ
+   Não deteta rootkits, malware só em memória nem infeções do setor de arranque (para isso,
+   usa a Análise offline do Microsoft Defender). Não recupera ficheiros cifrados por
+   ransomware. Depois de limpar, troca as palavras-passe a partir de OUTRO aparelho.
+
+Licença MIT. Código: github.com/JPFerraZzz/ZeroBirus
