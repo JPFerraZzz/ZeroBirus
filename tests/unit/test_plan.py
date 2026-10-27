@@ -42,7 +42,6 @@ def test_the_miner_machine_gets_a_plan_with_every_kind_of_item() -> None:
         ActionType.QUARANTINE_FILE,
         ActionType.REMOVE_DEFENDER_EXCLUSION,
         ActionType.REMOVE_HOSTS_LINE,
-        ActionType.ADD_FIREWALL_BLOCK,
     }
     assert [t for t, _ in plan.groups()][:3] == [
         "Processos",
@@ -60,10 +59,8 @@ def test_suspeito_is_preselected_and_conferir_never_is() -> None:
             assert item.default_selected, item
 
 
-def test_blocking_is_opt_in_even_for_a_suspect_connection() -> None:
-    [block] = by_action(miner_plan(), ActionType.ADD_FIREWALL_BLOCK)
-    assert block.level is Level.SUSPEITO
-    assert not block.default_selected
+def test_firewall_blocks_are_not_offered_in_alpha_1_0() -> None:
+    assert not by_action(miner_plan(), ActionType.ADD_FIREWALL_BLOCK)
 
 
 def test_the_registry_value_is_identified_exactly() -> None:

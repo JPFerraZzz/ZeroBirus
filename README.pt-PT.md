@@ -4,7 +4,7 @@
 
 Ferramenta portátil para Windows 10 e 11 (x64) que guia, etapa a etapa, na deteção e remoção de mineradores de criptomoeda, trojans e outro malware. Foi pensada para correr de uma pen USB de reparação, sem instalação e sem depender de internet.
 
-**Estado: Alpha 1.0, a primeira release oficial. As sete etapas funcionam. Foi testada num runner Windows de CI e numa corrida manual em Windows real (limpeza de temporários: quarentena, desfazer, apagar de vez). O bloqueio de firewall, a análise do Defender e a verificação pós-reinício ainda não foram experimentados em Windows real. A seguir: um modo simples de limpeza e otimização para gamers, ver `docs/ROADMAP.md`.**
+**Estado: Alpha 1.0, a primeira release oficial. As sete etapas funcionam. Foi testada num runner Windows de CI e numa corrida manual em Windows real (limpeza de temporários: quarentena, desfazer, apagar de vez). O bloqueio de firewall (não é oferecido neste Alpha), a análise do Defender e a verificação pós-reinício ainda não foram experimentados em Windows real. A seguir: um modo simples de limpeza e otimização para gamers, ver `docs/ROADMAP.md`.**
 
 ## Como funciona
 

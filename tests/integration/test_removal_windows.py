@@ -238,6 +238,9 @@ def test_hosts_line_is_removed_and_restored_and_a_block_is_added_and_undone(
         HOSTS.write_bytes(original)
 
 
+@pytest.mark.skip(
+    reason="firewall blocks are not offered in Alpha 1.0 (rule created, check not confirmed yet)"
+)
 def test_firewall_block_is_added_verified_and_undone(engine: Remediation) -> None:
     item = _item(ActionType.ADD_FIREWALL_BLOCK, address=FIREWALL_ADDRESS)
     outcome = run_plan(engine, Plan((item,), ()), [item.id])

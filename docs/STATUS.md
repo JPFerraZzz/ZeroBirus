@@ -192,7 +192,7 @@ Estado: pronto exceto o teste manual. Versão 0.1.0; `packaging/LEIA-ME.txt`; `p
 
 ## Alpha 1.0 (primeira release)
 
-Versão 1.0.0, publicada como pré-release "ZeroBirus Alpha". Testes: CI Windows verde nas Fases 0 a 5; teste manual em Windows real **só** da limpeza de temporários (remover para a quarentena, desfazer, apagar a quarentena). Por provar em Windows real: firewall, análise do Defender, verificação pós-reinício, remoção de artefactos de malware.
+Versão 1.0.0, publicada como pré-release "ZeroBirus Alpha". Testes: CI Windows verde nas Fases 0 a 5; teste manual em Windows real **só** da limpeza de temporários (remover para a quarentena, desfazer, apagar a quarentena). Bloqueio de firewall: **retirado do plano** nesta versão (a regra é criada, mas a verificação independente não a confirmou no CI; pendente). Por provar em Windows real: firewall, análise do Defender, verificação pós-reinício, remoção de artefactos de malware.
 
 ## Próximo passo
 

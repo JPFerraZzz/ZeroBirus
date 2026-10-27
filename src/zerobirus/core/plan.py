@@ -341,18 +341,10 @@ class _Builder:
         self.add(_item(ActionType.REMOVE_HOSTS_LINE, line, {"line": line}, f))
 
     def connection(self, f: Finding) -> None:
-        addr = f.subject_get("remote_address")
-        if addr:
-            self.add(
-                _item(
-                    ActionType.ADD_FIREWALL_BLOCK,
-                    addr,
-                    {"address": addr},
-                    f,
-                    # blocking is opt-in: it adds a rule and removes nothing
-                    default_selected=False,
-                )
-            )
+        """Firewall blocks are not offered in Alpha 1.0: the rule is created on Windows but the
+        independent check could not confirm it yet (docs/STATUS.md). The connection still shows
+        in the diagnosis, and the process behind it is planned for removal."""
+        return
 
 
 def temp_items(entries: Iterable[TempEntry], ctx: SystemContext) -> list[PlanItem]:

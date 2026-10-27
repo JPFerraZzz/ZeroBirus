@@ -49,3 +49,7 @@ A pedido do João, depois do primeiro teste em Windows real, a versão atual é 
 ## D-012 Firewall: verificação por números
 
 O `Get-NetFirewallRule` devolve `Action` e `Direction` como números (4 e 2) no runner; a verificação comparava com texto e nunca confirmava, apesar de a regra ser criada. Passou a comparar números. Encontrado pelo teste de integração e pelo diagnóstico no log do CI.
+
+## D-013 Firewall fora do Alpha 1.0
+
+O bloqueio de firewall deixou de ser proposto no plano: depois de várias correções a verificação independente continuava a não confirmar a regra que o diagnóstico do CI mostrava existir. Em vez de publicar algo que não consigo confirmar, retirei-o do Alpha. O código do motor e o teste ficam (teste em skip) para retomar. Se estiver errado: perde-se só a opção de bloquear IPs de pools.
