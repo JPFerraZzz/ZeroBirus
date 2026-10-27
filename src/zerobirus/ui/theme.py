@@ -194,7 +194,7 @@ QHeaderView::section {{
 }}
 
 QListWidget#rail {{ background: transparent; border: none; border-right: 1px solid {t.rule}; }}
-QListWidget#rail::item {{ padding: {t.space_3}px {t.space_3}px; border-left: 3px solid transparent; }}
+QListWidget#rail::item {{ padding: {t.space_2}px {t.space_3}px; border-left: 3px solid transparent; }}
 QListWidget#rail::item:selected {{ background: {t.selection}; border-left: 3px solid {t.accent}; }}
 QListWidget#rail:focus {{ border-right: {fw}px solid {t.accent}; }}
 

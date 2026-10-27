@@ -109,6 +109,9 @@ class MainWindow(QMainWindow):
         self.rail.setObjectName("rail")
         self.rail.setAccessibleName("Etapas")
         self.rail.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        # Seven short rows always fit; scrollbars here only eat the narrow compact rail.
+        self.rail.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.rail.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         side_layout.addWidget(self.rail, 1)
         self.side = side
         layout.addWidget(side)

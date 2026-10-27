@@ -17,3 +17,7 @@ Uma só linha agrupada, NAO_VERIFICADO, sem alarme; nunca se monta um hive (`reg
 ## D-004 PowerShell: `-EncodedCommand` mantido
 
 Ambiente do filho construído de raiz com lista permitida; `system_root` de `GetSystemWindowsDirectoryW` (também na expansão de valores do registo); saída limitada a 32 MB (o filho é morto); stderr cortado e redigido; assinaturas em lotes de 200; cada script devolve itens mais erros por item. Razão para manter `-EncodedCommand`: não deixa scripts no disco que alguém possa substituir entre escrita e execução. Se o teste manual mostrar reação de Defender, SmartScreen ou EDR, passa a `-File` com verificação do hash (ver WINDOWS_TEST_PLAN).
+
+## D-005 Barra lateral sem scrollbars
+
+A barra de etapas tem sempre 7 linhas curtas; scrollbars só ocupavam a largura da versão compacta (a 150%, 853x480 lógicos) e cortavam a última etapa. Ficam desligadas e as linhas têm menos padding. Se uma etapa nova fizer a lista não caber em 460 pontos de altura, é preciso rever o layout, não voltar às scrollbars.

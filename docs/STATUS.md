@@ -149,8 +149,27 @@ Não há skips por Defender: no runner o Defender responde (tempo real desligado
 - Docs ainda por escrever: ARCHITECTURE.md, DESIGN.md (Fase 2).
 - Fase 3: a regra de remoção tem de usar o `signer` real em Program Files; o Remediator revalida cada caminho contra o `safety` com os caminhos canónicos vindos de `platform/windows/paths.py`.
 
+## Fase 2: interface (PR #6)
+
+Estado: etapas 0 a 3 (contexto, verificação, diagnóstico, autorização) prontas; etapas 4 a 7 são marcadores até à Fase 3.
+
+### Feito
+
+- `docs/DESIGN.md`, tema, logótipo e ícone, modelo de plano e autorização (nada altera o sistema sem plano autorizado).
+- Capturas a 100% e 150% geradas no CI Windows com a plataforma nativa (a offscreen não tem fontes no Windows e desenha quadrados). Revistas: legíveis nas duas escalas.
+- Defeito encontrado na revisão das capturas a 150%: a barra lateral compacta mostrava scrollbars por cima dos números e cortava a etapa 7. Corrigido (sem scrollbars na barra, linhas mais baixas).
+- Executáveis `--onedir` de janela e de consola no job de build de desenvolvimento.
+- Ponte PowerShell: no máximo dois processos em simultâneo, timeouts de 120 s e 240 s (o teste de integração falhava por arranques lentos).
+
+### Onde foi testado
+
+| Item | Linux | CI Windows | Manual (João) |
+| --- | --- | --- | --- |
+| ruff, mypy (linux e win32), pyright | verde | verde | não aplicável |
+| pytest (1403 passed, 53 skipped; UI com `QT_QPA_PLATFORM=offscreen`) | verde | verde (run 40423024969, antes da correção da barra lateral) | não testado |
+| Capturas de ecrã | não aplicável | verde, revistas | não testado em Windows real |
+
 ## Próximo passo
 
-1. **Teste manual do João** em Windows real ou VM, segundo `docs/WINDOWS_TEST_PLAN.md`: duas corridas (sem e com administrador), ler o relatório, gerar pelo menos uma fixture golden, e enviar-me o relatório ou a fixture.
-2. Depois do teu OK, tiro o PR #4 de rascunho e faço o merge com o CI verde.
-3. Fase 2 (DESIGN.md primeiro) só depois disto. Nenhum código da Fase 3 antes do teste manual.
+1. Fundir o PR #6 com o CI verde.
+2. Fase 3 (remoção), depois Fases 4 e 5. Teste manual do João em Windows real ou VM segundo `docs/WINDOWS_TEST_PLAN.md` antes de qualquer release.
