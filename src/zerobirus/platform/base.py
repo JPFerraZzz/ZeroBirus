@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Protocol
 
+from zerobirus.core.defender_scan import ScanStatus
 from zerobirus.core.models import (
     AutorunEntry,
     ConnectionInfo,
@@ -71,3 +72,13 @@ class Inspector(Protocol):
         ...
 
     def file_hashes(self, paths: Sequence[str]) -> Observed[FileHash]: ...
+
+
+class DefenderScanner(Protocol):
+    """Starts a Microsoft Defender full scan and reports how it is going, from facts only."""
+
+    def start(self) -> tuple[int, str]:
+        """Start it. Returns (process id, UTC start time as ISO 8601)."""
+        ...
+
+    def status(self, pid: int | None, started_at: str | None) -> ScanStatus: ...

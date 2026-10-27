@@ -116,3 +116,16 @@ def list_sessions(base: Path) -> list[str]:
     if not sessions.is_dir():
         return []
     return sorted(p.name for p in sessions.iterdir() if _ID.match(p.name))
+
+
+def find_pending_restart_check(base: Path) -> list[str]:
+    """Sessions that asked for the post-restart check and did not finish it (newest first)."""
+    found: list[str] = []
+    for sid in reversed(list_sessions(base)):
+        try:
+            data: Any = json.loads((base / "Sessions" / sid / "session.json").read_text("utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(data, dict) and data.get("pending_restart_check") is True:  # pyright: ignore[reportUnknownMemberType]
+            found.append(sid)
+    return found

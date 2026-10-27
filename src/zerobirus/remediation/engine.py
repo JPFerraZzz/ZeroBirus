@@ -20,6 +20,7 @@ Everything that comes from the system (names, paths, messages) is data: it is ne
 from __future__ import annotations
 
 import ipaddress
+import os
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -81,6 +82,11 @@ _IFEO_KEY = re.compile(
     r"^software\\(?:wow6432node\\)?microsoft\\windows nt\\currentversion\\"
     r"image file execution options\\[^\\]+$",
     re.IGNORECASE,
+)
+_HKU_ROOT = re.compile(r"^HKU\\S-1-5-21-[0-9]+(?:-[0-9]+)+$")
+_AV_TASK_FOLDERS = (
+    "\\microsoft\\windows\\windows defender\\",
+    "\\microsoft\\windows\\defender\\",
 )
 _SERVICE_NAME = re.compile(r"^[\w .$@-]{1,256}$")
 _HOSTNAME = re.compile(r"^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$")
@@ -306,6 +312,8 @@ class Remediation:
             folder, name = item.param("folder"), item.param("name")
             if not name or not folder.startswith("\\") or not folder.endswith("\\"):
                 return _Refusal("o nome ou a pasta da tarefa não são válidos")
+            if folder.lower().startswith(_AV_TASK_FOLDERS):
+                return _Refusal("as tarefas do antivírus não são tocadas")
             return None
         if a is ActionType.DISABLE_SERVICE:
             name, image = item.param("name"), item.param("image")
@@ -337,6 +345,8 @@ class Remediation:
         pid = item.param("pid")
         if not pid.isdigit():
             return _Refusal("não há identificador do processo")
+        if int(pid) in (os.getpid(), os.getppid()):
+            return _Refusal("é a própria ferramenta")
         image = self._ops.process_image(int(pid))
         if image is None:
             return _Refusal("o processo já tinha terminado")
@@ -372,6 +382,12 @@ class Remediation:
             return _Refusal("a pasta contém links ou junções, ou não foi possível vê-la toda")
         return None
 
+    def _is_our_quarantine_entry(self, path: str) -> bool:
+        """True only for a direct child of this session's quarantine folder (records can be
+        edited by anything with write access to the session folder; never trust their paths)."""
+        base = (self._session.folder / QUARANTINE_DIR).resolve()
+        return Path(path).resolve().parent == base
+
     def _within_quarantine(self, path: str) -> bool:
         base = normalize_windows_path(str(self._session.folder))
         n = normalize_windows_path(path)
@@ -379,7 +395,7 @@ class Remediation:
 
     def _gate_registry(self, item: PlanItem) -> _Refusal | None:
         root, key, value = item.param("root"), item.param("key"), item.param("value")
-        if root != "HKLM" and not root.startswith("HKU\\S-1-5-21-"):
+        if root != "HKLM" and not _HKU_ROOT.match(root):
             return _Refusal("a raiz do registo não é permitida")
         if _AUTORUN_KEY.match(key):
             return None if value else _Refusal("falta o nome do valor")
@@ -486,6 +502,8 @@ class Remediation:
         saved: dict[str, Any] = record["undo"]
         if item.action in FILE_ACTIONS:
             original, dest = saved["original"], saved["quarantined_to"]
+            if not self._is_our_quarantine_entry(dest):
+                raise RuntimeError("o registo para desfazer aponta para fora da quarentena")
             if self._is_protected(original):
                 raise RuntimeError("o local original está protegido")
             if self._ops.file_kind(dest) == "missing":

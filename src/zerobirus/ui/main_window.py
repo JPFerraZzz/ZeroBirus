@@ -22,21 +22,43 @@ from PySide6.QtWidgets import (
 )
 
 from zerobirus import __version__
+from zerobirus.core.after import advice, render_final_report
+from zerobirus.core.compare import (
+    Change,
+    baseline_from_checks,
+    baseline_from_json,
+    baseline_to_json,
+)
 from zerobirus.core.context import Answers, check_order, emphasised
 from zerobirus.core.diagnosis import Diagnosis
 from zerobirus.core.models import TempEntry
 from zerobirus.core.plan import AuthorizedPlan, Plan, build_plan, plan_to_dict
+from zerobirus.core.redact import redact
 from zerobirus.core.report import build_report
-from zerobirus.core.session import Session, create_session, update_session
-from zerobirus.platform.base import Inspector
+from zerobirus.core.session import (
+    Session,
+    create_session,
+    find_pending_restart_check,
+    open_session,
+    update_session,
+)
+from zerobirus.platform.base import DefenderScanner, Inspector
+from zerobirus.platform.fake.defender_scan import FakeDefenderScanner
 from zerobirus.platform.fake.ops import FakeOps
-from zerobirus.platform.loader import create_remediation_ops
+from zerobirus.platform.loader import (
+    create_defender_scanner,
+    create_remediation_ops,
+    restart_computer,
+)
+from zerobirus.remediation.cleanup import purge_session_work
 from zerobirus.remediation.engine import Remediation
 from zerobirus.remediation.ops import SystemOps
 from zerobirus.scanners.runner import ScanResult
 from zerobirus.ui import catalog
+from zerobirus.ui.page_after import AfterPage
 from zerobirus.ui.page_authorize import AuthorizePage
 from zerobirus.ui.page_base import Page
+from zerobirus.ui.page_confirm import ConfirmPage
 from zerobirus.ui.page_context import ContextPage
 from zerobirus.ui.page_diagnosis import DiagnosisPage
 from zerobirus.ui.page_removal import CallWorker, RemovalPage
@@ -46,19 +68,6 @@ from zerobirus.ui.widgets import make_label, make_rule
 
 STAGE_KEYS = [key for key, _ in catalog.STAGES]
 COMPACT_HEIGHT = 620  # logical points; under it pages use tighter margins
-
-
-class PlaceholderPage(Page):
-    """Stages whose content arrives with the removal and confirmation work."""
-
-    def __init__(self, title: str, lead: str) -> None:
-        super().__init__(title, lead)
-        self.note = make_label(catalog.PLACEHOLDER_LATER, "lead")
-        self.body.addWidget(self.note)
-        self.body.addStretch(1)
-
-    def set_note(self, text: str) -> None:
-        self.note.setText(text)
 
 
 class MainWindow(QMainWindow):
@@ -73,6 +82,7 @@ class MainWindow(QMainWindow):
         relaunch: Callable[[], bool] | None = None,
         clock: Callable[[], datetime] = datetime.now,
         ops_factory: Callable[[], SystemOps] | None = None,
+        defender_factory: Callable[[], DefenderScanner] | None = None,
     ) -> None:
         super().__init__()
         self.setWindowTitle(f"{catalog.APP_NAME} {catalog.SIGNATURE}")
@@ -85,6 +95,8 @@ class MainWindow(QMainWindow):
         self._ops_factory = ops_factory
         self.temp_entries: tuple[TempEntry, ...] = ()
         self._temp_worker: CallWorker | None = None
+        self.baseline: list[Change] = []
+        self.kept_all = False
         self.answers = Answers()
         self.result: ScanResult | None = None
         self.diagnosis: Diagnosis | None = None
@@ -139,8 +151,12 @@ class MainWindow(QMainWindow):
         self.diagnosis_page = DiagnosisPage()
         self.authorize_page = AuthorizePage()
         self.removal_page = RemovalPage()
-        self.confirm_page = PlaceholderPage(catalog.STAGES[5][1], catalog.STAGE_LEAD["confirm"])
-        self.after_page = PlaceholderPage(catalog.STAGES[6][1], catalog.STAGE_LEAD["after"])
+        self.confirm_page = ConfirmPage(
+            inspector,
+            defender_factory or (FakeDefenderScanner if demo else create_defender_scanner),
+            None if demo else restart_computer,
+        )
+        self.after_page = AfterPage()
         self.pages: list[Page] = [
             self.context_page,
             self.scan_page,
@@ -167,6 +183,11 @@ class MainWindow(QMainWindow):
         self.authorize_page.kept_all.connect(self._on_kept_all)
         self.authorize_page.authorized.connect(self._on_authorized)
         self.removal_page.proceed.connect(self._after_removal)
+        self.confirm_page.proceed.connect(self._to_after)
+        self.context_page.post_restart_requested.connect(self._on_post_restart)
+        pending = find_pending_restart_check(data_dir)
+        if pending:
+            self.context_page.show_pending(pending[0])
 
         self._refresh_rail()
         self.go("context")
@@ -263,6 +284,8 @@ class MainWindow(QMainWindow):
         self.diagnosis_page.set_result(result)
         self.diagnosis = self.diagnosis_page.diagnosis
         if self.session is not None:
+            self.baseline = baseline_from_checks(result.checks)
+            self.session.write("baseline.json", baseline_to_json(self.baseline))
             self.session.write("findings.json", build_report(result, include_snapshot=False))
             update_session(self.session, stage="diagnosis")
         self._unlock("diagnosis")
@@ -309,7 +332,9 @@ class MainWindow(QMainWindow):
     def _on_kept_all(self) -> None:
         if self.session is not None:
             update_session(self.session, stage="kept_all")
+        self.kept_all = True
         self.after_page.set_note("Não foi removido nada, como pediste.")
+        self._configure_after()
         self._unlock("after")
         self.go("after")
 
@@ -338,9 +363,76 @@ class MainWindow(QMainWindow):
     def _after_removal(self) -> None:
         if self.session is not None:
             update_session(self.session, stage="removed")
-        self.confirm_page.set_note(
-            "A confirmação (repetir a verificação e analisar com o Microsoft Defender) "
-            "chega na próxima versão."
-        )
+        self.confirm_page.configure(self.session, self.baseline)
         self._unlock("confirm")
         self.go("confirm")
+
+    def _on_post_restart(self, session_id: str) -> None:
+        """After a restart: reopen the session that asked for it and go to the confirmation."""
+        try:
+            session = open_session(self.data_dir, session_id)
+            baseline = baseline_from_json(session.read("baseline.json"))
+        except (OSError, ValueError, KeyError):
+            self.context_page.show_pending_error()
+            return
+        update_session(session, pending_restart_check=False)
+        self.session, self.baseline = session, baseline
+        self.confirm_page.configure(session, baseline)
+        self._unlock("confirm")
+        self.go("confirm")
+
+    def _to_after(self) -> None:
+        self.after_page.set_note("Limpeza concluída. Isto é o que convém fazer a seguir.")
+        self._configure_after()
+        if self.session is not None:
+            update_session(self.session, stage="after")
+        self._unlock("after")
+        self.go("after")
+
+    def _results(self) -> list[tuple[str, str, str]]:
+        outcome = self.removal_page.outcome
+        if outcome is None:
+            return []
+        return [(r.target, r.result.value, r.detail) for r in outcome.results]
+
+    def _configure_after(self) -> None:
+        outcome = self.removal_page.outcome
+        rows = outcome.results if outcome else ()
+        lines = advice(
+            self.diagnosis,
+            [r.result for r in rows],
+            anything_failed=bool(self.confirm_page.diff and not self.confirm_page.diff.clean),
+        )
+        session = self.session
+
+        def save() -> Path | None:
+            if session is None:
+                return None
+            status = self.confirm_page.defender_status
+            text = render_final_report(
+                version=__version__,
+                session_id=session.session_id,
+                overall=self.diagnosis.overall.value if self.diagnosis else "-",
+                results=[(redact(t), r, d) for t, r, d in self._results()],
+                diff_lines=self.confirm_page.diff_lines(),
+                defender_text=status.text if status else "não foi feita",
+                advice_lines=lines,
+            )
+            (session.folder / "relatorio-final.txt").write_text(text, encoding="utf-8-sig")
+            target = self.desktop_dir or session.folder
+            target.mkdir(parents=True, exist_ok=True)
+            path = target / f"ZeroBirus-relatorio-final-{session.session_id}.txt"
+            path.write_text(text, encoding="utf-8-sig")
+            return path
+
+        def purge() -> list[str]:
+            return purge_session_work(session) if session is not None else []
+
+        self.after_page.configure(lines, save, purge)
+
+    def wait_all(self) -> None:
+        """Wait for every background thread (tests and shutdown)."""
+        self.wait_background()
+        self.scan_page.wait()
+        self.removal_page.wait()
+        self.confirm_page.wait()

@@ -470,3 +470,79 @@ def test_real_symlink_to_a_file_is_not_followed(tmp_path: Path, session: Session
     assert res.result is ActionResult.IGNORADO
     assert target.read_text() == "keep"
     assert link.is_symlink()
+
+
+# adversarial: the plan and the session folder are not trusted either ------------------------
+
+
+@pytest.mark.parametrize(
+    "root",
+    [r"HKU\S-1-5-21-1-2-3-1001\..\..", r"HKU\.DEFAULT", r"HKCU", r"HKLM\..", ""],
+)
+def test_registry_roots_are_validated_strictly(session: Session, root: str) -> None:
+    key = r"Software\Microsoft\Windows\CurrentVersion\Run"
+    ops = FakeOps()
+    ops.registry[(root, key, "x")] = "v"
+    item = make_item(ActionType.REMOVE_REGISTRY_VALUE, root=root, key=key, value="x", view="64")
+    assert engine(ops, session).run(authorize_items(item)).results[0].result is (
+        ActionResult.IGNORADO
+    )
+
+
+def test_antivirus_scheduled_tasks_are_never_removed(session: Session) -> None:
+    ops = FakeOps()
+    folder = "\\Microsoft\\Windows\\Windows Defender\\"
+    ops.tasks[(folder, "Windows Defender Scheduled Scan")] = "<x/>"
+    item = make_item(ActionType.REMOVE_TASK, folder=folder, name="Windows Defender Scheduled Scan")
+    assert engine(ops, session).run(authorize_items(item)).results[0].result is (
+        ActionResult.IGNORADO
+    )
+    assert ops.tasks
+
+
+def test_our_own_pid_is_never_terminated_even_if_the_context_forgot_it(session: Session) -> None:
+    import os
+
+    ops = FakeOps()
+    ops.processes[os.getpid()] = DROP
+    item = make_item(ActionType.KILL_PROCESS, pid=str(os.getpid()), name="x.exe", path=DROP)
+    assert engine(ops, session).run(authorize_items(item)).results[0].result is (
+        ActionResult.IGNORADO
+    )
+
+
+def test_a_tampered_undo_record_cannot_move_arbitrary_files(session: Session) -> None:
+    import json
+
+    ops = FakeOps()
+    path = r"C:\Users\Ana\Downloads\a.exe"
+    ops.add_file(path)
+    item = make_item(ActionType.QUARANTINE_FILE, path=path)
+    eng = engine(ops, session)
+    eng.run(authorize_items(item))
+    record_path = session.undo_dir / f"{item.id}.json"
+    record = json.loads(record_path.read_text("utf-8"))
+    victim = r"C:\Users\Ana\Downloads\victim.exe"
+    ops.add_file(victim)
+    record["undo"]["quarantined_to"] = victim
+    record["undo"]["original"] = r"C:\Users\Ana\AppData\Roaming\evil.exe"
+    record_path.write_text(json.dumps(record), "utf-8")
+    assert not eng.undo_item(item.id).ok
+    assert ops.file_kind(victim) == "file"
+
+
+def test_a_tampered_record_cannot_delete_outside_the_quarantine(session: Session) -> None:
+    import json
+
+    ops = FakeOps()
+    path = r"C:\Users\Ana\Downloads\a.exe"
+    ops.add_file(path)
+    item = make_item(ActionType.QUARANTINE_FILE, path=path)
+    eng = engine(ops, session)
+    eng.run(authorize_items(item))
+    record_path = session.undo_dir / f"{item.id}.json"
+    record = json.loads(record_path.read_text("utf-8"))
+    record["undo"]["quarantined_to"] = r"C:\Users\Ana\Documents\important.docx"
+    record_path.write_text(json.dumps(record), "utf-8")
+    assert not eng.delete_quarantined([item.id])[0].ok
+    assert not any(c.startswith("delete:") for c in ops.calls)

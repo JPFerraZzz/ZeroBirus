@@ -177,3 +177,33 @@ AUTH_INTRO_TEMP = (
     "Opcional: ficheiros temporários antigos. Não são ameaças; libertam espaço. Vêm desmarcados "
     "e vão para a quarentena como tudo o resto."
 )
+
+# Stage 5 and 6
+CONFIRM_RESCAN = "&Repetir a verificação"
+CONFIRM_RESCANNING = "A repetir a verificação..."
+CONFIRM_DEFENDER = "&Analisar com o Microsoft Defender"
+CONFIRM_DEFENDER_NOTE = (
+    "A análise completa pode demorar horas e continua mesmo que feches esta janela. "
+    "O fim só é dado como certo quando o Defender o regista."
+)
+CONFIRM_RESTART = "Reiniciar o &PC..."
+CONFIRM_RESTART_ASK = (
+    "Reiniciar o PC daqui a 30 segundos?\n\nGuarda o que tens aberto. Quando voltares a abrir o "
+    "ZeroBirus, ele oferece a verificação pós-reinício."
+)
+CONFIRM_OFFLINE = (
+    "Se ainda houver dúvidas, faz a Análise offline do Microsoft Defender (Segurança do Windows, "
+    "Proteção contra vírus e ameaças, Opções de análise). Reinicia o PC, por isso só quando "
+    "puderes."
+)
+CONFIRM_CLEAN = "Não há nada suspeito e tudo foi verificado."
+CONFIRM_NOT_CLEAN = "Ainda há itens suspeitos ou verificações por completar. Lê a lista."
+BTN_TO_AFTER = "Continuar para o &fim"
+BTN_SAVE_FINAL = "&Guardar o relatório final"
+BTN_CLEAN_WORK = "&Apagar a pasta de trabalho..."
+CLEAN_WORK_ASK = (
+    "Apagar a quarentena e a informação para desfazer deste PC?\n\nOs relatórios ficam. Depois "
+    "disto NÃO dá para desfazer a limpeza."
+)
+PENDING_RESTART = "Há uma verificação pós-reinício por fazer (sessão {sid})."
+BTN_POST_RESTART = "Fazer a verificação &pós-reinício"
