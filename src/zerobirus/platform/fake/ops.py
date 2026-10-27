@@ -103,6 +103,12 @@ class FakeOps:
         if pid not in self.stubborn_pids:
             self.processes.pop(pid, None)
 
+    def image_in_use(self, path: str) -> bool:
+        n = _n(path)
+        return any(
+            p and (_n(p) == n or _n(p).startswith(n + "\\")) for p in self.processes.values()
+        )
+
     def file_kind(self, path: str) -> FileKind:
         node = self.files.get(_n(path))
         return node.kind if node else "missing"

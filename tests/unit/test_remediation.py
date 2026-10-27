@@ -546,3 +546,14 @@ def test_a_tampered_record_cannot_delete_outside_the_quarantine(session: Session
     record_path.write_text(json.dumps(record), "utf-8")
     assert not eng.delete_quarantined([item.id])[0].ok
     assert not any(c.startswith("delete:") for c in ops.calls)
+
+
+def test_a_file_whose_program_is_still_running_is_not_moved(session: Session) -> None:
+    ops = FakeOps()
+    ops.processes[5] = DROP
+    ops.add_file(DROP)
+    item = make_item(ActionType.QUARANTINE_FILE, path=DROP)
+    res = engine(ops, session).run(authorize_items(item)).results[0]
+    assert res.result is ActionResult.FALHOU
+    assert "a correr" in res.detail
+    assert ops.file_kind(DROP) == "file"

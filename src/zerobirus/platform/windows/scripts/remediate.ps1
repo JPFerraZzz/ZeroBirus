@@ -149,7 +149,8 @@ switch ($a) {
     }
     'firewall_add' {
         $addr = [string]$Params.address
-        New-NetFirewallRule -DisplayName ('ZeroBirus block ' + $addr) -Group 'ZeroBirus' -Direction Outbound -Action Block -RemoteAddress $addr -Profile Any | Out-Null
+        $made = New-NetFirewallRule -DisplayName ('ZeroBirus block ' + $addr) -Group 'ZeroBirus' -Direction Outbound -Action Block -RemoteAddress $addr -Profile Any
+        if (-not $made) { throw 'the firewall rule was not created' }
         $result = Out-Result $true $null
     }
     'firewall_has' {

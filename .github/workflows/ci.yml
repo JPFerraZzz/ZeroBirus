@@ -13,6 +13,7 @@ env:
 jobs:
   ubuntu:
     name: Ubuntu (lint, types, tests)
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     permissions:
       contents: read

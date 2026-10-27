@@ -468,6 +468,13 @@ class Remediation:
                 ActionResult.FALHOU,
                 "O programa ainda está a correr, por isso o ficheiro não foi movido.",
             )
+        if self._ops.image_in_use(path):
+            return self._result(
+                item,
+                ActionResult.FALHOU,
+                "Um programa ainda está a correr a partir deste ficheiro, por isso não foi movido. "
+                "Termina-o (ou reinicia o PC) e repete.",
+            )
         before = self._ops.fingerprint(path)
         if before is None:
             return self._result(item, ActionResult.FALHOU, "Não foi possível ler o ficheiro.")

@@ -242,6 +242,7 @@ def test_firewall_block_is_added_verified_and_undone(engine: Remediation) -> Non
     item = _item(ActionType.ADD_FIREWALL_BLOCK, address=FIREWALL_ADDRESS)
     outcome = run_plan(engine, Plan((item,), ()), [item.id])
     print(ascii(str(outcome.results)))
+    powershell("dump_firewall.ps1")  # diagnostics for the log
     assert outcome.results[0].result is ActionResult.REMOVIDO
     assert _state()["firewall_rules"] >= 1
     assert engine.undo_item(item.id).ok
@@ -281,7 +282,9 @@ def test_after_the_removal_the_program_and_its_file_are_really_gone(
     result = run_scan(inspector, timeout=180.0)
     plan = build_plan(result.checks, result.snapshot.system, result.snapshot)
     ours = [i for i in plan.items if marked(i)]
-    run_plan(engine, plan, [i.id for i in ours])
+    outcome = run_plan(engine, plan, [i.id for i in ours])
+    for r in outcome.results:
+        print(ascii(f"{r.action.value} {r.result.value}: {r.detail}"))
     state = _state()
     assert not state["process"]
     assert not state["exe"]

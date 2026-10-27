@@ -15,6 +15,8 @@ import stat
 from pathlib import Path
 from typing import Any, Literal, Protocol
 
+import psutil
+
 from zerobirus.core.plan import PlanItem
 
 FileKind = Literal["missing", "file", "dir", "link", "other"]
@@ -35,6 +37,11 @@ class SystemOps(Protocol):
         ...
 
     def terminate(self, pid: int) -> None: ...
+
+    def image_in_use(self, path: str) -> bool:
+        """True if any running process was started from this file (Windows lets a running
+        program be moved within a drive, so the engine must check before moving it)."""
+        ...
 
     # files and folders (the engine decides; this moves) --------------------------------
     def file_kind(self, path: str) -> FileKind:
@@ -84,6 +91,18 @@ def is_link(st: os.stat_result) -> bool:
 
 class LocalFileOps:
     """File and folder operations on the real file system (used by the Windows backend)."""
+
+    def image_in_use(self, path: str) -> bool:
+        wanted = os.path.normcase(os.path.abspath(path))
+        prefix = wanted.rstrip("\\/") + os.sep
+        for proc in psutil.process_iter(["exe"]):
+            exe = proc.info.get("exe")
+            if not exe:
+                continue
+            norm = os.path.normcase(os.path.abspath(exe))
+            if norm == wanted or norm.startswith(prefix):  # the file itself, or inside a folder
+                return True
+        return False
 
     def file_kind(self, path: str) -> FileKind:
         try:
