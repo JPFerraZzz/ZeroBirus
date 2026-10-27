@@ -157,6 +157,7 @@ class AuthorizePage(Page):
             for level, intro in (
                 (Level.SUSPEITO, catalog.AUTH_INTRO_SUSPECT),
                 (Level.CONFERIR, catalog.AUTH_INTRO_CONFER),
+                (Level.OK, catalog.AUTH_INTRO_TEMP),
             ):
                 chosen = [m for m in members if m.level is level]
                 if not chosen:

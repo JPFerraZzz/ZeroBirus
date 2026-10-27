@@ -147,3 +147,33 @@ AUTH_PLAN_NOT_SAVED = (
 )
 
 PLACEHOLDER_LATER = "Esta etapa fica disponível quando a etapa anterior estiver concluída."
+
+# Stage 4: removal
+REMOVAL_RUNNING = "A criar o ponto de restauro e a guardar o que é preciso para desfazer. Depois, um passo de cada vez."
+REMOVAL_NO_RESTORE = (
+    "Não foi possível criar um ponto de restauro: {reason}\n\n"
+    "Podes continuar sem ele. Remover é mover para a quarentena e dá para desfazer, mas sem o "
+    "ponto de restauro o Windows não te deixa voltar atrás de uma só vez."
+)
+REMOVAL_FAILED = "A remoção parou por um erro: {reason}. Nada mais foi alterado."
+REMOVAL_SUMMARY = "{done} feitos e confirmados, {failed} falharam, {ignored} não foram tocados. Ponto de restauro: {restore}."
+BTN_GO_ON_WITHOUT_RESTORE = "Continuar &sem ponto de restauro"
+BTN_STOP_NOTHING_CHANGED = "&Parar (nada foi alterado)"
+BTN_UNDO_ITEM = "&Desfazer"
+BTN_UNDO_ALL = "Desfazer &tudo"
+BTN_DELETE_QUARANTINE = "Apagar a quarentena de &vez..."
+BTN_CONTINUE_CONFIRM = "Continuar para a &confirmação"
+DELETE_QUARANTINE_ASK = (
+    "Apagar de vez o que está na quarentena?\n\nDepois disto NÃO dá para desfazer esses itens."
+)
+RESULT_LABEL = {
+    "REMOVIDO": "Feito e confirmado",
+    "EM_QUARENTENA": "Em quarentena",
+    "FALHOU": "Falhou",
+    "PENDENTE_REINICIO": "Falta reiniciar",
+    "IGNORADO": "Não foi tocado",
+}
+AUTH_INTRO_TEMP = (
+    "Opcional: ficheiros temporários antigos. Não são ameaças; libertam espaço. Vêm desmarcados "
+    "e vão para a quarentena como tudo o resto."
+)

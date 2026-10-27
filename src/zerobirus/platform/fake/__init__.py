@@ -22,6 +22,7 @@ from zerobirus.core.models import (
     ServiceInfo,
     Signature,
     TaskInfo,
+    TempEntry,
     WmiBinding,
 )
 from zerobirus.core.safety import SystemContext, normalize_windows_path
@@ -91,6 +92,18 @@ class FakeInspector:
 
     def candidate_files(self) -> Observed[FileCandidate]:
         return self._observed("files", self._snap.files)
+
+    def temp_entries(self) -> Observed[TempEntry]:
+        """A few synthetic Temp entries under the first profile, so the demo has something."""
+        base = self._snap.system.profile_roots[0] + "\\AppData\\Local\\Temp\\"
+        return Observed(
+            (
+                TempEntry(base + "installer-cache.tmp", False, 48_000_000, 12),
+                TempEntry(base + "old-setup", True, 120_000_000, 30),
+                TempEntry(base + "~DF3A91.tmp", False, 16_000, 5),
+                TempEntry(base + "in-use.tmp", False, 1_000, 0),
+            )
+        )
 
     def signatures(self, paths: Sequence[str]) -> Observed[Signature]:
         known = {normalize_windows_path(s.path): s for s in self._snap.signatures}

@@ -24,7 +24,7 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from zerobirus.core.models import ActionResult
 from zerobirus.core.plan import EXCLUSION_KINDS, ActionType, AuthorizedPlan, PlanItem, item_id
@@ -157,8 +157,11 @@ class Remediation:
         self._ops = ops
         self._ctx = ctx
         self._session = session
-        self._is_protected = is_protected or (lambda p: is_protected_path(p, ctx))
+        self._is_protected: Callable[[str], bool] = is_protected or self._default_guard
         self._hosts_lines = hosts_lines
+
+    def _default_guard(self, path: str) -> bool:
+        return is_protected_path(path, self._ctx)
 
     # public ---------------------------------------------------------------------------
 
@@ -507,10 +510,13 @@ class Remediation:
     def _load_record(self, iid: str) -> dict[str, Any]:
         import json
 
-        data = json.loads(self._record_path(iid).read_text("utf-8"))
-        if not isinstance(data, dict) or data.get("schema_version") != UNDO_SCHEMA_VERSION:
+        data: Any = json.loads(self._record_path(iid).read_text("utf-8"))
+        if not isinstance(data, dict):
             raise ValueError("unsupported undo record")
-        return data
+        record = cast("dict[str, Any]", data)
+        if record.get("schema_version") != UNDO_SCHEMA_VERSION:
+            raise ValueError("unsupported undo record")
+        return record
 
     def _write_record(self, iid: str, record: dict[str, Any]) -> None:
         from zerobirus.core.session import write_json_atomic
@@ -584,9 +590,10 @@ def _item_from_record(record: dict[str, Any]) -> PlanItem | None:
     from zerobirus.core.models import Level
 
     try:
-        raw = record["item"]
+        raw: dict[str, Any] = record["item"]
+        raw_params: dict[str, Any] = raw["params"]
         action = ActionType(raw["action"])
-        params = tuple(sorted((str(k), str(v)) for k, v in raw["params"].items()))
+        params = tuple(sorted((str(k), str(v)) for k, v in raw_params.items()))
         if raw["id"] != item_id(action, params):
             return None
         return PlanItem(

@@ -6,6 +6,7 @@ from collections.abc import Callable
 from datetime import datetime
 from importlib import resources
 from pathlib import Path
+from typing import Any
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QResizeEvent
@@ -23,16 +24,22 @@ from PySide6.QtWidgets import (
 from zerobirus import __version__
 from zerobirus.core.context import Answers, check_order, emphasised
 from zerobirus.core.diagnosis import Diagnosis
+from zerobirus.core.models import TempEntry
 from zerobirus.core.plan import AuthorizedPlan, Plan, build_plan, plan_to_dict
 from zerobirus.core.report import build_report
 from zerobirus.core.session import Session, create_session, update_session
 from zerobirus.platform.base import Inspector
+from zerobirus.platform.fake.ops import FakeOps
+from zerobirus.platform.loader import create_remediation_ops
+from zerobirus.remediation.engine import Remediation
+from zerobirus.remediation.ops import SystemOps
 from zerobirus.scanners.runner import ScanResult
 from zerobirus.ui import catalog
 from zerobirus.ui.page_authorize import AuthorizePage
 from zerobirus.ui.page_base import Page
 from zerobirus.ui.page_context import ContextPage
 from zerobirus.ui.page_diagnosis import DiagnosisPage
+from zerobirus.ui.page_removal import CallWorker, RemovalPage
 from zerobirus.ui.page_scan import ScanPage
 from zerobirus.ui.theme import MIN_WINDOW, NARROW_BELOW, TOKENS
 from zerobirus.ui.widgets import make_label, make_rule
@@ -65,6 +72,7 @@ class MainWindow(QMainWindow):
         animations: bool = True,
         relaunch: Callable[[], bool] | None = None,
         clock: Callable[[], datetime] = datetime.now,
+        ops_factory: Callable[[], SystemOps] | None = None,
     ) -> None:
         super().__init__()
         self.setWindowTitle(f"{catalog.APP_NAME} {catalog.SIGNATURE}")
@@ -74,6 +82,9 @@ class MainWindow(QMainWindow):
         self.data_dir = data_dir
         self.desktop_dir = desktop_dir
         self._clock = clock
+        self._ops_factory = ops_factory
+        self.temp_entries: tuple[TempEntry, ...] = ()
+        self._temp_worker: CallWorker | None = None
         self.answers = Answers()
         self.result: ScanResult | None = None
         self.diagnosis: Diagnosis | None = None
@@ -127,7 +138,7 @@ class MainWindow(QMainWindow):
         self.scan_page = ScanPage(inspector, animations=animations)
         self.diagnosis_page = DiagnosisPage()
         self.authorize_page = AuthorizePage()
-        self.removal_page = PlaceholderPage(catalog.STAGES[4][1], catalog.STAGE_LEAD["removal"])
+        self.removal_page = RemovalPage()
         self.confirm_page = PlaceholderPage(catalog.STAGES[5][1], catalog.STAGE_LEAD["confirm"])
         self.after_page = PlaceholderPage(catalog.STAGES[6][1], catalog.STAGE_LEAD["after"])
         self.pages: list[Page] = [
@@ -155,6 +166,7 @@ class MainWindow(QMainWindow):
         self.authorize_page.back_requested.connect(lambda: self.go("diagnosis"))
         self.authorize_page.kept_all.connect(self._on_kept_all)
         self.authorize_page.authorized.connect(self._on_authorized)
+        self.removal_page.proceed.connect(self._after_removal)
 
         self._refresh_rail()
         self.go("context")
@@ -254,12 +266,29 @@ class MainWindow(QMainWindow):
             self.session.write("findings.json", build_report(result, include_snapshot=False))
             update_session(self.session, stage="diagnosis")
         self._unlock("diagnosis")
+        self._temp_worker = CallWorker(self.inspector.temp_entries)
+        self._temp_worker.start()
+
+    def _collect_temp_entries(self, value: object) -> None:
+        items: Any = getattr(value, "items", None)
+        if isinstance(items, tuple):
+            found: tuple[Any, ...] = items  # pyright: ignore[reportUnknownVariableType]
+            self.temp_entries = tuple(e for e in found if isinstance(e, TempEntry))
+
+    def wait_background(self) -> None:
+        if self._temp_worker is not None:
+            self._temp_worker.wait()
+            self._collect_temp_entries(self._temp_worker.result)
 
     def _to_authorization(self) -> None:
         if self.result is None:
             return
+        self.wait_background()  # the Temp listing started when the scan ended
         self.plan = build_plan(
-            self.result.checks, self.result.snapshot.system, self.result.snapshot
+            self.result.checks,
+            self.result.snapshot.system,
+            self.result.snapshot,
+            self.temp_entries,
         )
         desktop = self.result.snapshot.desktop
         self.authorize_page.configure(
@@ -288,10 +317,30 @@ class MainWindow(QMainWindow):
         if not isinstance(authorization, AuthorizedPlan):
             return
         self.authorization = authorization
-        path = self.authorize_page.saved_path
-        self.removal_page.set_note(
-            f"O plano foi autorizado e guardado em {path}. "
-            "A remoção ainda não está disponível nesta versão: nada foi alterado."
-        )
+        if self.session is None or self.result is None:
+            return
+        ops = self._make_ops()
+        remediation = Remediation(ops, self.result.snapshot.system, self.session)
+        update_session(self.session, stage="removal")
         self._unlock("removal")
         self.go("removal")
+        self.removal_page.start(authorization, remediation)
+
+    def _make_ops(self) -> SystemOps:
+        if self._ops_factory is not None:
+            return self._ops_factory()
+        if self.demo or self.result is None:
+            if self.result is None:
+                raise RuntimeError("não há resultado da verificação")
+            return FakeOps.from_snapshot(self.result.snapshot, self.temp_entries)
+        return create_remediation_ops()
+
+    def _after_removal(self) -> None:
+        if self.session is not None:
+            update_session(self.session, stage="removed")
+        self.confirm_page.set_note(
+            "A confirmação (repetir a verificação e analisar com o Microsoft Defender) "
+            "chega na próxima versão."
+        )
+        self._unlock("confirm")
+        self.go("confirm")

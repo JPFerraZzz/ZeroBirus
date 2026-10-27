@@ -77,7 +77,7 @@ class SystemOps(Protocol):
         ...
 
 
-def _is_link(st: os.stat_result) -> bool:
+def is_link(st: os.stat_result) -> bool:
     attrs = getattr(st, "st_file_attributes", 0)
     return stat.S_ISLNK(st.st_mode) or bool(attrs & _REPARSE_POINT)
 
@@ -92,7 +92,7 @@ class LocalFileOps:
             return "missing"
         except OSError:
             return "other"
-        if _is_link(st):
+        if is_link(st):
             return "link"
         if stat.S_ISDIR(st.st_mode):
             return "dir"
@@ -108,7 +108,7 @@ class LocalFileOps:
             try:
                 with os.scandir(current) as it:
                     for entry in it:
-                        if _is_link(entry.stat(follow_symlinks=False)):
+                        if is_link(entry.stat(follow_symlinks=False)):
                             return True
                         if entry.is_dir(follow_symlinks=False):
                             stack.append(entry.path)

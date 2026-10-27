@@ -163,7 +163,9 @@ def test_authorising_saves_the_plan_before_anything_and_builds_the_immutable_pla
     stored = window.session.read("plan.json")
     assert {i["id"] for i in stored["items"] if i["approved"]} == chosen
     assert window.stage() == "removal"
-    assert "guardado em" in window.removal_page.note.text()
+    qtbot.waitUntil(lambda: window.removal_page.outcome is not None, timeout=30_000)
+    window.removal_page.wait()
+    window.wait_background()
     window.scan_page.wait()
 
 
