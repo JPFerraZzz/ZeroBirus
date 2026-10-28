@@ -13,6 +13,7 @@ env:
 jobs:
   ubuntu:
     name: Ubuntu (lint, types, tests)
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -36,6 +37,7 @@ jobs:
 
   windows:
     name: Windows (tests, windows marker, smoke)
+    timeout-minutes: 75
     runs-on: windows-latest
     permissions:
       contents: read
@@ -48,18 +50,17 @@ jobs:
           version: ${{ env.UV_VERSION }}
       - run: uv sync --locked
       - run: uv run mypy
+      # One run only: the integration tests take ~25 min on the runner, so repeating the
+      # windows-marked ones in a second step pushed the job past its timeout.
       - name: All tests (windows-marked tests run here, never skipped)
-        run: uv run pytest -v -rs
-      - name: Windows-marked tests only (visible in the log)
-        if: success() || failure()
-        run: uv run pytest -m windows -v -s
+        run: uv run pytest -v -rs -s
       - run: uv run zerobirus version
       - run: uv run zerobirus selftest
 
   package:
     name: Windows dev build (PyInstaller onedir)
     runs-on: windows-latest
-    needs: [ubuntu, windows]
+    needs: [ubuntu]  # the exe is built even while the slow Windows integration tests run
     permissions:
       contents: read
     steps:
@@ -107,12 +108,8 @@ jobs:
           $text = [System.Text.Encoding]::ASCII.GetString($bytes)
           if ($text -notmatch "requireAdministrator") { throw "no administrator manifest" }
           "company: $($item.VersionInfo.CompanyName), description: $($item.VersionInfo.FileDescription)"
-      - name: Zip and checksum
-        run: |
-          Compress-Archive -Path dist\ZeroBirus -DestinationPath ZeroBirus-dev-win64.zip
-          $hash = (Get-FileHash ZeroBirus-dev-win64.zip -Algorithm SHA256).Hash.ToLower()
-          "$hash  ZeroBirus-dev-win64.zip" | Out-File -Encoding ascii SHA256SUMS.txt
-          Get-Content SHA256SUMS.txt
+      - name: Zip (with LEIA-ME.txt) and checksum
+        run: ./packaging/make_zip.ps1 -ZipName ZeroBirus-dev-win64.zip
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: zerobirus-dev-win64

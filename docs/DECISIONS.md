@@ -21,3 +21,35 @@ Ambiente do filho construído de raiz com lista permitida; `system_root` de `Get
 ## D-005 Barra lateral sem scrollbars
 
 A barra de etapas tem sempre 7 linhas curtas; scrollbars só ocupavam a largura da versão compacta (a 150%, 853x480 lógicos) e cortavam a última etapa. Ficam desligadas e as linhas têm menos padding. Se uma etapa nova fizer a lista não caber em 460 pontos de altura, é preciso rever o layout, não voltar às scrollbars.
+
+## D-006 Temporários passam pela quarentena
+
+O pedido de "apagar temporários" cumpre-se sem quebrar a regra de nunca apagar: entradas de topo de `%TEMP%` do utilizador (mais de 2 dias, máx. 200, links nunca) são oferecidas desmarcadas e movidas para a quarentena; só "Apagar a quarentena de vez" apaga, com confirmação. Se estiver errado: custa espaço em disco na quarentena até se apagar.
+
+## D-007 Restauro de ponto: parar e perguntar
+
+Se o ponto de restauro não puder ser criado, a remoção pára e pede confirmação explícita para continuar (BRIEF §5). O ZeroBirus não liga a Proteção do Sistema por si.
+
+## D-008 Fim da análise do Defender
+
+Decidido por eventos 1000/1001/1002/1005 desde o início e pelo processo que lançámos; processo desaparecido sem evento de fim é "não foi possível saber", nunca "concluída". O 1005 só está confirmado por uma resposta da comunidade Microsoft; 1000 a 1002 pela documentação.
+
+## D-009 Reativar proteções desligadas não faz parte da v1
+
+O ZeroBirus nunca liga nem desliga antivírus ou proteções. Fica para depois, com a mesma exigência de plano autorizado.
+
+## D-010 Release em rascunho
+
+O workflow de release cria sempre um rascunho; publicar é manual. Ensaio: `workflow_dispatch`.
+
+## D-011 Primeira release: Alpha 1.0
+
+A pedido do João, depois do primeiro teste em Windows real, a versão atual é publicada como pré-release "ZeroBirus Alpha" com a tag v1.0.0. É um alpha: o que não foi provado em Windows real está dito no README e no STATUS. Se estiver errado: a release despublica-se ou apaga-se.
+
+## D-012 Firewall: verificação por números
+
+O `Get-NetFirewallRule` devolve `Action` e `Direction` como números (4 e 2) no runner; a verificação comparava com texto e nunca confirmava, apesar de a regra ser criada. Passou a comparar números. Encontrado pelo teste de integração e pelo diagnóstico no log do CI.
+
+## D-013 Firewall fora do Alpha 1.0
+
+O bloqueio de firewall deixou de ser proposto no plano: depois de várias correções a verificação independente continuava a não confirmar a regra que o diagnóstico do CI mostrava existir. Em vez de publicar algo que não consigo confirmar, retirei-o do Alpha. O código do motor e o teste ficam (teste em skip) para retomar. Se estiver errado: perde-se só a opção de bloquear IPs de pools.

@@ -11,7 +11,8 @@ import importlib
 import sys
 from typing import Any
 
-from zerobirus.platform.base import Inspector
+from zerobirus.platform.base import DefenderScanner, Inspector
+from zerobirus.remediation.ops import SystemOps
 
 
 class BackendUnavailable(RuntimeError):
@@ -27,6 +28,31 @@ def create_inspector() -> Inspector:
     raise BackendUnavailable(
         "A verificação real só funciona em Windows 10 e 11. Neste sistema usa --demo."
     )
+
+
+def create_remediation_ops() -> SystemOps:
+    """The state-changing operations for this machine. Windows only."""
+    if sys.platform == "win32":
+        module: Any = importlib.import_module("zerobirus.platform.windows")
+        ops: SystemOps = module.create_remediation_ops()
+        return ops
+    raise BackendUnavailable("A remoção real só funciona em Windows 10 e 11.")
+
+
+def restart_computer() -> None:
+    if sys.platform == "win32":
+        module: Any = importlib.import_module("zerobirus.platform.windows")
+        module.restart_computer()
+        return
+    raise BackendUnavailable("O reinício só é pedido em Windows.")
+
+
+def create_defender_scanner() -> DefenderScanner:
+    if sys.platform == "win32":
+        module: Any = importlib.import_module("zerobirus.platform.windows")
+        scanner: DefenderScanner = module.create_defender_scanner()
+        return scanner
+    raise BackendUnavailable("A análise do Defender só funciona em Windows 10 e 11.")
 
 
 def relaunch_elevated() -> bool:

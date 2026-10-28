@@ -4,7 +4,19 @@
 
 Ferramenta portátil para Windows 10 e 11 (x64) que guia, etapa a etapa, na deteção e remoção de mineradores de criptomoeda, trojans e outro malware. Foi pensada para correr de uma pen USB de reparação, sem instalação e sem depender de internet.
 
-**Estado: desenvolvimento inicial (Fase 1, verificação só de leitura). Ainda não há executável nem nada para descarregar; a verificação corre a partir do código.**
+**Estado: Alpha 1.0, a primeira release oficial. As sete etapas funcionam. Foi testada num runner Windows de CI e numa corrida manual em Windows real (limpeza de temporários: quarentena, desfazer, apagar de vez). O bloqueio de firewall (não é oferecido neste Alpha), a análise do Defender e a verificação pós-reinício ainda não foram experimentados em Windows real. A seguir: um modo simples de limpeza e otimização para gamers, ver `docs/ROADMAP.md`.**
+
+## Como funciona
+
+1. **Contexto**: o que notaste? (só muda a ordem das verificações)
+2. **Verificação** (só leitura): processos, arranque, tarefas agendadas, serviços, executáveis em pastas graváveis, ligações de rede, Microsoft Defender, ficheiro hosts, assinaturas WMI.
+3. **Diagnóstico**: cada achado é OK, CONFERIR, SUSPEITO ou NAO_VERIFICADO, com as razões. Uma verificação que não correu nunca é OK.
+4. **Autorização**: escolhes exatamente o que pode mudar. O plano fica guardado no Ambiente de trabalho antes de acontecer seja o que for.
+5. **Remoção**: ponto de restauro, informação para desfazer, e só depois os itens autorizados, cada um confirmado a reler o sistema. Remover é mover para a quarentena; tudo se pode desfazer. Opcional: mover também temporários antigos para a quarentena.
+6. **Confirmação**: repetir a verificação e ver a diferença; seguir uma análise completa do Defender (o fim vem dos eventos do Defender); verificação pós-reinício.
+7. **Depois**: conselhos (palavras-passe, formatar), relatório final, limpeza opcional da pasta de trabalho.
+
+Usa a versão compilada a partir do ZIP (ver o `LEIA-ME.txt` lá dentro), ou do código: `uv sync --locked`, `uv run zerobirus gui` (janela), `uv run zerobirus scan --demo` (dados sintéticos, funciona em Linux).
 
 ## Princípios
 

@@ -4,7 +4,19 @@
 
 A portable tool for Windows 10 and 11 (x64) that guides you step by step through detecting and removing crypto miners, trojans and other malware. It is designed to run from a repair USB stick, with no installation and no internet connection.
 
-**Status: early development (Phase 1, read-only scan). There is no download or executable yet; the scan runs from source.**
+**Status: Alpha 1.0, the first official release. All seven stages work. It was tested on a Windows CI runner and by one manual run on a real Windows PC (Temp cleaning: quarantine, undo, permanent delete). The firewall block (not offered in this Alpha), the Defender scan and the post-restart check have not been tried on real Windows. Next: a simpler cleaning and optimisation mode for gamers, see `docs/ROADMAP.md`.**
+
+## How it works
+
+1. **Context**: what did you notice? (only reorders the checks)
+2. **Scan** (read-only): processes, startup entries, scheduled tasks, services, executables in writable folders, network connections, Microsoft Defender, hosts file, WMI subscriptions.
+3. **Diagnosis**: every finding is OK, CONFERIR, SUSPEITO or NAO_VERIFICADO, with the reasons. A check that could not run is never OK.
+4. **Authorisation**: you pick exactly what may change. The plan is saved on the Desktop before anything happens.
+5. **Removal**: restore point, undo records, then only the authorised items, each one verified by re-reading the system. Removing means moving to quarantine; every item can be undone. Optional: move old Temp files to quarantine too.
+6. **Confirmation**: repeat the scan and see the difference; follow a Microsoft Defender full scan (end detected from Defender events); restart check.
+7. **After**: password and reformat advice, final report, optional cleanup of the work folder.
+
+Run the built version from a ZIP (see `LEIA-ME.txt` inside it), or from source: `uv sync --locked`, `uv run zerobirus gui` (window), `uv run zerobirus scan --demo` (synthetic data, works on Linux).
 
 ## Principles
 

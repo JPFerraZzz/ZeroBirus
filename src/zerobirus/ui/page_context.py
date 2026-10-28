@@ -16,6 +16,7 @@ from zerobirus.ui.widgets import make_label
 
 class ContextPage(Page):
     done = Signal(object)  # Answers
+    post_restart_requested = Signal(str)
 
     def __init__(
         self, *, elevated: bool, demo: bool, relaunch: Callable[[], bool] | None = None
@@ -48,6 +49,16 @@ class ContextPage(Page):
             self.restart.setToolTip(catalog.ADMIN_RESTART_DISABLED_DEMO)
         self.restart.clicked.connect(self._on_restart)
         self.body.addWidget(self.restart)
+        self.pending_label = make_label("", name="Verificação pós-reinício")
+        self.pending_button = button(catalog.BTN_POST_RESTART)
+        self.pending_label.setVisible(False)
+        self.pending_button.setVisible(False)
+        self._pending_id = ""
+        self.pending_button.clicked.connect(
+            lambda: self.post_restart_requested.emit(self._pending_id)
+        )
+        self.body.addWidget(self.pending_label)
+        self.body.addWidget(self.pending_button)
         self.body.addStretch(1)
 
         self.next_button = button(catalog.BTN_NEXT, "primary")
@@ -67,3 +78,12 @@ class ContextPage(Page):
             from PySide6.QtWidgets import QApplication
 
             QApplication.quit()
+
+    def show_pending(self, session_id: str) -> None:
+        self._pending_id = session_id
+        self.pending_label.setText(catalog.PENDING_RESTART.format(sid=session_id))
+        self.pending_label.setVisible(True)
+        self.pending_button.setVisible(True)
+
+    def show_pending_error(self) -> None:
+        self.pending_label.setText("Não foi possível abrir essa sessão.")

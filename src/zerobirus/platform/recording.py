@@ -22,6 +22,7 @@ from zerobirus.core.models import (
     ServiceInfo,
     Signature,
     TaskInfo,
+    TempEntry,
     WmiBinding,
 )
 from zerobirus.core.safety import SystemContext, normalize_windows_path
@@ -100,6 +101,9 @@ class RecordingInspector:
 
     def candidate_files(self) -> Observed[FileCandidate]:
         return self._once("files", self._inner.candidate_files)
+
+    def temp_entries(self) -> Observed[TempEntry]:
+        return self._inner.temp_entries()  # optional cleaning: not part of a scan snapshot
 
     def _fetch_shared[T](
         self,

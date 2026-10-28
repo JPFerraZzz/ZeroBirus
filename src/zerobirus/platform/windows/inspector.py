@@ -25,6 +25,7 @@ from zerobirus.core.models import (
     ServiceInfo,
     Signature,
     TaskInfo,
+    TempEntry,
     WmiBinding,
 )
 from zerobirus.core.parsing import (
@@ -39,6 +40,7 @@ from zerobirus.core.safety import SystemContext
 from zerobirus.platform.windows import files, knownfolders, ps, registry
 from zerobirus.platform.windows.paths import canonical_path
 from zerobirus.platform.windows.processes import list_processes, own_and_parent_pids
+from zerobirus.remediation.tempscan import scan_temp
 
 if sys.platform != "win32":  # pragma: no cover
     raise ImportError("zerobirus.platform.windows only works on Windows")
@@ -183,6 +185,13 @@ class WindowsInspector:
             roots.append(os.path.join(profile, "AppData", "Local"))
         roots.append(ctx.program_data)
         return files.search_roots(r for r in roots if os.path.isdir(r))
+
+    def temp_entries(self) -> Observed[TempEntry]:
+        try:
+            profile = _canon(knownfolders.known_folder(knownfolders.PROFILE))
+        except OSError as exc:
+            return Observed((), (f"não foi possível encontrar a pasta do utilizador ({exc})",))
+        return scan_temp(os.path.join(profile, "AppData", "Local", "Temp"))
 
     def file_hashes(self, paths: Sequence[str]) -> Observed[FileHash]:
         return files.sha256_of(paths)

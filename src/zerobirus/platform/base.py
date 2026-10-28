@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Protocol
 
+from zerobirus.core.defender_scan import ScanStatus
 from zerobirus.core.models import (
-    ActionResult,
     AutorunEntry,
     ConnectionInfo,
     DefenderState,
@@ -17,6 +17,7 @@ from zerobirus.core.models import (
     ServiceInfo,
     Signature,
     TaskInfo,
+    TempEntry,
     WmiBinding,
 )
 from zerobirus.core.safety import SystemContext
@@ -62,6 +63,10 @@ class Inspector(Protocol):
         """Executables found by a bounded search of user-writable places (depth, size, time)."""
         ...
 
+    def temp_entries(self) -> Observed[TempEntry]:
+        """Top-level entries of the current user's Temp folder, for the optional cleaning."""
+        ...
+
     def signatures(self, paths: Sequence[str]) -> Observed[Signature]:
         """Authenticode for the requested paths only (candidates, never the whole disk)."""
         ...
@@ -69,7 +74,11 @@ class Inspector(Protocol):
     def file_hashes(self, paths: Sequence[str]) -> Observed[FileHash]: ...
 
 
-class Remediator(Protocol):
-    """Changes the system. Must reject anything not in the authorised plan (Phase 3)."""
+class DefenderScanner(Protocol):
+    """Starts a Microsoft Defender full scan and reports how it is going, from facts only."""
 
-    def quarantine_file(self, path: str, *, plan_item_id: str) -> ActionResult: ...
+    def start(self) -> tuple[int, str]:
+        """Start it. Returns (process id, UTC start time as ISO 8601)."""
+        ...
+
+    def status(self, pid: int | None, started_at: str | None) -> ScanStatus: ...
