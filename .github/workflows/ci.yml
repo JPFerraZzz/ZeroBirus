@@ -37,7 +37,7 @@ jobs:
 
   windows:
     name: Windows (tests, windows marker, smoke)
-    timeout-minutes: 60
+    timeout-minutes: 75
     runs-on: windows-latest
     permissions:
       contents: read
@@ -50,11 +50,10 @@ jobs:
           version: ${{ env.UV_VERSION }}
       - run: uv sync --locked
       - run: uv run mypy
+      # One run only: the integration tests take ~25 min on the runner, so repeating the
+      # windows-marked ones in a second step pushed the job past its timeout.
       - name: All tests (windows-marked tests run here, never skipped)
-        run: uv run pytest -v -rs
-      - name: Windows-marked tests only (visible in the log)
-        if: success() || failure()
-        run: uv run pytest -m windows -v -s
+        run: uv run pytest -v -rs -s
       - run: uv run zerobirus version
       - run: uv run zerobirus selftest
 
