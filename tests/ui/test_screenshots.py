@@ -10,12 +10,13 @@ from zerobirus.ui.screenshots import capture
 def test_capture_at_100_percent_writes_every_stage_at_1280x720(tmp_path: Path) -> None:
     files = capture(tmp_path, scale=1.0, fixture="clean_pc")
     assert [f.name.split("-", 2)[2] for f in files] == [
-        "1-context.png",
-        "2-verify.png",
-        "3-diagnosis.png",
-        "4-diagnosis-threat.png",
-        "5-authorize.png",
-        "6-authorize-end.png",
+        "1-home.png",
+        "2-context.png",
+        "3-verify.png",
+        "4-diagnosis.png",
+        "5-diagnosis-threat.png",
+        "6-authorize.png",
+        "7-authorize-end.png",
     ]
     for f in files:
         image = QImage(str(f))
@@ -43,7 +44,7 @@ def test_capture_at_150_percent_really_scales_in_its_own_process(tmp_path: Path)
     )
     assert done.returncode == 0, done.stderr.decode("utf-8", "replace")
     files = sorted(tmp_path.glob("clean_pc-150pct-*.png"))
-    assert len(files) == 6
+    assert len(files) == 7
     for f in files:
         image = QImage(str(f))
         assert (image.width(), image.height()) == (1280, 720)  # physical pixels
