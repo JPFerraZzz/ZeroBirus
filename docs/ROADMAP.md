@@ -2,6 +2,8 @@
 
 O BRIEF (docs/BRIEF.md) continua a ser a especificação de base e as suas regras não se negoceiam. Este plano substitui a versão anterior (modo simples com cinco cartões) pela estrutura pedida pelo João depois de ver as capturas da Fase 6.
 
+O pedido original do João, palavra por palavra, e a checklist para a revisão estão em `docs/FEEDBACK_PHASE6.md`.
+
 ## Estrutura
 
 Um **menu principal** com 3 cartões. Cada cartão abre **uma janela própria**. Dentro de cada janela há os seus módulos, e os módulos com muitas opções têm um submenu próprio.
