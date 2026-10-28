@@ -1,44 +1,78 @@
-# Plano novo: ZeroBirus depois do Alpha 1.0
+# Plano: ZeroBirus depois do Alpha 1.0
 
-O BRIEF (docs/BRIEF.md) continua a ser a especificação de base e as suas regras não se negoceiam. Este plano acrescenta uma segunda face ao produto, pedida pelo João depois do primeiro teste em Windows real.
+O BRIEF (docs/BRIEF.md) continua a ser a especificação de base e as suas regras não se negoceiam. Este plano substitui a versão anterior (modo simples com cinco cartões) pela estrutura pedida pelo João depois de ver as capturas da Fase 6.
 
-## Ideia
+## Estrutura
 
-Uma só aplicação com um **ecrã inicial em forma de menu clicável**. Cada opção é um cartão grande:
+Um **menu principal** com 3 cartões. Cada cartão abre **uma janela própria**. Dentro de cada janela há os seus módulos, e os módulos com muitas opções têm um submenu próprio.
 
-1. **Limpeza** (lixo, caches, temporários)
-2. **FPS / Modo jogo**
-3. **Arranque** (programas que arrancam com o Windows)
-4. **Atualizar apps** (winget)
-5. **Drivers**
-6. **Análise profunda** (o que já existe, as 7 etapas: contexto, verificação, diagnóstico, autorização, remoção, confirmação, depois). É a **última opção, no fundo do menu**, num cartão mais largo e mais cuidado (é a que distingue o ZeroBirus de um limpador qualquer).
+```
+Menu principal
+├── Modo Jogo
+│   ├── FPS Optimizer      tudo o que rende FPS
+│   ├── RAM Lover          diagnóstico simples da RAM e otimização
+│   └── MegaTweaker        submenu próprio (muitas opções, organizadas por categoria)
+├── PitStop                (nome proposto: a paragem na box do PC, para afinar e preparar)
+│   ├── FirstSetup         submenu próprio (estilo Ninite)
+│   ├── AllUp              atualizar apps e serviços (estilo winget)
+│   ├── BigDiag            submenu próprio (relatório completo do PC)
+│   └── AllDrivers         drivers com atualização disponível
+└── Nerd'O                 a análise profunda que já existe (7 etapas), sem "modos"
+```
 
-Os cinco primeiros são o modo simples, para gamers e dia a dia: um botão grande "Analisar", números claros ("podes libertar 6,4 GB"), categorias com caixas, um toque para limpar, e no fim "libertaste X GB". Pouco texto, nada de jargão. Inspirado no que torna a limpeza do Xiaomi boa: **simples à frente, engenharia por trás** (tamanhos reais, seguro por omissão, tudo reversível). A análise profunda só recebe correções.
+Notas de organização:
 
-## Categorias do modo simples
+- A **Limpeza** deixa de ser um cartão: lixo e temporários só existem no Nerd'O, num grupo próprio "Arquivos Temporários" (ver abaixo).
+- O **Arranque** (programas que arrancam com o Windows) passa para o MegaTweaker, que reutiliza a leitura que já existe.
+- O Nerd'O é o fluxo atual de 7 etapas. Recebe só as alterações do diagnóstico descritas a seguir.
+- Cada janela usa o mesmo tema, a mesma barra lateral e o mesmo motor (plano autorizado, quarentena ou valor anterior guardado, desfazer, verificação independente).
 
-| Categoria | O que faz | Como (engenharia) |
+## Diagnóstico do Nerd'O: tabela de risco
+
+Cinco níveis, do mais leve ao mais grave. O nível sai da pontuação existente (`core/rules/*.json`); os limiares ficam em ficheiro de regras, com testes golden.
+
+| Nível | O que significa | Ação por omissão |
 | --- | --- | --- |
-| **Limpeza de lixo** | Temporários do utilizador, caches de navegadores (só cache), miniaturas, relatórios de falhas do utilizador, caches de shaders (DirectX, NVIDIA, AMD), registos antigos. Mostra o tamanho por categoria. | Lista só locais do utilizador, nunca ficheiros do Windows; passa pelo mesmo motor (plano autorizado, quarentena, desfazer, verificação). |
-| **FPS Booster / Modo jogo** | Perfil reversível para jogar: plano de energia de alto desempenho, Modo de Jogo do Windows, lista de programas em segundo plano que podes fechar enquanto jogas, desligar a captura da Xbox Game Bar (opcional). Botão "Ativar" e "Repor". | Cada alteração guarda o valor anterior e verifica depois; "Repor" desfaz tudo. Sem "limpadores de RAM" nem promessas de percentagem de FPS: mostramos antes e depois (RAM livre, processos) e dizemos que o ganho depende do PC. |
-| **Otimizador de arranque** | Programas que arrancam com o Windows, com o impacto, e desativar os que não queres. | Reutiliza a leitura de arranque que já existe; desativar é reversível. |
-| **Atualizador de apps (winget)** | Lista o que tem atualização e atualiza as que escolheres, ou todas. | Chama o `winget` do Windows (caminho absoluto); o ZeroBirus não faz pedidos de rede por si. Ver decisão em aberto 1. |
-| **Drivers** | Lista a versão e a data dos drivers (placa gráfica, rede, áudio) e leva-te às páginas certas: Windows Update (opcionais) e a página do fabricante (NVIDIA, AMD, Intel) conforme a placa detetada. | Só leitura e ligações. Não descarrega nem instala drivers (risco de cadeia de fornecimento e de ecrã preto). |
-| **Espaço em disco** (analítico) | Maiores pastas e ficheiros, só leitura. | No modo profundo, para quem percebe. |
+| 1. **Incomum** | Fora do normal mas explicável (programa raro, caminho pouco habitual). Um sinal fraco. | Só informar. Sem remoção sugerida. Fica desmarcado. |
+| 2. **Anómalo** | Vários sinais fracos ou um comportamento estranho. | Informar e guardar na base de comparação para a próxima verificação. Desmarcado. |
+| 3. **Suspeito** | Pelo menos um sinal forte, sem confirmação. | Recomenda análise do Defender e revisão manual. Remoção disponível, desmarcada. |
+| 4. **Grave** | Sinais fortes concordantes de um tipo de ameaça. | **Marcado por omissão** para quarentena. |
+| 5. **Crítico** | Confirmado por sinais independentes (por exemplo, minerador a correr, persistência e ligação a pool). | **Marcado por omissão** para quarentena, com ponto de restauro e fecho do processo antes. |
 
-## Visual
+Regras:
 
-Escuro por omissão, acento ciano/verde-elétrico, números grandes em tipo monoespaçado, anéis de progresso, cartões com cantos suaves, sem néon exagerado. Mantém tudo o que o DESIGN.md já exige: funciona a 150% em 1280x720, teclado, alto contraste do Windows, animações reduzidas. O DESIGN.md é atualizado **antes** do código.
+- O utilizador pode desmarcar qualquer item "por sua conta e risco" (texto curto e claro na interface). Marcado por omissão nunca significa executado sem autorização: o plano continua a ter de ser autorizado.
+- O `safety` manda sempre. Um item protegido (Windows, antivírus, pastas pessoais) nunca é removível, seja qual for o nível. Um item só chega a Crítico com sinais independentes; a pontuação não sobe só porque o nome assusta.
+- Remover continua a ser mover para a quarentena. Nada de apagar por omissão.
+- **Sinalização**: em vez do semáforo atual, cada incidente tem um selo de nível (cor e palavra, nunca só cor), e a lista fica agrupada por nível, do Crítico para o Incomum. Cada grupo é recolhível (já existe `CollapsibleGroup`). Cabeçalho do grupo: contagem e quantos estão marcados.
+- **Arquivos Temporários**: grupo próprio, recolhível, fora da tabela de risco. Só aparece no Nerd'O, desmarcado por omissão, passa pela quarentena como tudo o resto.
+
+## Modo Jogo
+
+Todas as alterações são reversíveis (valor anterior guardado, verificado a reler, botão "Repor"), com ponto de restauro antes.
+
+- **FPS Optimizer**: plano de energia de alto desempenho, Modo de Jogo do Windows, desligar a captura da Xbox Game Bar, agendamento de GPU por hardware se suportado, programas em segundo plano que podes fechar enquanto jogas. Mostra antes e depois (RAM livre, processos). Sem promessas de percentagem de FPS: o ganho depende do PC.
+- **RAM Lover**: diagnóstico simples (total, em uso, cache, os maiores consumidores, pressão de memória) e otimização: fechar o que escolheres e esvaziar a lista de espera (standby) quando faz sentido. Sem "limpadores de RAM" milagrosos: mostra o que mudou de facto.
+- **MegaTweaker**: submenu próprio, categorias à maneira do winutil (inspiração; reimplementamos, não copiamos código). Cada tweak tem descrição, nível (seguro, moderado, agressivo), estado atual e "Repor". Exemplos: telemetria e recomendações do Windows, animações, serviços desnecessários em PCs de jogo, arranque. Fora de qualquer nível, sempre: tudo o que toca em antivírus, Defender, Windows Update de segurança, firewall e ficheiros do Windows.
+
+## PitStop
+
+- **BigDiag**: relatório de diagnóstico completo, só leitura: resultado do MRT, RAM, discos (SSD e SMART), CPU, GPU, temperaturas quando disponíveis, estado do Defender, últimas falhas, espaço. Exporta para ficheiro redigido (sem dados pessoais).
+- **AllUp**: lista o que tem atualização e atualiza as escolhidas ou todas, chamando o `winget` do Windows por caminho absoluto.
+- **FirstSetup**: ecrã igual ao Ninite, com as mesmas categorias (Web Browsers, Messaging, Media, Developer Tools, Compression, Utilities, Other, etc.). Escolhes as apps e o ZeroBirus gera um executável no ambiente de trabalho com a marca ZeroBirus que instala tudo de seguida.
+- **AllDrivers**: lista drivers com atualização disponível. Ver decisão 2.
 
 ## Fases (cada uma para e é revista)
 
 | Fase | Conteúdo | Aceitação |
 | --- | --- | --- |
-| **6. Ecrã inicial e tema** | Atualizar DESIGN.md; ecrã inicial com o menu de cartões (a análise profunda por último, no fundo); tema escuro gamer; Autorização com grupos que se abrem e fecham (feedback do primeiro teste). | Capturas a 100% e 150% revistas; CI verde. |
-| **7. Limpeza de lixo** | Categorias com tamanhos, um toque para limpar, ecrã de resultado ("libertaste X GB"), tudo pelo motor existente. | Teste de integração no Windows; teste manual do João. |
-| **8. Modo jogo e arranque** | Operações reversíveis novas no motor (valor de registo, plano de energia, desativar arranque), perfil "Ativar/Repor", gestor de arranque. Auditoria adversarial. | Integração Windows com desfazer; auditoria em docs/reviews. |
-| **9. Atualizador e drivers** | winget (lista, atualizar escolhidas) e a página de drivers. | Teste manual do João. |
-| **10. Release 1.1** | Instalador opcional, assinatura de código (SignPath), formulário de falsos positivos da Microsoft. | Teste manual completo. |
+| **6. Ecrã inicial e tema** (feita, PR aberto) | Tema escuro, cartões, grupos recolhíveis na Autorização. | Capturas revistas; CI verde. |
+| **7. Reorganização** | DESIGN.md primeiro. Menu principal com 3 cartões e janelas por módulo (esqueleto, módulos "Em breve"). Nerd'O: tabela de risco de 5 níveis, novo sinal de seleção (Grave e Crítico marcados), grupo "Arquivos Temporários". | Golden tests dos níveis; capturas a 100% e 150%; CI verde. |
+| **8. Modo Jogo (FPS Optimizer e RAM Lover)** | Operações reversíveis novas no motor (valor de registo, plano de energia, fecho de processo), "Repor". Auditoria adversarial. | Integração Windows com desfazer; auditoria em docs/reviews. |
+| **9. MegaTweaker** | Catálogo de tweaks por categoria e nível, submenu próprio, ponto de restauro, "Repor" por tweak e total. Auditoria. | Integração Windows; teste manual do João. |
+| **10. PitStop (BigDiag e AllUp)** | Relatório completo e atualizador winget. | Teste manual do João. |
+| **11. FirstSetup e AllDrivers** | Dependem das decisões 1 e 2. | Depois das decisões. |
+| **12. Release 1.1** | Instalador opcional, assinatura de código (SignPath), formulário de falsos positivos da Microsoft. | Teste manual completo. |
 
 ## Regras que continuam (BRIEF, secção 4 e CLAUDE.md)
 
@@ -46,6 +80,10 @@ Nada altera o sistema sem um plano autorizado; tudo é reversível e verificado 
 
 ## Decisões em aberto (do João)
 
-1. **winget e a rede.** A regra "zero pedidos de rede no código do produto" mantém-se: quem descarrega é o `winget`, não o ZeroBirus. Mas o produto passa a precisar de internet para esta função, que fica **opcional e separada**, só quando carregas no botão. Recomendo aceitar assim. Se não, o atualizador só mostra o que tem atualização e abre o winget.
-2. **Libertar espaço de verdade.** A quarentena duplica o espaço até apagares. Recomendo manter a regra e ter, no fim da limpeza, o botão "Libertar já" (o "Apagar a quarentena de vez" que já existe, com confirmação). A alternativa, apagar logo caches que se regeneram sozinhas (cache de shaders e do navegador), quebra uma regra do BRIEF e precisa da tua decisão.
-3. **Âmbito do Modo jogo.** Recomendo só alterações reversíveis e pequenas (plano de energia, Modo de Jogo, Game Bar, programas em segundo plano). Tweaks agressivos de registo e serviços ficam de fora.
+Estas três bloqueiam a Fase 11 e o âmbito da Fase 9. As Fases 7 e 8 não dependem delas.
+
+1. **FirstSetup e a rede.** Um executável "como o Ninite" tem de descarregar instaladores, e o CLAUDE.md diz "zero pedidos de rede no código do produto". Recomendo: o executável gerado chama o `winget` (quem descarrega é o Windows, de uma fonte assinada pela Microsoft), e o ZeroBirus em si continua sem rede. Copiar o Ninite à letra (instaladores diretos dos sites dos fabricantes) obriga a manter links e somas de verificação de dezenas de apps, partem a cada versão, e abre a porta a instaladores trocados. Se aceitares o winget, o ecrã e as categorias ficam iguais ao Ninite; só muda o motor por trás.
+2. **AllDrivers.** Recomendo **não** instalar drivers fora do Windows Update: drivers de sites de terceiros são um risco de cadeia de fornecimento e de ecrã preto. Versão proposta: listar versão e data, mostrar o que o Windows Update tem como opcional e instalar por aí, mais a ligação à página do fabricante (NVIDIA, AMD, Intel) para a placa gráfica. Não faz "atualizar tudo num clique" com ficheiros de terceiros.
+3. **Âmbito do MegaTweaker.** A decisão anterior era só mudanças pequenas e reversíveis. O MegaTweaker alarga isto. Recomendo aceitar com estas condições: ponto de restauro antes, cada tweak reversível por valor anterior guardado, nível "agressivo" desligado por omissão e com aviso, e a lista negra acima (antivírus, Defender, atualizações de segurança, firewall, ficheiros do Windows).
+
+Nota sobre a ideia: a estrutura em 3 janelas é boa e cabe no motor que já existe. O ponto fraco é o FirstSetup à Ninite, pela razão da decisão 1; o resto é trabalho, não risco.

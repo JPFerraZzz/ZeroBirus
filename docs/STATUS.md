@@ -196,7 +196,7 @@ Versão 1.0.0, publicada como pré-release "ZeroBirus Alpha". Testes: CI Windows
 
 ## Fase 6: ecrã inicial e tema (branch `phase-6/home`, 2026-10-28)
 
-Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1584 testes). **Não testado em Windows real e sem CI Windows ainda** (a branch parte da PR #7, ainda por fundir).
+Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1584 testes). **Não testado em Windows real.** A PR #7 já está fundida em main (e a Alpha 1.0 publicada); o CI Windows desta branch corre com o PR da Fase 6.
 
 - **DESIGN.md atualizado primeiro**: tema escuro único (secção 3.1), cartões e grupos com raio de 8 px (3.4), ecrã inicial (3.11), grupos que se abrem e fecham (3.12). Tokens regenerados.
 - **Tema escuro**: `paper #0E1218`, acento menta-ciano `#2BD9B4`, níveis claros sobre fundos suaves; todos os pares passam AA (teste). Sem gradientes, sombras ou brilho. `logo-dark.svg` para a barra lateral; `logo.svg` fica para o ícone.
@@ -208,4 +208,4 @@ Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyrigh
 
 ## Próximo passo
 
-Plano novo em `docs/ROADMAP.md` (modo simples de limpeza e otimização). A Fase 6 está feita (ver acima). Segue a Fase 7 (Limpeza de lixo) quando o João rever as capturas da Fase 6.
+`docs/ROADMAP.md` foi reescrito com o feedback do João às capturas da Fase 6: menu principal com 3 janelas (Modo Jogo, PitStop, Nerd'O), tabela de risco de 5 níveis no diagnóstico e seleção por omissão de Grave e Crítico. A Fase 6 está feita. Segue a Fase 7 (reorganização: DESIGN.md primeiro, depois menu, janelas e diagnóstico) e as decisões 1 a 3 do ROADMAP bloqueiam só a Fase 11 e o âmbito da Fase 9.
