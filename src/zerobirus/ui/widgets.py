@@ -2,21 +2,33 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QPointF, QRect, QRectF, QSize, Qt
+from PySide6.QtCore import (
+    QModelIndex,
+    QPersistentModelIndex,
+    QPointF,
+    QRect,
+    QRectF,
+    QSize,
+    Qt,
+    Signal,
+)
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen, QPolygonF, QResizeEvent, QTextOption
 from PySide6.QtWidgets import (
     QFrame,
     QLabel,
     QLayout,
     QPlainTextEdit,
+    QPushButton,
     QSizePolicy,
     QStyle,
     QStyledItemDelegate,
     QStyleOptionViewItem,
+    QVBoxLayout,
     QWidget,
 )
 
 from zerobirus.core.models import Level
+from zerobirus.ui import catalog
 from zerobirus.ui.theme import TOKENS, level_style
 
 LEVEL_ROLE = Qt.ItemDataRole.UserRole + 1
@@ -228,4 +240,92 @@ class LevelBadge(QWidget):
             QRect(GLYPH + 10, 0, self.width() - GLYPH - 10, self.height()),
             int(Qt.AlignmentFlag.AlignVCenter),
             style.label,
+        )
+
+
+class HomeCard(QPushButton):
+    """One entry of the home menu: a single button (keyboard, accessible name = title + lead)."""
+
+    def __init__(self, title: str, lead: str, *, soon: bool = False, deep: bool = False) -> None:
+        super().__init__()
+        self.setProperty("role", "card")
+        if deep:
+            self.setProperty("deep", "true")
+        self.setAutoDefault(False)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setMinimumHeight(96 if not deep else 120)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self.setAccessibleName(f"{title}. {lead}" + (f" {catalog.HOME_SOON}." if soon else ""))
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(TOKENS.space_4, TOKENS.space_3, TOKENS.space_4, TOKENS.space_3)
+        lay.setSpacing(TOKENS.space_1)
+        self.title_label = make_label(title, "subtitle", wrap=False)
+        self.lead_label = make_label(lead, "lead")
+        lay.addWidget(self.title_label)
+        lay.addWidget(self.lead_label)
+        if soon:
+            lay.addWidget(make_label(catalog.HOME_SOON, "small", wrap=False))
+        lay.addStretch(1)
+        for label in self.findChildren(QLabel):
+            label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+            label.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
+
+
+class CollapsibleGroup(QWidget):
+    """A header button that opens and closes its content. The arrow and the words say the state."""
+
+    toggled = Signal(bool)
+
+    def __init__(self, title: str, *, expanded: bool) -> None:
+        super().__init__()
+        self._title = title
+        self._count = 0
+        self._marked = 0
+        self.header = QPushButton()
+        self.header.setProperty("role", "group")
+        self.header.setAutoDefault(False)
+        self.header.setCheckable(True)
+        self.header.setChecked(expanded)
+        self.header.toggled.connect(self._on_toggled)
+        self.content = QFrame()
+        self.content.setProperty("role", "groupbody")
+        self.content_layout = QVBoxLayout(self.content)
+        self.content_layout.setContentsMargins(TOKENS.space_3, TOKENS.space_2, 0, TOKENS.space_2)
+        self.content_layout.setSpacing(0)
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(TOKENS.space_1)
+        lay.addWidget(self.header)
+        lay.addWidget(self.content)
+        self.content.setVisible(expanded)
+        self._refresh()
+
+    def set_counts(self, count: int, marked: int) -> None:
+        self._count, self._marked = count, marked
+        self._refresh()
+
+    def is_expanded(self) -> bool:
+        return self.header.isChecked()
+
+    def set_expanded(self, expanded: bool) -> None:
+        self.header.setChecked(expanded)
+
+    def _on_toggled(self, expanded: bool) -> None:
+        self.content.setVisible(expanded)
+        self._refresh()
+        self.toggled.emit(expanded)
+
+    def _refresh(self) -> None:
+        expanded = self.header.isChecked()
+        text = catalog.GROUP_HEADER.format(
+            arrow="▾" if expanded else "▸",
+            title=self._title,
+            n=self._count,
+            itens="item" if self._count == 1 else "itens",
+            k=self._marked,
+        )
+        self.header.setText(text)
+        self.header.setAccessibleName(
+            f"{self._title}, {'aberto' if expanded else 'fechado'}: {self._count} "
+            f"{'item' if self._count == 1 else 'itens'}, {self._marked} para remover"
         )

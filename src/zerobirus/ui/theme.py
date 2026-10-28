@@ -14,35 +14,38 @@ from zerobirus.core.models import Level
 
 @dataclass(frozen=True, slots=True)
 class Tokens:
-    # surfaces and ink
-    paper: str = "#F5F2EA"  # page background: a warm white, easier on bad screens than #FFF
-    surface: str = "#FCFBF8"  # tables and text areas
-    ink: str = "#1C1A17"  # primary text
-    ink_muted: str = "#57534B"  # secondary text
-    rule: str = "#8C8677"  # borders that must be seen (inputs, table frame)
-    rule_soft: str = "#D8D3C6"  # hairlines between rows
-    selection: str = "#DCE8EC"  # selected row background
-    # the one action colour
-    accent: str = "#0B5C73"
-    accent_hover: str = "#084A5D"
-    on_accent: str = "#FFFFFF"
+    # surfaces and ink (dark, a cold near-black; the white of a light theme glares in a dark room)
+    paper: str = "#0E1218"  # page background
+    surface: str = "#151B24"  # tables and text areas
+    card: str = "#182030"  # the cards of the home menu and the collapsible groups
+    card_hover: str = "#1F2A3D"
+    ink: str = "#E8ECF1"  # primary text
+    ink_muted: str = "#9DA7B5"  # secondary text
+    rule: str = "#6B7788"  # borders that must be seen (inputs, table frame)
+    rule_soft: str = "#273040"  # hairlines between rows
+    selection: str = "#1D2B3A"  # selected row background
+    # the one action colour: a mint-cyan, used for the main button, the focus ring and numbers
+    accent: str = "#2BD9B4"
+    accent_hover: str = "#55E6C6"
+    on_accent: str = "#04211B"
     # levels: text colour and soft background, never alone (a shape and a word go with them)
-    suspeito: str = "#9B1B1B"
-    suspeito_bg: str = "#F6E3E0"
-    conferir: str = "#7A4B00"
-    conferir_bg: str = "#F4EAD0"
-    ok: str = "#25623A"
-    ok_bg: str = "#E1EEE3"
-    nao_verificado: str = "#4B4F59"
-    nao_verificado_bg: str = "#E6E7EA"
-    danger: str = "#9B1B1B"
+    suspeito: str = "#FF8F86"
+    suspeito_bg: str = "#3A1C20"
+    conferir: str = "#F0C050"
+    conferir_bg: str = "#34290F"
+    ok: str = "#62D890"
+    ok_bg: str = "#14301F"
+    nao_verificado: str = "#A9B2BF"
+    nao_verificado_bg: str = "#232A34"
+    danger: str = "#C23B3B"
     on_danger: str = "#FFFFFF"
-    disabled: str = "#6B665C"
+    disabled: str = "#8591A3"
     # type (points; the system font keeps ClearType and the accents right)
     font_body_pt: float = 10.0
     font_small_pt: float = 9.0
     font_title_pt: float = 16.0
     font_subtitle_pt: float = 12.0
+    font_metric_pt: float = 22.0  # the big numbers ("6,4 GB")
     font_family: str = (
         '"Segoe UI Variable Text", "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif'
     )
@@ -56,6 +59,7 @@ class Tokens:
     space_6: int = 32
     row_height: int = 36
     radius: int = 2
+    radius_card: int = 8  # only cards and groups; buttons and inputs stay nearly square
     focus_width: int = 2
 
 
@@ -69,6 +73,11 @@ TEXT_PAIRS: tuple[tuple[str, str, str], ...] = (
     ("ink", "surface", "table and text areas"),
     ("ink_muted", "paper", "secondary text on the page"),
     ("ink_muted", "surface", "secondary text in tables"),
+    ("ink", "card", "text on a card"),
+    ("ink_muted", "card", "secondary text on a card"),
+    ("accent", "card", "accent text on a card"),
+    ("ink", "card_hover", "text on a hovered card"),
+    ("ink_muted", "card_hover", "secondary text on a hovered card"),
     ("ink", "selection", "selected row"),
     ("on_accent", "accent", "primary button"),
     ("on_accent", "accent_hover", "primary button hovered"),
@@ -88,6 +97,7 @@ TEXT_PAIRS: tuple[tuple[str, str, str], ...] = (
 NON_TEXT_PAIRS: tuple[tuple[str, str, str], ...] = (
     ("rule", "paper", "borders of inputs and tables"),
     ("accent", "paper", "focus ring"),
+    ("rule", "card", "borders of cards"),
 )
 
 
@@ -136,6 +146,7 @@ QLabel[role="subtitle"] {{ font-size: {t.font_subtitle_pt}pt; font-weight: 600; 
 QLabel[role="lead"] {{ color: {t.ink_muted}; }}
 QLabel[role="small"] {{ color: {t.ink_muted}; font-size: {t.font_small_pt}pt; }}
 QLabel[role="mono"], QPlainTextEdit[role="mono"] {{ font-family: {t.font_mono}; }}
+QLabel[role="metric"] {{ font-family: {t.font_mono}; font-size: {t.font_metric_pt}pt; color: {t.accent}; }}
 QLabel[role="signature"] {{ color: {t.ink_muted}; font-size: {t.font_small_pt}pt; }}
 
 QPushButton {{
@@ -165,6 +176,24 @@ QPushButton[role="link"] {{
     text-decoration: underline; padding: {t.space_1}px {t.space_2}px;
 }}
 QPushButton[role="link"]:focus {{ border: {fw}px solid {t.accent}; }}
+
+QPushButton[role="card"] {{
+    background: {t.card}; border: 1px solid {t.rule_soft}; border-radius: {t.radius_card}px;
+    padding: 0; text-align: left;
+}}
+QPushButton[role="card"]:hover {{ background: {t.card_hover}; border-color: {t.rule}; }}
+QPushButton[role="card"]:focus {{ border: {fw}px solid {t.accent}; }}
+QPushButton[role="card"][deep="true"] {{ background: {t.surface}; border: 1px solid {t.accent}; }}
+QPushButton[role="card"][deep="true"]:hover {{ background: {t.card_hover}; }}
+QPushButton[role="group"] {{
+    background: {t.card}; border: 1px solid {t.rule_soft}; border-radius: {t.radius_card}px;
+    padding: {t.space_2}px {t.space_4}px; text-align: left; font-weight: 600; min-height: 24px;
+}}
+QPushButton[role="group"]:hover {{ background: {t.card_hover}; }}
+QPushButton[role="group"]:focus {{ border: {fw}px solid {t.accent}; }}
+QFrame[role="groupbody"] {{
+    background: transparent; border-left: 2px solid {t.rule_soft}; margin-left: {t.space_3}px;
+}}
 
 QCheckBox, QRadioButton {{ spacing: {t.space_2}px; background: transparent; }}
 QCheckBox::indicator, QRadioButton::indicator {{

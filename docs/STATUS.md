@@ -194,6 +194,18 @@ Estado: pronto exceto o teste manual. Versão 0.1.0; `packaging/LEIA-ME.txt`; `p
 
 Versão 1.0.0, publicada como pré-release "ZeroBirus Alpha". Testes: CI Windows verde nas Fases 0 a 5; teste manual em Windows real **só** da limpeza de temporários (remover para a quarentena, desfazer, apagar a quarentena). Bloqueio de firewall: **retirado do plano** nesta versão (a regra é criada, mas a verificação independente não a confirmou no CI; pendente). Por provar em Windows real: firewall, análise do Defender, verificação pós-reinício, remoção de artefactos de malware.
 
+## Fase 6: ecrã inicial e tema (branch `phase-6/home`, 2026-10-28)
+
+Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1584 testes). **Não testado em Windows real e sem CI Windows ainda** (a branch parte da PR #7, ainda por fundir).
+
+- **DESIGN.md atualizado primeiro**: tema escuro único (secção 3.1), cartões e grupos com raio de 8 px (3.4), ecrã inicial (3.11), grupos que se abrem e fecham (3.12). Tokens regenerados.
+- **Tema escuro**: `paper #0E1218`, acento menta-ciano `#2BD9B4`, níveis claros sobre fundos suaves; todos os pares passam AA (teste). Sem gradientes, sombras ou brilho. `logo-dark.svg` para a barra lateral; `logo.svg` fica para o ícone.
+- **Ecrã inicial** (`ui/page_home.py`): cartões clicáveis Limpeza, FPS / Modo jogo, Arranque, Atualizar apps, Drivers (todos "Em breve" até às Fases 7 a 9) e, no fim, a toda a largura e com contorno, a Análise profunda. A grelha passa de 3 para 2 e 1 colunas em janelas estreitas. A barra lateral ganhou "← Menu inicial" (desativada durante verificação, remoção e confirmação).
+- **Autorização com grupos** (`CollapsibleGroup`): abre por omissão só o grupo com itens SUSPEITO; cabeçalho com seta, contagem e quantos estão marcados; "Abrir tudo" e "Fechar tudo". Fechar não altera a seleção nem o botão de remover.
+- Capturas: agora 7 por conjunto (a nova é `1-home`). O CI de capturas gera-as a 100% e 150%.
+- Decisões em aberto do ROADMAP: o João não preencheu; segui as recomendações (winget opcional, quarentena com "Libertar já", Modo jogo só com mudanças pequenas e reversíveis). Nada disto foi implementado ainda: só afeta as Fases 7 a 9.
+- CI: o job Windows passava de 60 min porque corria os testes de integração duas vezes (44 + 16 min). Passou a correr uma só vez, com limite de 75 min.
+
 ## Próximo passo
 
-Plano novo em `docs/ROADMAP.md` (modo simples de limpeza e otimização). Começa pela Fase 6 (ecrã inicial, tema, Autorização com grupos) depois de o João decidir as três questões em aberto desse documento.
+Plano novo em `docs/ROADMAP.md` (modo simples de limpeza e otimização). A Fase 6 está feita (ver acima). Segue a Fase 7 (Limpeza de lixo) quando o João rever as capturas da Fase 6.

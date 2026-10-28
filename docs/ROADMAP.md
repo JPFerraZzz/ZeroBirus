@@ -4,12 +4,16 @@ O BRIEF (docs/BRIEF.md) continua a ser a especificação de base e as suas regra
 
 ## Ideia
 
-Dois modos na mesma aplicação, escolhidos no ecrã inicial:
+Uma só aplicação com um **ecrã inicial em forma de menu clicável**. Cada opção é um cartão grande:
 
-1. **Limpeza e Otimização** (novo, simples, para gamers e dia a dia). Um botão grande "Analisar", números claros ("podes libertar 6,4 GB"), categorias com caixas, um toque para limpar, e no fim "libertaste X GB". Pouco texto, nada de jargão. Inspirado no que torna a limpeza do Xiaomi boa: **simples à frente, engenharia por trás** (tamanhos reais, seguro por omissão, tudo reversível).
-2. **Análise profunda** (o que já existe, as 7 etapas: contexto, verificação, diagnóstico, autorização, remoção, confirmação, depois). Mais analítico, para quem percebe.
+1. **Limpeza** (lixo, caches, temporários)
+2. **FPS / Modo jogo**
+3. **Arranque** (programas que arrancam com o Windows)
+4. **Atualizar apps** (winget)
+5. **Drivers**
+6. **Análise profunda** (o que já existe, as 7 etapas: contexto, verificação, diagnóstico, autorização, remoção, confirmação, depois). É a **última opção, no fundo do menu**, num cartão mais largo e mais cuidado (é a que distingue o ZeroBirus de um limpador qualquer).
 
-O foco imediato é o modo simples. A análise profunda só recebe correções.
+Os cinco primeiros são o modo simples, para gamers e dia a dia: um botão grande "Analisar", números claros ("podes libertar 6,4 GB"), categorias com caixas, um toque para limpar, e no fim "libertaste X GB". Pouco texto, nada de jargão. Inspirado no que torna a limpeza do Xiaomi boa: **simples à frente, engenharia por trás** (tamanhos reais, seguro por omissão, tudo reversível). A análise profunda só recebe correções.
 
 ## Categorias do modo simples
 
@@ -30,7 +34,7 @@ Escuro por omissão, acento ciano/verde-elétrico, números grandes em tipo mono
 
 | Fase | Conteúdo | Aceitação |
 | --- | --- | --- |
-| **6. Ecrã inicial e tema** | Atualizar DESIGN.md; ecrã inicial com os dois modos; tema escuro gamer; Autorização com grupos que se abrem e fecham (feedback do primeiro teste). | Capturas a 100% e 150% revistas; CI verde. |
+| **6. Ecrã inicial e tema** | Atualizar DESIGN.md; ecrã inicial com o menu de cartões (a análise profunda por último, no fundo); tema escuro gamer; Autorização com grupos que se abrem e fecham (feedback do primeiro teste). | Capturas a 100% e 150% revistas; CI verde. |
 | **7. Limpeza de lixo** | Categorias com tamanhos, um toque para limpar, ecrã de resultado ("libertaste X GB"), tudo pelo motor existente. | Teste de integração no Windows; teste manual do João. |
 | **8. Modo jogo e arranque** | Operações reversíveis novas no motor (valor de registo, plano de energia, desativar arranque), perfil "Ativar/Repor", gestor de arranque. Auditoria adversarial. | Integração Windows com desfazer; auditoria em docs/reviews. |
 | **9. Atualizador e drivers** | winget (lista, atualizar escolhidas) e a página de drivers. | Teste manual do João. |
