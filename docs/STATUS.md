@@ -240,7 +240,7 @@ Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyrigh
 
 ## Fase 10: PitStop, BigDiag e AllUp (branch `phase-10/pitstop`, 2026-10-29)
 
-Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1729 testes). **Não testado em Windows real**; `tests/integration/test_pitstop_windows.py` ainda não correu no CI. A branch parte de `phase-9/megatweaker`.
+Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1725 testes). **Não testado em Windows real**; `tests/integration/test_pitstop_windows.py` ainda não correu no CI. A branch parte de `phase-9/megatweaker`.
 
 - **BigDiag** (`core/bigdiag.py`, `scripts/bigdiag.ps1`): relatório só de leitura com 9 secções: sistema, processador, RAM, discos (saúde, desgaste, temperatura, erros, horas), espaço livre, placa gráfica, MRT (versão, última execução e resultado lidos do log), Defender e falhas dos últimos 30 dias. Cada secção tem estado Bom, Atenção, Problema ou "Não foi possível ler"; o que não se leu nunca conta como bom. Exporta para o Ambiente de trabalho, redigido e sem dados pessoais.
 - **AllUp** (`core/allup.py`, `remediation/updates.py`, `platform/windows/winget.py`): lista o que o `winget` diz que tem atualização, a pessoa marca (nada vem marcado, há "Marcar todas"), confirma que percebe que instalar não se desfaz, e o plano fica gravado na sessão antes de instalar. Cada pacote só é "confirmado" se uma nova listagem do winget já não o mostrar. Quem descarrega é o Windows (D-016); o ZeroBirus não faz pedidos de rede.
