@@ -42,13 +42,23 @@ from zerobirus.core.session import (
     open_session,
     update_session,
 )
-from zerobirus.platform.base import DefenderScanner, Inspector, MemoryProbe
+from zerobirus.platform.base import (
+    DefenderScanner,
+    DiagProbe,
+    Inspector,
+    MemoryProbe,
+    PackageUpdater,
+)
 from zerobirus.platform.fake.defender_scan import FakeDefenderScanner
+from zerobirus.platform.fake.diag import FakeDiagProbe
 from zerobirus.platform.fake.memory import FakeMemoryProbe
 from zerobirus.platform.fake.ops import FakeOps
+from zerobirus.platform.fake.winget import FakePackageUpdater
 from zerobirus.platform.loader import (
     create_defender_scanner,
+    create_diag_probe,
     create_memory_probe,
+    create_package_updater,
     create_remediation_ops,
     restart_computer,
 )
@@ -65,6 +75,7 @@ from zerobirus.ui.page_context import ContextPage
 from zerobirus.ui.page_diagnosis import DiagnosisPage
 from zerobirus.ui.page_game import FpsPage, GameModulePage, GameServices, MegaPage, RamPage
 from zerobirus.ui.page_home import HomePage, HubPage
+from zerobirus.ui.page_pitstop import AllUpPage, BigDiagPage, PitstopPage, PitstopServices
 from zerobirus.ui.page_removal import CallWorker, RemovalPage
 from zerobirus.ui.page_scan import ScanPage
 from zerobirus.ui.theme import MIN_WINDOW, NARROW_BELOW, TOKENS
@@ -88,6 +99,8 @@ class MainWindow(QMainWindow):
         ops_factory: Callable[[], SystemOps] | None = None,
         defender_factory: Callable[[], DefenderScanner] | None = None,
         memory_factory: Callable[[], MemoryProbe] | None = None,
+        diag_factory: Callable[[], DiagProbe] | None = None,
+        updater_factory: Callable[[], PackageUpdater] | None = None,
     ) -> None:
         super().__init__()
         self.setWindowTitle(f"{catalog.APP_NAME} {catalog.SIGNATURE}")
@@ -162,11 +175,13 @@ class MainWindow(QMainWindow):
             hub.back_requested.connect(self.show_home)
             hub.opened.connect(self.show_module)
         # Modo Jogo modules that exist; the others are skeleton cards in their hub.
-        self.modules: dict[str, GameModulePage] = {
+        game_pages: dict[str, GameModulePage] = {
             "fps": FpsPage(),
             "ram": RamPage(),
             "mega": MegaPage(),
         }
+        pit_pages: dict[str, PitstopPage] = {"bigdiag": BigDiagPage(), "allup": AllUpPage()}
+        self.modules: dict[str, GameModulePage | PitstopPage] = {**game_pages, **pit_pages}
         services = GameServices(
             inspector,
             ops_factory or self._default_ops,
@@ -174,10 +189,23 @@ class MainWindow(QMainWindow):
             data_dir,
             clock,
         )
-        for module in self.modules.values():
-            module.configure(services)
-            self.screens.addWidget(module)
-            module.back_requested.connect(lambda: self.show_hub(catalog.HOME_GAME))
+        pit_services = PitstopServices(
+            inspector,
+            diag_factory or (FakeDiagProbe if demo else create_diag_probe),
+            memory_factory or (FakeMemoryProbe if demo else create_memory_probe),
+            updater_factory or (FakePackageUpdater if demo else create_package_updater),
+            data_dir,
+            desktop_dir,
+            clock,
+        )
+        for game_page in game_pages.values():
+            game_page.configure(services)
+            self.screens.addWidget(game_page)
+            game_page.back_requested.connect(lambda: self.show_hub(catalog.HOME_GAME))
+        for pit_page in pit_pages.values():
+            pit_page.configure(pit_services)
+            self.screens.addWidget(pit_page)
+            pit_page.back_requested.connect(lambda: self.show_hub(catalog.HOME_PITSTOP))
         self.setCentralWidget(self.screens)
 
         # pages

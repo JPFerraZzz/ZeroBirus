@@ -78,3 +78,7 @@ Cada cartão do menu principal abre um ecrã inteiro da mesma janela (com "← M
 ## D-019 Âmbito do Modo Jogo na Fase 8
 
 O FPS Optimizer muda só definições de um catálogo fixo e reversível; os programas em segundo plano fecham-se no RAM Lover. Esvaziar a lista de espera da RAM ficou de fora: precisa de uma chamada nativa com privilégio que não se prova sem Windows real. O resultado de uma definição mudada chama-se `APLICADO`, não `REMOVIDO`. Se estiver errado: acrescentar a lista de espera numa fase própria, com teste no CI Windows.
+
+## D-020 AllUp só com apps (winget) e plano gravado
+
+O AllUp atualiza aplicações pelo `winget`, não o Windows Update. Instalar não se desfaz, por isso exige marcar item a item, uma confirmação explícita e o plano gravado na sessão; "confirmado" só depois de uma nova listagem do winget. Se estiver errado: juntar o Windows Update numa fase própria.

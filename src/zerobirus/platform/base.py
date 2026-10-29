@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Protocol
+from collections.abc import Mapping, Sequence
+from typing import Any, Protocol
 
+from zerobirus.core.allup import Upgrade
 from zerobirus.core.defender_scan import ScanStatus
 from zerobirus.core.models import (
     AutorunEntry,
@@ -89,3 +90,19 @@ class MemoryProbe(Protocol):
     """A read-only reading of the RAM and of what each program uses."""
 
     def snapshot(self) -> MemorySnapshot: ...
+
+
+class DiagProbe(Protocol):
+    """A read-only reading of the hardware and health of the PC, as plain data (BigDiag)."""
+
+    def read(self) -> Mapping[str, Any]: ...
+
+
+class PackageUpdater(Protocol):
+    """Lists and installs app updates through the Windows package manager (winget)."""
+
+    def list_upgrades(self) -> tuple[Upgrade, ...]: ...
+
+    def upgrade(self, package_id: str) -> tuple[bool, str]:
+        """Update one package. Returns what the tool said (success flag, last line)."""
+        ...

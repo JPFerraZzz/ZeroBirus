@@ -284,7 +284,7 @@ TEMP_GROUP_TITLE = "Arquivos Temporários"
 
 
 # Modo Jogo modules (docs/ROADMAP.md, Fase 8)
-MODULES_AVAILABLE = frozenset({"fps", "ram", "mega"})
+MODULES_AVAILABLE = frozenset({"fps", "ram", "mega", "bigdiag", "allup"})
 GAME_BACK = "← &Modo Jogo"
 GAME_APPLY_N = "&Aplicar {n} definições"
 GAME_APPLY_ONE = "&Aplicar a definição"
@@ -335,3 +335,33 @@ MEGA_RISKY_WARNING = (
     "Mudam o aspeto ou o comportamento do Windows de forma notada. Vêm desmarcadas. Dão para "
     "repor, mas só as marques se percebes o que fazem."
 )
+
+PITSTOP_BACK = "← &PitStop"
+BIGDIAG_LEAD = (
+    "Um relatório completo do PC: sistema, processador, RAM, discos, espaço, placa gráfica, "
+    "MRT, Defender e falhas recentes. Só lê, não altera nada."
+)
+BIGDIAG_LEAD2 = "Carrega em «Fazer o diagnóstico». Demora um ou dois minutos."
+BIGDIAG_RUN = "&Fazer o diagnóstico"
+BIGDIAG_SAVE = "&Guardar no Ambiente de trabalho"
+BIGDIAG_RUNNING = "A ler o PC... pode demorar um ou dois minutos."
+BIGDIAG_SUMMARY = "Resumo: {status}. O que não se conseguiu ler aparece como tal."
+BIGDIAG_SAVED = "Relatório guardado em: {path}. Não tem dados pessoais."
+ALLUP_LEAD = (
+    "Atualiza as aplicações que o winget (o gestor de pacotes do Windows) diz que têm versão "
+    "nova. É o Windows que descarrega, o ZeroBirus não liga à internet."
+)
+ALLUP_LISTING = "A perguntar ao winget o que tem atualização..."
+ALLUP_FOUND = "{n} aplicações têm atualização. Marca as que queres."
+ALLUP_NONE = "Não há aplicações com atualização."
+ALLUP_FAILED = "Não foi possível: {reason}"
+ALLUP_TICK_ALL = "&Marcar todas"
+ALLUP_STOP = "&Parar depois desta"
+ALLUP_ACK = (
+    "Percebo que as atualizações instalam software, o ZeroBirus não as desfaz e podem pedir "
+    "para fechar programas"
+)
+ALLUP_APPLY_N = "&Atualizar {n} aplicações"
+ALLUP_APPLY_ONE = "&Atualizar a aplicação"
+ALLUP_RUNNING = "A atualizar... pode demorar vários minutos. Não feches o ZeroBirus."
+ALLUP_DONE = "{ok} de {n} atualizadas e confirmadas numa nova lista do winget."

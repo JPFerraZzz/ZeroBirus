@@ -11,7 +11,13 @@ import importlib
 import sys
 from typing import Any
 
-from zerobirus.platform.base import DefenderScanner, Inspector, MemoryProbe
+from zerobirus.platform.base import (
+    DefenderScanner,
+    DiagProbe,
+    Inspector,
+    MemoryProbe,
+    PackageUpdater,
+)
 from zerobirus.remediation.ops import SystemOps
 
 
@@ -45,6 +51,22 @@ def create_memory_probe() -> MemoryProbe:
         probe: MemoryProbe = module.create_memory_probe()
         return probe
     raise BackendUnavailable("O diagnóstico da RAM só funciona em Windows 10 e 11.")
+
+
+def create_diag_probe() -> DiagProbe:
+    if sys.platform == "win32":
+        module: Any = importlib.import_module("zerobirus.platform.windows")
+        probe: DiagProbe = module.create_diag_probe()
+        return probe
+    raise BackendUnavailable("O BigDiag só funciona em Windows 10 e 11.")
+
+
+def create_package_updater() -> PackageUpdater:
+    if sys.platform == "win32":
+        module: Any = importlib.import_module("zerobirus.platform.windows")
+        updater: PackageUpdater = module.create_package_updater()
+        return updater
+    raise BackendUnavailable("O AllUp só funciona em Windows 10 e 11.")
 
 
 def restart_computer() -> None:
