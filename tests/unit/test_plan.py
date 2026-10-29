@@ -15,6 +15,7 @@ from zerobirus.core.plan import (
     needs_extra_confirmation,
     render_plan_text,
 )
+from zerobirus.core.risk import Risk
 from zerobirus.platform.fake import FakeInspector
 from zerobirus.scanners.runner import run_scan
 
@@ -50,13 +51,16 @@ def test_the_miner_machine_gets_a_plan_with_every_kind_of_item() -> None:
     ]
 
 
-def test_suspeito_is_preselected_and_conferir_never_is() -> None:
+def test_only_grave_and_critico_are_preselected() -> None:
     plan = miner_plan()
     for item in plan.items:
+        if item.risk is None:
+            assert not item.default_selected, item  # optional cleaning is never marked
+        else:
+            assert item.default_selected is (item.risk in (Risk.GRAVE, Risk.CRITICO)), item
         if item.level is Level.CONFERIR:
             assert not item.default_selected, item
-        if item.level is Level.SUSPEITO and item.action is not ActionType.ADD_FIREWALL_BLOCK:
-            assert item.default_selected, item
+    assert any(i.default_selected for i in plan.items)
 
 
 def test_firewall_blocks_are_not_offered_in_alpha_1_0() -> None:
