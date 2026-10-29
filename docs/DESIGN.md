@@ -76,15 +76,24 @@ Ordem de tabulação igual à ordem visual. Todos os botões têm atalho Alt com
 
 O nome é ZeroBirus, com a assinatura "by Ferraz" mais pequena e em tinta secundária. O sinal é original: um anel grosso, quase um zero, com um pequeno quadrado encaixado numa abertura do traço. Lê-se como "zero" e como "o que ficou de fora do anel". Não é um escudo, não tem visto, não imita marcas de antivírus. Está em `src/zerobirus/ui/assets/logo.svg`, e o ícone `packaging/zerobirus.ico` é gerado dele (`tools/make_icon.py`) em 16, 24, 32, 48, 64, 128 e 256 px.
 
-### 3.11 Ecrã inicial
+### 3.11 Ecrã inicial e janelas
 
-O ecrã inicial é um menu de cartões clicáveis, em grelha (3 colunas a largura normal, 2 ou 1 quando é estreito). Cada cartão tem um título, uma frase e, quando ainda não existe, a marca "Em breve". Ordem: **Limpeza**, **FPS / Modo jogo**, **Arranque**, **Atualizar apps**, **Drivers**, e por último, **no fundo e a toda a largura**, o cartão da **Análise profunda** (contorno em `accent`, texto maior, a frase "Procura mineradores, trojans e outro malware; mostra tudo e só remove o que autorizares"). É a opção que distingue o ZeroBirus, por isso é a mais cuidada, mas fica no fim para não assustar quem só quer limpar.
+Revisto na Fase 7 (ver `docs/ROADMAP.md`, D-014). O ecrã inicial é o **menu principal** e tem exatamente três cartões, em fila a largura normal e empilhados quando é estreito: **Modo Jogo**, **PitStop** e **Nerd'O**. Cada cartão tem título, uma frase e, quando o módulo ainda não existe, a marca "Em breve". O Nerd'O (a análise profunda) mantém o contorno em `accent` e o texto maior: é o que distingue o ZeroBirus.
 
-Cada cartão é um único botão (foco por teclado, Enter ou Espaço abrem, anel de foco em `accent`, nome acessível = título + frase). Os cartões ainda por construir não fazem nada além de mostrar "Esta função chega numa versão seguinte" por baixo da grelha.
+Cada cartão abre **a sua janela**, com o mesmo tema e a mesma barra lateral:
 
-### 3.12 Grupos que se abrem e fecham (Autorização)
+- **Modo Jogo** e **PitStop** abrem uma janela com os módulos em cartões (FPS Optimizer, RAM Lover, MegaTweaker; FirstSetup, AllUp, BigDiag, AllDrivers). MegaTweaker, FirstSetup e BigDiag terão submenu próprio quando forem construídos. Na Fase 7 são esqueleto: cada módulo mostra "Em breve" e o que vai fazer.
+- **Nerd'O** abre o fluxo de sete etapas já existente, sem modos.
 
-No primeiro teste em Windows real, a lista plana da Autorização confundiu. Agora cada grupo (por exemplo "Ficheiros temporários", "Arranque com o Windows") é um cabeçalho com uma seta, o título, o número de itens e quantos estão marcados para remover. O grupo com itens SUSPEITO abre por omissão; os restantes ficam fechados, mas o resumo e o botão de remover contam sempre todos os itens, abertos ou não. Os cabeçalhos são botões (Enter e Espaço abrem e fecham; a seta e o texto dizem o estado, não só a cor). Há "Abrir tudo" e "Fechar tudo". Os itens CONFERIR continuam a vir em "Manter" e a decisão é item a item.
+Cada janela tem "← Menu principal" no topo da barra lateral (desativado enquanto algo corre). Cada cartão é um único botão (foco por teclado, Enter ou Espaço abrem, anel de foco em `accent`, nome acessível = título + frase). Um módulo "Em breve" não faz nada além de mostrar essa nota.
+
+### 3.12 Níveis de risco e grupos (Nerd'O)
+
+Cinco níveis, do mais leve ao mais grave: **Incomum, Anómalo, Suspeito, Grave, Crítico** (BRIEF §9 e D-015). Cada incidente tem um **selo de nível**: uma forma, a palavra e a cor, nunca só a cor. As formas são todas distintas (círculo vazio, círculo cheio, triângulo, losango, losango duplo) e um teste confirma-o. As cores reutilizam as quatro cores de nível existentes (cinza frio, âmbar, coral, e um coral mais forte para Crítico) sem acrescentar cor de acento.
+
+Na Autorização a lista fica **agrupada por nível**, do Crítico para o Incomum. Cada grupo é recolhível (cabeçalho com seta, título, contagem e quantos estão marcados). **Grave e Crítico vêm marcados por omissão**; os restantes, desmarcados. Desmarcar é sempre possível, com o texto curto "por tua conta e risco" por baixo do grupo marcado. Marcado nunca significa executado: o plano continua a precisar de autorização e o botão de remover mantém a fricção da 3.8. Abrem por omissão os grupos Crítico e Grave; os outros ficam fechados.
+
+**Arquivos Temporários** é um grupo à parte, recolhível, fora da tabela de risco, sempre desmarcado, no fim da lista. Só existe no Nerd'O.
 
 ## 4. Padrões a evitar (verificação)
 
@@ -93,7 +102,7 @@ Lista do BRIEF §11 e como a interface a cumpre:
 | Padrão a evitar | Como foi evitado |
 | --- | --- |
 | Gradientes decorativos, neon azul e roxo, glassmorphism, sombras difusas | Cores planas, uma só cor de ação (menta-ciano, sem brilho), nenhuma sombra nem transparência. |
-| Grelha de cartões iguais com ícone em círculo colorido | Só o menu inicial usa cartões, sem ícones em círculos, e o da análise profunda é diferente dos outros (largo, com contorno, no fundo). As páginas de trabalho mantêm a estrutura título, frase, conteúdo, barra de ações. |
+| Grelha de cartões iguais com ícone em círculo colorido | Só o menu principal usa cartões (três), sem ícones em círculos, e o do Nerd'O é diferente dos outros (contorno em accent). As páginas de trabalho mantêm a estrutura título, frase, conteúdo, barra de ações. |
 | Emojis como ícones | Nenhum emoji. Os níveis usam formas desenhadas mais texto. |
 | Terminal de filme (verde sobre preto) | Tema escuro frio com um único acento menta-ciano; sem verde fosforescente, sem efeito de terminal. A letra de largura fixa só aparece no detalhe técnico e nos números grandes. |
 | Escudo com visto e texto de marketing | Sinal geométrico original. Textos factuais, sem promessas ("Protege o teu PC" não existe). |
