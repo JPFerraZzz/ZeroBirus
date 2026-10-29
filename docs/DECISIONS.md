@@ -53,3 +53,20 @@ O `Get-NetFirewallRule` devolve `Action` e `Direction` como números (4 e 2) no 
 ## D-013 Firewall fora do Alpha 1.0
 
 O bloqueio de firewall deixou de ser proposto no plano: depois de várias correções a verificação independente continuava a não confirmar a regra que o diagnóstico do CI mostrava existir. Em vez de publicar algo que não consigo confirmar, retirei-o do Alpha. O código do motor e o teste ficam (teste em skip) para retomar. Se estiver errado: perde-se só a opção de bloquear IPs de pools.
+
+## D-014 Estrutura em três janelas
+
+Menu principal com três cartões (Modo Jogo, PitStop, Nerd'O); cada um abre uma janela própria, com submenus para MegaTweaker, FirstSetup e BigDiag. A Limpeza deixa de ser um cartão: temporários e lixo vivem só no Nerd'O, no grupo "Arquivos Temporários". Pedido do João depois das capturas da Fase 6. Se estiver errado: voltar ao menu de cartões planos da Fase 6.
+
+## D-015 Tabela de risco de cinco níveis
+
+Incomum, Anómalo, Suspeito, Grave, Crítico, com Grave e Crítico marcados por omissão e desmarcáveis "por conta e risco". Marcado nunca significa executado: o plano continua a ter de ser autorizado, e o `safety` manda sobre qualquer nível. Se estiver errado: voltar aos níveis OK, CONFERIR, SUSPEITO.
+
+## D-016 FirstSetup e AllDrivers sem rede do ZeroBirus
+
+O FirstSetup gera um executável que chama o `winget` (o Windows descarrega); o AllDrivers só usa o Windows Update. O ZeroBirus continua sem pedidos de rede. Se estiver errado: perde-se a paridade total com o Ninite, não a regra de zero rede.
+
+## D-017 MegaTweaker alarga o âmbito dos tweaks
+
+A decisão anterior era só mudanças pequenas e reversíveis. O MegaTweaker aceita mais, com ponto de restauro, valor anterior guardado por tweak, nível agressivo desligado por omissão e lista negra (antivírus, Defender, atualizações de segurança, firewall, ficheiros do Windows). Se estiver errado: reduzir o catálogo ao nível seguro.
+
