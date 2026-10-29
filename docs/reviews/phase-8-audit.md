@@ -25,3 +25,12 @@
 4. **Repor** escreve o valor que estava antes. Se a pessoa mudou a definição à mão entretanto, é substituída pelo valor antigo.
 5. **Lista de espera (standby) da RAM** não foi implementada: precisa de um privilégio e de uma chamada nativa que não consigo provar sem Windows real. O RAM Lover diz isso no ecrã.
 6. Tudo o que é Windows (registo, `powercfg`, PowerShell) só foi coberto pelo backend de demonstração e pelo teste de integração `tests/integration/test_tweaks_windows.py`, que ainda não correu no CI.
+
+## Adenda da Fase 9 (MegaTweaker)
+
+O MegaTweaker usa o mesmo motor e o mesmo catálogo: 16 definições novas em 4 categorias (Privacidade e recomendações, Aspeto e animações, Jogos e rede, Sistema e arranque), todas um único valor numérico de registo. Níveis: seguro, moderado, agressivo. As agressivas (efeitos visuais de melhor desempenho e reserva de processador para segundo plano) vêm desmarcadas, num grupo próprio com aviso, e exigem uma caixa de confirmação para aplicar.
+
+- Testes novos: o catálogo completo aplica-se e desfaz-se; um item com valor alterado é recusado; o catálogo não contém palavras de segurança (Defender, firewall, Windows Update, SmartScreen, Security Center, pasta System32); cada categoria existe; `HKLM` implica administrador.
+- Os nomes e valores de registo vêm do meu conhecimento do Windows 10 e 11, **não** de uma verificação numa máquina real. Algumas definições (telemetria, arranque rápido, otimizações de ecrã inteiro) podem não ter efeito nalgumas edições ou versões; nesse caso a verificação relê o valor e dá `APLICADO` por o valor estar lá, o que não prova o efeito. O teste manual do João é a prova.
+- `AllowTelemetry` fica numa chave de política: se o PC estiver gerido por uma organização, a política dela pode mandar mais do que isto.
+- O valor `0xFFFFFFFF` (`NetworkThrottlingIndex`) passa pelo mesmo caminho dos outros, mas é o único acima de 2 mil milhões; coberto só pelo backend de demonstração.

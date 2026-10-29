@@ -108,3 +108,23 @@ def test_the_high_performance_plan_is_set_and_the_old_one_comes_back(engine: Rem
     assert _active_plan() == HIGH_PERFORMANCE_PLAN
     assert engine.undo_item(outcome.results[0].item_id).ok
     assert _active_plan() == before
+
+
+def test_a_megatweaker_privacy_setting_is_set_confirmed_and_undone(engine: Remediation) -> None:
+    key = r"Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo"
+    before = _read(key, "Enabled")
+    outcome = _run(engine, "ad_id")
+    assert [r.result for r in outcome.results] == [ActionResult.APLICADO]
+    assert _read(key, "Enabled") == 0
+    assert engine.undo_item(outcome.results[0].item_id).ok
+    assert _read(key, "Enabled") == before
+
+
+def test_a_value_created_from_nothing_is_removed_again_by_undo(engine: Remediation) -> None:
+    key = r"Software\Microsoft\Windows\CurrentVersion\Explorer\Serialize"
+    before = _read(key, "StartupDelayInMSec")
+    outcome = _run(engine, "startup_delay")
+    assert [r.result for r in outcome.results] == [ActionResult.APLICADO]
+    assert _read(key, "StartupDelayInMSec") == 0
+    assert engine.undo_item(outcome.results[0].item_id).ok
+    assert _read(key, "StartupDelayInMSec") == before

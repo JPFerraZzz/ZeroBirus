@@ -271,7 +271,7 @@ MODULE_SOON_NOTE = "{title}: esta função chega numa versão seguinte."
 # Collapsible groups on the authorisation page (docs/DESIGN.md 3.12).
 GROUP_OPEN_ALL = "&Abrir tudo"
 GROUP_CLOSE_ALL = "&Fechar tudo"
-GROUP_HEADER = "{arrow}  {title}  ({n} {itens}, {k} para remover)"
+GROUP_HEADER = "{arrow}  {title}  ({n} {itens}, {k} {what})"
 RISK_MARKED_NOTE = "Marcados por omissão. Podes desmarcar, por tua conta e risco."
 RISK_INTRO = {
     "CRITICO": "Confirmado por sinais independentes. " + RISK_MARKED_NOTE,
@@ -284,7 +284,7 @@ TEMP_GROUP_TITLE = "Arquivos Temporários"
 
 
 # Modo Jogo modules (docs/ROADMAP.md, Fase 8)
-MODULES_AVAILABLE = frozenset({"fps", "ram"})
+MODULES_AVAILABLE = frozenset({"fps", "ram", "mega"})
 GAME_BACK = "← &Modo Jogo"
 GAME_APPLY_N = "&Aplicar {n} definições"
 GAME_APPLY_ONE = "&Aplicar a definição"
@@ -323,4 +323,15 @@ RAM_AFTER = "Fechados {done} de {n}. RAM livre: {before} antes, {after} depois."
 RAM_NO_STANDBY = (
     "Esvaziar a lista de espera da memória (standby) não está nesta versão: só se mostra o que "
     "mudou de facto."
+)
+GAME_UNDO_ONE = "&Repor esta"
+GAME_RISKY_ACK = "Percebo que as definições agressivas são por minha conta e risco"
+MEGA_LEAD = (
+    "Definições que quem monta um PC para jogar costuma desligar, por categoria. Cada uma "
+    "diz o que muda, guarda o valor anterior, é confirmada depois e dá para repor."
+)
+MEGA_RISKY_GROUP = "Agressivas (por tua conta e risco)"
+MEGA_RISKY_WARNING = (
+    "Mudam o aspeto ou o comportamento do Windows de forma notada. Vêm desmarcadas. Dão para "
+    "repor, mas só as marques se percebes o que fazem."
 )
