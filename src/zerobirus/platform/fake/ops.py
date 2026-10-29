@@ -11,6 +11,7 @@ from zerobirus.core.models import TempEntry
 from zerobirus.core.plan import EXCLUSION_KINDS, ActionType, PlanItem
 from zerobirus.core.safety import normalize_windows_path
 from zerobirus.core.snapshot import Snapshot
+from zerobirus.core.tweaks import GUID
 from zerobirus.remediation.ops import FileKind
 
 
@@ -45,6 +46,11 @@ class FakeOps:
     stubborn_pids: set[int] = field(default_factory=set[int])
     aliased: set[str] = field(default_factory=set[str])
     calls: list[str] = field(default_factory=list[str])
+    settings: dict[tuple[str, str, str], int] = field(
+        default_factory=dict[tuple[str, str, str], int]
+    )
+    power_plan: str = "381b4222-f694-41f0-9685-ff5bb260df2e"  # Balanced
+    unverifiable: set[str] = field(default_factory=set[str])  # setting values that "do not stick"
 
     @classmethod
     def from_snapshot(
@@ -149,6 +155,13 @@ class FakeOps:
             return dict(self.services[item.param("name")])
         if a is ActionType.REMOVE_HOSTS_LINE:
             return {"hosts": list(self.hosts)}
+        if a is ActionType.SET_REGISTRY_VALUE:
+            key = self._set_key(item)
+            if item.param("requires_existing") == "1" and key not in self.settings:
+                raise LookupError("esta definição não existe neste PC")
+            return {"present": key in self.settings, "data": self.settings.get(key)}
+        if a is ActionType.SET_POWER_PLAN:
+            return {"plan": self.power_plan}
         return {"present": True}
 
     def perform(self, item: PlanItem) -> None:
@@ -172,6 +185,11 @@ class FakeOps:
             self.hosts.append(f"0.0.0.0 {item.param('host')} # ZeroBirus")
         elif a is ActionType.ADD_FIREWALL_BLOCK:
             self.firewall.add(item.param("address"))
+        elif a is ActionType.SET_REGISTRY_VALUE:
+            if item.param("data") not in self.unverifiable:
+                self.settings[self._set_key(item)] = int(item.param("data"))
+        elif a is ActionType.SET_POWER_PLAN:
+            self.power_plan = item.param("plan")
 
     def verify(self, item: PlanItem) -> bool:
         a = item.action
@@ -197,6 +215,10 @@ class FakeOps:
             return any(item.param("host") in x and "ZeroBirus" in x for x in self.hosts)
         if a is ActionType.ADD_FIREWALL_BLOCK:
             return item.param("address") in self.firewall
+        if a is ActionType.SET_REGISTRY_VALUE:
+            return self.settings.get(self._set_key(item)) == int(item.param("data"))
+        if a is ActionType.SET_POWER_PLAN:
+            return self.power_plan == item.param("plan")
         return False
 
     def restore(self, item: PlanItem, saved: dict[str, Any]) -> None:
@@ -219,6 +241,20 @@ class FakeOps:
             self.hosts = [x for x in self.hosts if "ZeroBirus" not in x]
         elif a is ActionType.ADD_FIREWALL_BLOCK:
             self.firewall.discard(item.param("address"))
+        elif a is ActionType.SET_REGISTRY_VALUE:
+            key = self._set_key(item)
+            if saved["present"]:
+                self.settings[key] = int(saved["data"])
+            else:
+                self.settings.pop(key, None)
+        elif a is ActionType.SET_POWER_PLAN:
+            if not GUID.match(str(saved["plan"])):
+                raise ValueError("o plano guardado não é válido")
+            self.power_plan = str(saved["plan"])
+
+    @staticmethod
+    def _set_key(item: PlanItem) -> tuple[str, str, str]:
+        return (item.param("root"), item.param("key").lower(), item.param("value").lower())
 
     @staticmethod
     def _reg_key(item: PlanItem) -> tuple[str, str, str]:

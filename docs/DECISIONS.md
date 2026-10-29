@@ -74,3 +74,7 @@ A decisão anterior era só mudanças pequenas e reversíveis. O MegaTweaker ace
 ## D-018 Módulos como ecrãs da mesma janela
 
 Cada cartão do menu principal abre um ecrã inteiro da mesma janela (com "← Menu principal"), não uma janela do sistema separada. O Nerd'O tem threads de trabalho que o Qt aborta se a janela for destruída com eles a correr, e o estado da verificação é partilhado. Se estiver errado: passar cada módulo a `QMainWindow` própria, o que exige separar o estado da sessão e fechar os workers antes de destruir.
+
+## D-019 Âmbito do Modo Jogo na Fase 8
+
+O FPS Optimizer muda só definições de um catálogo fixo e reversível; os programas em segundo plano fecham-se no RAM Lover. Esvaziar a lista de espera da RAM ficou de fora: precisa de uma chamada nativa com privilégio que não se prova sem Windows real. O resultado de uma definição mudada chama-se `APLICADO`, não `REMOVIDO`. Se estiver errado: acrescentar a lista de espera numa fase própria, com teste no CI Windows.

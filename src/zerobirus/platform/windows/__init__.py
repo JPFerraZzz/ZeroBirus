@@ -10,7 +10,7 @@ import sys
 if sys.platform != "win32":  # pragma: no cover
     raise ImportError("zerobirus.platform.windows only works on Windows")
 
-from zerobirus.platform.base import DefenderScanner, Inspector
+from zerobirus.platform.base import DefenderScanner, Inspector, MemoryProbe
 from zerobirus.remediation.ops import SystemOps
 
 
@@ -27,6 +27,13 @@ def create_remediation_ops() -> SystemOps:
     from zerobirus.platform.windows.remediator import WindowsOps
 
     return WindowsOps(windows_directory())
+
+
+def create_memory_probe() -> MemoryProbe:
+    """Reads the RAM and the memory of each program."""
+    from zerobirus.platform.windows.memory import WindowsMemoryProbe
+
+    return WindowsMemoryProbe()
 
 
 def restart_computer() -> None:
@@ -55,6 +62,7 @@ __all__ = [
     "animations_enabled",
     "create_defender_scanner",
     "create_inspector",
+    "create_memory_probe",
     "create_remediation_ops",
     "high_contrast_active",
     "relaunch_elevated",

@@ -95,6 +95,10 @@ Na Autorização a lista fica **agrupada por nível**, do Crítico para o Incomu
 
 **Arquivos Temporários** é um grupo à parte, recolhível, fora da tabela de risco, sempre desmarcado, no fim da lista. Só existe no Nerd'O.
 
+### 3.13 Módulos do Modo Jogo
+
+FPS Optimizer e RAM Lover são ecrãs da mesma janela, abertos a partir do cartão do módulo, com "← Modo Jogo" à esquerda e a ação principal à direita. Cada escolha é uma caixa com o nome, uma frase simples e, por baixo, o estado ("Já está assim", "Não existe neste PC", "Precisa de administrador"). As definições seguras vêm marcadas, as moderadas não; no RAM Lover nenhum programa vem marcado e fechar exige uma caixa de confirmação. O botão diz o que faz e quantos itens ("Aplicar 3 definições", "Fechar 2 programas"). Depois de aplicar, cada item mostra o resultado confirmado e "Repor tudo" volta ao valor anterior; fechar programas não tem "Repor" e o texto diz porquê.
+
 ## 4. Padrões a evitar (verificação)
 
 Lista do BRIEF §11 e como a interface a cumpre:

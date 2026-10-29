@@ -11,7 +11,7 @@ import importlib
 import sys
 from typing import Any
 
-from zerobirus.platform.base import DefenderScanner, Inspector
+from zerobirus.platform.base import DefenderScanner, Inspector, MemoryProbe
 from zerobirus.remediation.ops import SystemOps
 
 
@@ -37,6 +37,14 @@ def create_remediation_ops() -> SystemOps:
         ops: SystemOps = module.create_remediation_ops()
         return ops
     raise BackendUnavailable("A remoção real só funciona em Windows 10 e 11.")
+
+
+def create_memory_probe() -> MemoryProbe:
+    if sys.platform == "win32":
+        module: Any = importlib.import_module("zerobirus.platform.windows")
+        probe: MemoryProbe = module.create_memory_probe()
+        return probe
+    raise BackendUnavailable("O diagnóstico da RAM só funciona em Windows 10 e 11.")
 
 
 def restart_computer() -> None:

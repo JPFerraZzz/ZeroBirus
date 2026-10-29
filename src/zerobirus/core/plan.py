@@ -54,6 +54,9 @@ class ActionType(StrEnum):
     ADD_FIREWALL_BLOCK = "add_firewall_block"
     CLEAN_TEMP_FILE = "clean_temp_file"
     CLEAN_TEMP_FOLDER = "clean_temp_folder"
+    # Reversible settings from the fixed catalog in core/tweaks.py (Modo Jogo).
+    SET_REGISTRY_VALUE = "set_registry_value"
+    SET_POWER_PLAN = "set_power_plan"
 
 
 # Groups in the order of BRIEF section 5 stage 3, with the text shown to the person (pt-PT).
@@ -72,6 +75,7 @@ GROUPS: tuple[tuple[str, tuple[ActionType, ...]], ...] = (
         "Ficheiros temporários (opcional)",
         (ActionType.CLEAN_TEMP_FILE, ActionType.CLEAN_TEMP_FOLDER),
     ),
+    ("Definições do Windows", (ActionType.SET_REGISTRY_VALUE, ActionType.SET_POWER_PLAN)),
 )
 ACTION_VERB = {
     ActionType.KILL_PROCESS: "Terminar o processo",
@@ -88,6 +92,8 @@ ACTION_VERB = {
     ActionType.ADD_FIREWALL_BLOCK: "Bloquear na firewall o endereço",
     ActionType.CLEAN_TEMP_FILE: "Mover para a quarentena o ficheiro temporário",
     ActionType.CLEAN_TEMP_FOLDER: "Mover para a quarentena a pasta temporária",
+    ActionType.SET_REGISTRY_VALUE: "Mudar a definição",
+    ActionType.SET_POWER_PLAN: "Mudar o plano de energia para",
 }
 
 # Labels the Defender scanner puts in ``exclusion_kind`` (pt-PT) to the names Defender uses.
