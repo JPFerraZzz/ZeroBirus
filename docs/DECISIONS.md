@@ -70,3 +70,7 @@ O FirstSetup gera um executável que chama o `winget` (o Windows descarrega); o 
 
 A decisão anterior era só mudanças pequenas e reversíveis. O MegaTweaker aceita mais, com ponto de restauro, valor anterior guardado por tweak, nível agressivo desligado por omissão e lista negra (antivírus, Defender, atualizações de segurança, firewall, ficheiros do Windows). Se estiver errado: reduzir o catálogo ao nível seguro.
 
+
+## D-018 Módulos como ecrãs da mesma janela
+
+Cada cartão do menu principal abre um ecrã inteiro da mesma janela (com "← Menu principal"), não uma janela do sistema separada. O Nerd'O tem threads de trabalho que o Qt aborta se a janela for destruída com eles a correr, e o estado da verificação é partilhado. Se estiver errado: passar cada módulo a `QMainWindow` própria, o que exige separar o estado da sessão e fechar os workers antes de destruir.

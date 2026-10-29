@@ -89,7 +89,7 @@ Cada janela tem "← Menu principal" no topo da barra lateral (desativado enquan
 
 ### 3.12 Níveis de risco e grupos (Nerd'O)
 
-Cinco níveis, do mais leve ao mais grave: **Incomum, Anómalo, Suspeito, Grave, Crítico** (BRIEF §9 e D-015). Cada incidente tem um **selo de nível**: uma forma, a palavra e a cor, nunca só a cor. As formas são todas distintas (círculo vazio, círculo cheio, triângulo, losango, losango duplo) e um teste confirma-o. As cores reutilizam as quatro cores de nível existentes (cinza frio, âmbar, coral, e um coral mais forte para Crítico) sem acrescentar cor de acento.
+Cinco níveis, do mais leve ao mais grave: **Incomum, Anómalo, Suspeito, Grave, Crítico** (BRIEF §9 e D-015). Cada incidente tem um **selo de nível**: uma forma, a palavra e a cor, nunca só a cor. As formas são todas distintas (anel, alvo, triângulo, losango cheio, losango duplo) e um teste confirma-o. As cores reutilizam as existentes, sem acrescentar nenhuma: cinza frio (Incomum), âmbar (Anómalo e Suspeito) e coral (Grave e Crítico). Quem distingue os pares de mesma cor é a forma e a palavra.
 
 Na Autorização a lista fica **agrupada por nível**, do Crítico para o Incomum. Cada grupo é recolhível (cabeçalho com seta, título, contagem e quantos estão marcados). **Grave e Crítico vêm marcados por omissão**; os restantes, desmarcados. Desmarcar é sempre possível, com o texto curto "por tua conta e risco" por baixo do grupo marcado. Marcado nunca significa executado: o plano continua a precisar de autorização e o botão de remover mantém a fricção da 3.8. Abrem por omissão os grupos Crítico e Grave; os outros ficam fechados.
 

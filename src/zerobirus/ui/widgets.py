@@ -28,8 +28,9 @@ from PySide6.QtWidgets import (
 )
 
 from zerobirus.core.models import Level
+from zerobirus.core.risk import Risk
 from zerobirus.ui import catalog
-from zerobirus.ui.theme import TOKENS, level_style
+from zerobirus.ui.theme import TOKENS, level_style, risk_style
 
 LEVEL_ROLE = Qt.ItemDataRole.UserRole + 1
 GLYPH = 12  # logical pixels
@@ -163,6 +164,47 @@ def paint_level_glyph(painter: QPainter, rect: QRectF, level: Level) -> None:
     painter.restore()
 
 
+def paint_risk_glyph(painter: QPainter, rect: QRectF, risk: Risk) -> None:
+    """One distinct shape per risk level, so colour is never the only signal."""
+    style = risk_style(risk)
+    colour = QColor(style.color)
+    painter.save()
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+    pen = QPen(colour)
+    pen.setWidthF(1.6)
+    painter.setPen(pen)
+    cx, cy = rect.center().x(), rect.center().y()
+    r = min(rect.width(), rect.height()) / 2 - 0.5
+
+    def diamond(k: float, filled: bool) -> None:
+        painter.setBrush(colour if filled else Qt.BrushStyle.NoBrush)
+        painter.drawPolygon(
+            QPolygonF(
+                [_pt(cx, cy - r * k), _pt(cx + r * k, cy), _pt(cx, cy + r * k), _pt(cx - r * k, cy)]
+            )
+        )
+
+    if style.shape == "ring":
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawEllipse(_pt(cx, cy), r, r)
+    elif style.shape == "target":
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawEllipse(_pt(cx, cy), r, r)
+        painter.setBrush(colour)
+        painter.drawEllipse(_pt(cx, cy), r * 0.35, r * 0.35)
+    elif style.shape == "triangle":
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawPolygon(
+            QPolygonF([_pt(cx, cy - r), _pt(cx + r, cy + r * 0.85), _pt(cx - r, cy + r * 0.85)])
+        )
+    elif style.shape == "diamond":
+        diamond(1.0, True)
+    else:  # double-diamond
+        diamond(1.0, False)
+        diamond(0.5, True)
+    painter.restore()
+
+
 def _pt(x: float, y: float) -> QPointF:
     return QPointF(x, y)
 
@@ -240,6 +282,37 @@ class LevelBadge(QWidget):
             QRect(GLYPH + 10, 0, self.width() - GLYPH - 10, self.height()),
             int(Qt.AlignmentFlag.AlignVCenter),
             style.label,
+        )
+
+
+class RiskBadge(QWidget):
+    """Shape plus word for a risk level (docs/DESIGN.md 3.12)."""
+
+    def __init__(self, risk: Risk, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._risk = risk
+        self.setAccessibleName("Nível de risco")
+        self.setAccessibleDescription(risk.label)
+        self.setMinimumHeight(24)
+
+    def risk(self) -> Risk:
+        return self._risk
+
+    def sizeHint(self) -> QSize:
+        return QSize(120, 24)
+
+    def paintEvent(self, event: object) -> None:
+        style = risk_style(self._risk)
+        painter = QPainter(self)
+        paint_risk_glyph(painter, QRectF(2, (self.height() - GLYPH) / 2, GLYPH, GLYPH), self._risk)
+        painter.setPen(QColor(style.color))
+        font = self.font()
+        font.setWeight(font.Weight.DemiBold)
+        painter.setFont(font)
+        painter.drawText(
+            QRect(GLYPH + 10, 0, self.width() - GLYPH - 10, self.height()),
+            int(Qt.AlignmentFlag.AlignVCenter),
+            self._risk.label,
         )
 
 

@@ -61,7 +61,7 @@ from zerobirus.ui.page_base import Page, button
 from zerobirus.ui.page_confirm import ConfirmPage
 from zerobirus.ui.page_context import ContextPage
 from zerobirus.ui.page_diagnosis import DiagnosisPage
-from zerobirus.ui.page_home import HomePage
+from zerobirus.ui.page_home import HomePage, HubPage
 from zerobirus.ui.page_removal import CallWorker, RemovalPage
 from zerobirus.ui.page_scan import ScanPage
 from zerobirus.ui.theme import MIN_WINDOW, NARROW_BELOW, TOKENS
@@ -110,6 +110,7 @@ class MainWindow(QMainWindow):
         # Two screens: the home menu, and the seven-stage flow of the deep analysis.
         self.screens = QStackedWidget()
         self.home_page = HomePage()
+        self.hubs = {key: HubPage(key) for key in catalog.HUBS}
         flow = QWidget()
         flow.setObjectName("root")
         flow.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
@@ -152,6 +153,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.stack, 1)
         self.screens.addWidget(self.home_page)
         self.screens.addWidget(flow)
+        for hub in self.hubs.values():
+            self.screens.addWidget(hub)
+            hub.back_requested.connect(self.show_home)
         self.setCentralWidget(self.screens)
 
         # pages
@@ -220,9 +224,17 @@ class MainWindow(QMainWindow):
     def at_home(self) -> bool:
         return self.screens.currentWidget() is self.home_page
 
+    def show_hub(self, key: str) -> None:
+        hub = self.hubs[key]
+        self.screens.setCurrentWidget(hub)
+        self.setWindowTitle(f"{catalog.APP_NAME} {catalog.SIGNATURE}: {catalog.HUBS[key][0]}")
+        hub.on_enter()
+
     def _on_home_choice(self, key: str) -> None:
         if key == catalog.HOME_DEEP:
             self.show_flow()
+        elif key in self.hubs:
+            self.show_hub(key)
 
     def stage(self) -> str:
         return STAGE_KEYS[self.stack.currentIndex()]
@@ -234,8 +246,6 @@ class MainWindow(QMainWindow):
         index = STAGE_KEYS.index(key)
         if index > self._unlocked:
             return  # the gates: nothing opens before the previous stage is finished
-        if not self.at_home():
-            self.screens.setCurrentIndex(1)
         self.stack.setCurrentIndex(index)
         self.rail.blockSignals(True)
         self.rail.setCurrentRow(index)
@@ -271,14 +281,14 @@ class MainWindow(QMainWindow):
             )
         # Leaving mid-scan or mid-removal would hide work that is still running.
         self.home_button.setEnabled(STAGE_KEYS[current] not in ("verify", "removal", "confirm"))
-        if not self.at_home():
+        if self.screens.currentIndex() == 1:
             self.setWindowTitle(
                 f"{catalog.APP_NAME} {catalog.SIGNATURE}: {catalog.STAGES[current][1]}"
             )
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
-        for page in (self.home_page, *self.pages):
+        for page in (self.home_page, *self.hubs.values(), *self.pages):
             page.set_compact(self.height() < COMPACT_HEIGHT)
         compact = self.width() < NARROW_BELOW
         if compact != self._compact:

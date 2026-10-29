@@ -13,7 +13,8 @@ from ui_helpers import make_window, run_scan
 
 from zerobirus.core.context import Symptom
 from zerobirus.core.models import Level
-from zerobirus.core.plan import ActionType, AuthorizedPlan
+from zerobirus.core.plan import AuthorizedPlan
+from zerobirus.core.risk import Risk
 from zerobirus.ui.main_window import STAGE_KEYS, MainWindow
 
 
@@ -89,7 +90,7 @@ def test_symptoms_reorder_the_checks_but_every_check_still_runs(
     assert saved["other_text"] == "<b>x</b>"
 
 
-def test_the_authorisation_page_preselects_suspeito_and_never_conferir(
+def test_the_authorisation_page_preselects_only_grave_and_critico(
     qtbot: QtBot, window: MainWindow
 ) -> None:
     run_scan(qtbot, window)
@@ -99,13 +100,11 @@ def test_the_authorisation_page_preselects_suspeito_and_never_conferir(
     rows = page.rows()
     assert rows
     for row in rows:
+        marked = row.item.risk in (Risk.GRAVE, Risk.CRITICO)
+        assert row.remove.isChecked() is marked, row.item
         if row.item.level is Level.CONFERIR:
             assert row.keep.isChecked(), row.item
-        if (
-            row.item.level is Level.SUSPEITO
-            and row.item.action is not ActionType.ADD_FIREWALL_BLOCK
-        ):
-            assert row.remove.isChecked(), row.item
+    assert any(r.remove.isChecked() for r in rows)
 
 
 def test_the_removing_button_stays_off_until_the_person_confirms_and_the_safe_action_has_focus(
