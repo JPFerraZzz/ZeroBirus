@@ -69,6 +69,22 @@ def create_package_updater() -> PackageUpdater:
     raise BackendUnavailable("O AllUp só funciona em Windows 10 e 11.")
 
 
+def create_driver_probe() -> DiagProbe:
+    if sys.platform == "win32":
+        module: Any = importlib.import_module("zerobirus.platform.windows")
+        probe: DiagProbe = module.create_driver_probe()
+        return probe
+    raise BackendUnavailable("O AllDrivers só funciona em Windows 10 e 11.")
+
+
+def open_uri(uri: str) -> None:
+    if sys.platform == "win32":
+        module: Any = importlib.import_module("zerobirus.platform.windows")
+        module.open_uri(uri)
+        return
+    raise BackendUnavailable("Abrir páginas só funciona em Windows.")
+
+
 def restart_computer() -> None:
     if sys.platform == "win32":
         module: Any = importlib.import_module("zerobirus.platform.windows")

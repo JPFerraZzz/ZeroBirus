@@ -58,6 +58,25 @@ def create_package_updater() -> PackageUpdater:
     return WindowsPackageUpdater(windows_directory())
 
 
+def create_driver_probe() -> DiagProbe:
+    """The read-only driver reading (installed drivers and what Windows Update has)."""
+    from zerobirus.platform.windows.diag import WindowsDiagProbe
+    from zerobirus.platform.windows.inspector import windows_directory
+
+    return WindowsDiagProbe(windows_directory(), "drivers")
+
+
+def open_uri(uri: str) -> None:
+    """Open a page or a Settings page with the shell. Only links from core.drivers.LINKS."""
+    from zerobirus.core.drivers import is_allowed_link
+
+    if not is_allowed_link(uri):
+        raise ValueError("este endereço não é um dos permitidos")
+    import os
+
+    os.startfile(uri)  # noqa: S606 - a fixed allow list, opened by the user's default handler
+
+
 def restart_computer() -> None:
     """Restart in 30 seconds (the person can cancel with ``shutdown /a``)."""
     from zerobirus.platform.windows.inspector import windows_directory
@@ -84,11 +103,13 @@ __all__ = [
     "animations_enabled",
     "create_defender_scanner",
     "create_diag_probe",
+    "create_driver_probe",
     "create_inspector",
     "create_memory_probe",
     "create_package_updater",
     "create_remediation_ops",
     "high_contrast_active",
+    "open_uri",
     "relaunch_elevated",
     "restart_computer",
 ]
