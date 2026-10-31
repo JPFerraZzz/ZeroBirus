@@ -22,7 +22,7 @@ dev = [
     "mypy==2.4.0",
     "pyright==1.1.414",
     "pytest==9.1.1",
-    "hypothesis==6.170.9",
+    "hypothesis==6.170.13",
     "pytest-socket==0.8.1",
     "pytest-qt==4.5.0",
     "types-psutil==7.2.2.20260906",
