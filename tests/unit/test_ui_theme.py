@@ -60,3 +60,15 @@ def test_design_doc_token_table_is_current() -> None:
         [sys.executable, str(REPO / "tools" / "update_design_doc.py"), "--check"], check=False
     )
     assert done.returncode == 0, "run: uv run python tools/update_design_doc.py"
+
+
+def test_each_risk_level_has_its_own_shape_and_always_a_word() -> None:
+    from zerobirus.core.risk import Risk
+    from zerobirus.ui.theme import risk_style
+
+    styles = [risk_style(r) for r in Risk]
+    assert len({s.shape for s in styles}) == 5
+    assert [s.label for s in styles] == ["INCOMUM", "ANÓMALO", "SUSPEITO", "GRAVE", "CRÍTICO"]
+    for s in styles:
+        assert contrast(s.color, TOKENS.paper) >= 4.5
+        assert contrast(s.color, s.background) >= 4.5

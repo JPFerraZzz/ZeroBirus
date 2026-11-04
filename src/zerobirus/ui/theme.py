@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from zerobirus.core.models import Level
+from zerobirus.core.risk import Risk
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,6 +120,30 @@ def level_style(level: Level, t: Tokens = TOKENS) -> LevelStyle:
             level, t.nao_verificado, t.nao_verificado_bg, "dashed-square", "NÃO VERIFICADO"
         ),
     }[level]
+
+
+@dataclass(frozen=True, slots=True)
+class RiskStyle:
+    risk: Risk
+    color: str
+    background: str
+    shape: str  # drawn in widgets.paint_risk_glyph
+    label: str  # the word, always shown next to the shape
+
+
+def risk_style(risk: Risk, t: Tokens = TOKENS) -> RiskStyle:
+    """Five levels, five shapes; the colours are the existing level colours (no new accent)."""
+    grey = (t.nao_verificado, t.nao_verificado_bg)
+    amber = (t.conferir, t.conferir_bg)
+    coral = (t.suspeito, t.suspeito_bg)
+    shape, (color, background) = {
+        Risk.INCOMUM: ("ring", grey),
+        Risk.ANOMALO: ("target", amber),
+        Risk.SUSPEITO: ("triangle", amber),
+        Risk.GRAVE: ("diamond", coral),
+        Risk.CRITICO: ("double-diamond", coral),
+    }[risk]
+    return RiskStyle(risk, color, background, shape, risk.label.upper())
 
 
 def luminance(hex_color: str) -> float:

@@ -208,35 +208,75 @@ CLEAN_WORK_ASK = (
 PENDING_RESTART = "Há uma verificação pós-reinício por fazer (sessão {sid})."
 BTN_POST_RESTART = "Fazer a verificação &pós-reinício"
 
-# Home menu (docs/DESIGN.md 3.11). The last entry is the deep analysis, always at the bottom.
+# Main menu and module windows (docs/DESIGN.md 3.11, ROADMAP "Estrutura").
 HOME_TITLE = "O que queres fazer?"
 HOME_LEAD = (
     "Escolhe uma opção. Nada é alterado sem o autorizares e tudo o que se remove pode ser desfeito."
 )
-HOME_BACK = "← Menu inicial"
+HOME_BACK = "← Menu principal"
+HUB_BACK = "← &Menu principal"
 HOME_SOON = "Em breve"
 HOME_SOON_NOTE = "Esta função chega numa versão seguinte."
-HOME_DEEP = "deep"
-# key, title, one plain sentence, available now
-HOME_CARDS: tuple[tuple[str, str, str, bool], ...] = (
-    ("clean", "Limpeza", "Apaga lixo, temporários e caches. Vês quanto espaço libertas.", False),
-    ("game", "FPS / Modo jogo", "Prepara o PC para jogar. Mudanças pequenas e reversíveis.", False),
-    ("startup", "Arranque", "Vê o que arranca com o Windows e desativa o que não queres.", False),
-    ("apps", "Atualizar apps", "Atualiza os teus programas, uns a uns ou todos de uma vez.", False),
+HOME_DEEP = "nerdo"  # the deep analysis (the seven-stage flow)
+HOME_GAME = "jogo"
+HOME_PITSTOP = "pitstop"
+# key, title, one plain sentence; the Nerd'O is the outlined card
+HOME_CARDS: tuple[tuple[str, str, str], ...] = (
     (
-        "drivers",
-        "Drivers",
-        "Vê a versão dos drivers e abre as páginas certas para atualizar.",
-        False,
+        HOME_GAME,
+        "Modo Jogo",
+        "Prepara o PC para jogar: mais FPS, RAM livre e as definições dos PCs gamer.",
+    ),
+    (
+        HOME_PITSTOP,
+        "PitStop",
+        "A paragem na box: instalar o essencial, atualizar tudo e ver como está o PC.",
+    ),
+    (
+        HOME_DEEP,
+        "Nerd'O",
+        "Procura mineradores, trojans e outro malware. Mostra tudo e só remove o que autorizares.",
     ),
 )
-HOME_DEEP_TITLE = "Análise profunda"
-HOME_DEEP_LEAD = (
-    "Procura mineradores de criptomoeda, trojans e outro malware. Mostra tudo o que encontra "
-    "e só remove o que autorizares."
-)
+# hub key -> title, lead, modules (key, title, plain sentence, has its own submenu)
+HUBS: dict[str, tuple[str, str, tuple[tuple[str, str, str, bool], ...]]] = {
+    HOME_GAME: (
+        "Modo Jogo",
+        "Três módulos para jogar melhor. Todas as mudanças são reversíveis.",
+        (
+            ("fps", "FPS Optimizer", "Tudo o que rende para ganhar FPS.", False),
+            ("ram", "RAM Lover", "Diagnóstico simples da RAM e otimização ao máximo.", False),
+            (
+                "mega",
+                "MegaTweaker",
+                "As definições que se desligam num PC gamer, por categoria e com opção de repor.",
+                True,
+            ),
+        ),
+    ),
+    HOME_PITSTOP: (
+        "PitStop",
+        "Prepara, atualiza e diagnostica o PC.",
+        (
+            ("first", "FirstSetup", "Escolhe as apps de sempre, ao estilo do Ninite.", True),
+            ("allup", "AllUp", "Atualiza todas as apps e serviços do Windows de uma vez.", False),
+            ("bigdiag", "BigDiag", "Relatório completo do PC: RAM, discos, MRT e mais.", True),
+            ("drivers", "AllDrivers", "Vê os drivers que têm atualização disponível.", False),
+        ),
+    ),
+}
+MODULE_SOON_NOTE = "{title}: esta função chega numa versão seguinte."
 
 # Collapsible groups on the authorisation page (docs/DESIGN.md 3.12).
 GROUP_OPEN_ALL = "&Abrir tudo"
 GROUP_CLOSE_ALL = "&Fechar tudo"
 GROUP_HEADER = "{arrow}  {title}  ({n} {itens}, {k} para remover)"
+RISK_MARKED_NOTE = "Marcados por omissão. Podes desmarcar, por tua conta e risco."
+RISK_INTRO = {
+    "CRITICO": "Confirmado por sinais independentes. " + RISK_MARKED_NOTE,
+    "GRAVE": "Sinais fortes que concordam entre si. " + RISK_MARKED_NOTE,
+    "SUSPEITO": "Há um sinal forte sem confirmação. Revê e, se quiseres, analisa com o Defender.",
+    "ANOMALO": "Comportamento estranho. Só para saberes: nunca vem marcado.",
+    "INCOMUM": "Fora do normal, mas explicável. Só para saberes.",
+}
+TEMP_GROUP_TITLE = "Arquivos Temporários"
