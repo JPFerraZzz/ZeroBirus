@@ -39,8 +39,9 @@ def test_winget_lists_without_installing_anything() -> None:
 def test_the_driver_reading_works_and_never_installs_anything() -> None:
     windows: Any = importlib.import_module("zerobirus.platform.windows")
     raw: dict[str, Any] = windows.create_driver_probe().read()
-    sizes: dict[str, Any] = {
-        k: (len(cast("list[Any]", v)) if isinstance(v, list) else v) for k, v in raw.items()
-    }
+    sizes: dict[str, Any] = {}
+    for key, value in raw.items():
+        shown: object = value
+        sizes[key] = len(cast("list[object]", shown)) if isinstance(shown, list) else shown
     print(ascii(sizes))
     assert raw.get("installed")  # a runner has display and network drivers
