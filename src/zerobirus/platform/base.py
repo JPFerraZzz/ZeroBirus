@@ -20,6 +20,7 @@ from zerobirus.core.models import (
     TempEntry,
     WmiBinding,
 )
+from zerobirus.core.ram import MemorySnapshot
 from zerobirus.core.safety import SystemContext
 
 
@@ -82,3 +83,9 @@ class DefenderScanner(Protocol):
         ...
 
     def status(self, pid: int | None, started_at: str | None) -> ScanStatus: ...
+
+
+class MemoryProbe(Protocol):
+    """A read-only reading of the RAM and of what each program uses."""
+
+    def snapshot(self) -> MemorySnapshot: ...

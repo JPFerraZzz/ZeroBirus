@@ -19,6 +19,7 @@ from typing import Any, cast
 import psutil
 
 from zerobirus.core.plan import EXCLUSION_KINDS, ActionType, PlanItem
+from zerobirus.core.tweaks import GUID
 from zerobirus.platform.windows import ps
 from zerobirus.platform.windows.paths import canonical_path
 from zerobirus.remediation.ops import LocalFileOps
@@ -127,6 +128,39 @@ class WindowsOps(LocalFileOps):
         except FileNotFoundError:
             return None
 
+    @staticmethod
+    def _set_target(item: PlanItem) -> tuple[int, str]:
+        """Hive and key of a catalog setting. Only the two roots the catalog uses."""
+        root = item.param("root")
+        hive = {"HKCU": winreg.HKEY_CURRENT_USER, "HKLM": winreg.HKEY_LOCAL_MACHINE}.get(root)
+        if hive is None:
+            raise ValueError("a raiz do registo não é permitida")
+        return hive, item.param("key")
+
+    def _set_read(self, item: PlanItem) -> int | None:
+        hive, sub = self._set_target(item)
+        try:
+            with winreg.OpenKey(hive, sub, 0, winreg.KEY_READ | winreg.KEY_WOW64_64KEY) as k:
+                data, kind = winreg.QueryValueEx(k, item.param("value"))
+        except FileNotFoundError:
+            return None
+        if kind != winreg.REG_DWORD or not isinstance(data, int):
+            raise ValueError("o valor atual não é um número simples; não é alterado")
+        return data
+
+    def _set_write(self, item: PlanItem, data: int | None) -> None:
+        hive, sub = self._set_target(item)
+        access = winreg.KEY_SET_VALUE | winreg.KEY_WOW64_64KEY
+        if data is None:
+            try:
+                with winreg.OpenKey(hive, sub, 0, access) as k:
+                    winreg.DeleteValue(k, item.param("value"))
+            except FileNotFoundError:
+                pass
+            return
+        with winreg.CreateKeyEx(hive, sub, 0, access) as k:
+            winreg.SetValueEx(k, item.param("value"), 0, winreg.REG_DWORD, data)
+
     # undo state for everything that is not a file or process -----------------------------
 
     def capture(self, item: PlanItem) -> dict[str, Any]:
@@ -158,7 +192,20 @@ class WindowsOps(LocalFileOps):
             return {"backup_b64": base64.b64encode(raw).decode("ascii"), "lines": lines}
         if a is ActionType.ADD_HOSTS_BLOCK:
             return {"line": self._block_line(item)}
+        if a is ActionType.SET_REGISTRY_VALUE:
+            current = self._set_read(item)
+            if current is None and item.param("requires_existing") == "1":
+                raise LookupError("esta definição não existe neste PC")
+            return {"present": current is not None, "data": current}
+        if a is ActionType.SET_POWER_PLAN:
+            return {"plan": self._active_plan()}
         return {"present": True}
+
+    def _active_plan(self) -> str:
+        plan = str(self._call("power_get"))
+        if not GUID.match(plan):
+            raise RuntimeError("não foi possível ler o plano de energia atual")
+        return plan.lower()
 
     @staticmethod
     def _wmi(item: PlanItem) -> dict[str, str]:
@@ -204,6 +251,10 @@ class WindowsOps(LocalFileOps):
             self._hosts_write(raw + (self._block_line(item) + "\r\n").encode("ascii"))
         elif a is ActionType.ADD_FIREWALL_BLOCK:
             self._call("firewall_add", address=item.param("address"))
+        elif a is ActionType.SET_REGISTRY_VALUE:
+            self._set_write(item, int(item.param("data")))
+        elif a is ActionType.SET_POWER_PLAN:
+            self._call("power_set", plan=item.param("plan"))
         else:
             raise ValueError("ação desconhecida")
 
@@ -242,6 +293,10 @@ class WindowsOps(LocalFileOps):
             )
         if a is ActionType.ADD_FIREWALL_BLOCK:
             return bool(self._call("firewall_has", address=item.param("address")))
+        if a is ActionType.SET_REGISTRY_VALUE:
+            return self._set_read(item) == int(item.param("data"))
+        if a is ActionType.SET_POWER_PLAN:
+            return self._active_plan() == item.param("plan").lower()
         return False
 
     def restore(self, item: PlanItem, saved: dict[str, Any]) -> None:
@@ -291,6 +346,16 @@ class WindowsOps(LocalFileOps):
             self._hosts_write(b"".join(kept))
         elif a is ActionType.ADD_FIREWALL_BLOCK:
             self._call("firewall_remove", address=item.param("address"))
+        elif a is ActionType.SET_REGISTRY_VALUE:
+            old = saved["data"] if saved["present"] else None
+            if old is not None and (isinstance(old, bool) or not isinstance(old, int)):
+                raise ValueError("o valor guardado não é válido")
+            self._set_write(item, old)
+        elif a is ActionType.SET_POWER_PLAN:
+            plan = str(saved["plan"])
+            if not GUID.match(plan):
+                raise ValueError("o plano guardado não é válido")
+            self._call("power_set", plan=plan)
 
     # hosts file ------------------------------------------------------------------------
 

@@ -43,8 +43,23 @@ function Get-FwRules($addr) {
     @(Get-NetFirewallRule -DisplayName ('ZeroBirus block ' + $addr) -ErrorAction SilentlyContinue | Where-Object { [int]$_.Action -eq 4 -and [int]$_.Direction -eq 2 })  # 4 = Block, 2 = Outbound (CIM returns numbers)
 }
 
+$guidPattern = '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+$powercfg = Join-Path $env:SystemRoot 'System32\powercfg.exe'
+
 $a = [string]$Params.action
 switch ($a) {
+    'power_get' {
+        $line = & $powercfg /getactivescheme | Select-Object -First 1
+        if ([string]$line -notmatch '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})') { throw 'active power plan not found' }
+        $result = Out-Result $true $Matches[1].ToLower()
+    }
+    'power_set' {
+        $plan = [string]$Params.plan
+        if ($plan -notmatch $guidPattern) { throw 'not a power plan id' }
+        & $powercfg /setactive $plan
+        if ($LASTEXITCODE -ne 0) { throw 'powercfg could not activate the plan' }
+        $result = Out-Result $true $null
+    }
     'restore_point' {
         $desc = [string]$Params.description
         $why = ''

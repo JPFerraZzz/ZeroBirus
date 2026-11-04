@@ -25,6 +25,7 @@ class ActionResult(StrEnum):
     """Outcome of a remediation action (BRIEF section 5, stage 4)."""
 
     REMOVIDO = "REMOVIDO"
+    APLICADO = "APLICADO"  # a reversible setting was changed and re-read
     EM_QUARENTENA = "EM_QUARENTENA"
     FALHOU = "FALHOU"
     PENDENTE_REINICIO = "PENDENTE_REINICIO"

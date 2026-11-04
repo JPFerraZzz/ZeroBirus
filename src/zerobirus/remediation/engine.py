@@ -37,6 +37,7 @@ from zerobirus.core.safety import (
     normalize_windows_path,
 )
 from zerobirus.core.session import Session
+from zerobirus.core.tweaks import POWER_PLANS, TWEAK_ACTIONS, catalog_tweak_for
 from zerobirus.remediation.ops import SystemOps
 
 UNDO_SCHEMA_VERSION = 1
@@ -70,6 +71,7 @@ _ORDER: tuple[tuple[ActionType, ...], ...] = (
     (ActionType.REMOVE_DEFENDER_EXCLUSION,),
     (ActionType.REMOVE_HOSTS_LINE, ActionType.ADD_HOSTS_BLOCK),
     (ActionType.ADD_FIREWALL_BLOCK,),
+    (ActionType.SET_REGISTRY_VALUE, ActionType.SET_POWER_PLAN),
 )
 _RANK = {a: i for i, group in enumerate(_ORDER) for a in group}
 
@@ -175,10 +177,21 @@ class Remediation:
 
     # public ---------------------------------------------------------------------------
 
-    def run(self, plan: AuthorizedPlan, *, proceed_without_restore_point: bool = False) -> Outcome:
+    def run(
+        self,
+        plan: AuthorizedPlan,
+        *,
+        proceed_without_restore_point: bool = False,
+        restore_point: bool = True,
+    ) -> Outcome:
+        """``restore_point=False`` is for plans that only close programs: nothing to restore."""
         if not plan.verify():
             raise NotAuthorized("o plano autorizado foi alterado depois de autorizado")
-        restore = self._restore_point(plan, proceed_without_restore_point)
+        restore = (
+            self._restore_point(plan, proceed_without_restore_point)
+            if restore_point
+            else "não pedido"
+        )
         items = sorted(plan.items, key=lambda i: _RANK.get(i.action, 99))
         results: dict[str, ItemResult] = {}
 
@@ -339,7 +352,18 @@ class Remediation:
             return None
         if a is ActionType.ADD_FIREWALL_BLOCK:
             return self._gate_address(item.param("address"))
+        if a in TWEAK_ACTIONS:
+            return self._gate_tweak(item)
         return _Refusal("tipo de ação desconhecido")
+
+    @staticmethod
+    def _gate_tweak(item: PlanItem) -> _Refusal | None:
+        """Only the exact entries of the catalog (core/tweaks.py) are ever changed."""
+        if catalog_tweak_for(item) is None:
+            return _Refusal("esta definição não faz parte das definições permitidas")
+        if item.action is ActionType.SET_POWER_PLAN and item.param("plan") not in POWER_PLANS:
+            return _Refusal("este plano de energia não é um dos permitidos")
+        return None
 
     def _gate_process(self, item: PlanItem) -> _Refusal | None:
         pid = item.param("pid")
@@ -450,7 +474,10 @@ class Remediation:
                 )
             self._ops.perform(item)
             if self._ops.verify(item):
-                return self._result(item, ActionResult.REMOVIDO, _DONE[item.action])
+                done = (
+                    ActionResult.APLICADO if item.action in TWEAK_ACTIONS else ActionResult.REMOVIDO
+                )
+                return self._result(item, done, _DONE[item.action])
             return self._result(
                 item,
                 ActionResult.FALHOU,
@@ -523,6 +550,9 @@ class Remediation:
             return "Restaurado para o local original."
         if item.action is ActionType.KILL_PROCESS:
             return "Um processo terminado não volta sozinho; abre o programa se precisares."
+        if item.action in TWEAK_ACTIONS and self._gate_tweak(item) is not None:
+            # The undo record is a file on disk; never act on a key or plan it names itself.
+            raise RuntimeError("o registo para desfazer não corresponde a uma definição permitida")
         self._ops.restore(item, saved)
         return "Restaurado."
 
@@ -574,7 +604,8 @@ class Remediation:
         record["result"] = result.result.value
         record["state"] = (
             "done"
-            if result.result in (ActionResult.REMOVIDO, ActionResult.EM_QUARENTENA)
+            if result.result
+            in (ActionResult.REMOVIDO, ActionResult.APLICADO, ActionResult.EM_QUARENTENA)
             else "failed"
         )
         self._write_record(item.id, record)
@@ -597,6 +628,8 @@ _DONE = {
     ActionType.REMOVE_HOSTS_LINE: "Linha removida do ficheiro hosts (cópia guardada).",
     ActionType.ADD_HOSTS_BLOCK: "Nome bloqueado no ficheiro hosts.",
     ActionType.ADD_FIREWALL_BLOCK: "Endereço bloqueado na firewall.",
+    ActionType.SET_REGISTRY_VALUE: "Definição alterada (o valor anterior ficou guardado).",
+    ActionType.SET_POWER_PLAN: "Plano de energia alterado (o anterior ficou guardado).",
 }
 
 
