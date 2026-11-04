@@ -37,7 +37,14 @@ from zerobirus.core.ram import (
     signers_of,
 )
 from zerobirus.core.session import Session, create_session
-from zerobirus.core.tweaks import FPS_TWEAKS, Danger, Tweak, tweak_item, wanted_value
+from zerobirus.core.tweaks import (
+    FPS_TWEAKS,
+    MEGA_TWEAKS,
+    Danger,
+    Tweak,
+    tweak_item,
+    wanted_value,
+)
 from zerobirus.platform.base import Inspector, MemoryProbe
 from zerobirus.remediation.engine import (
     ItemResult,
@@ -51,7 +58,7 @@ from zerobirus.ui import catalog
 from zerobirus.ui.page_base import Page, button
 from zerobirus.ui.page_removal import CallWorker
 from zerobirus.ui.theme import TOKENS
-from zerobirus.ui.widgets import WrapText, clear_layout, make_label, make_rule
+from zerobirus.ui.widgets import CollapsibleGroup, WrapText, clear_layout, make_label, make_rule
 
 _DONE = (ActionResult.APLICADO, ActionResult.REMOVIDO)
 
@@ -257,20 +264,47 @@ class GameModulePage(Page):
                 make_label(f"{catalog.RESULT_LABEL[r.result.value]}: {r.target}", "subtitle")
             )
             lay.addWidget(make_label(r.detail, "small"))
+            if r.result in _DONE and r.action is not ActionType.KILL_PROCESS:
+                undo = button(catalog.GAME_UNDO_ONE, name=f"Repor {r.target}")
+                undo.clicked.connect(lambda _=False, i=r.item_id: self._undo_one(i))
+                lay.addWidget(undo)
             out.append(box)
         return out
+
+    def _undo_one(self, item_id: str) -> None:
+        engine = self._engine()
+        self._start(lambda: [engine.undo_item(item_id)], self._on_undo_one)
+
+    def _on_undo_one(self, value: object) -> None:
+        rows: list[Any] = value if isinstance(value, list) else []  # pyright: ignore[reportUnknownVariableType]
+        undone = [u for u in rows if isinstance(u, UndoResult)]
+        ok = bool(undone) and all(u.ok for u in undone)
+        self.status.setText(
+            "Reposto como estava." if ok else (undone[0].detail if undone else "Não foi reposto.")
+        )
 
 
 def _free(snapshot: MemorySnapshot) -> str:
     return megabytes(snapshot.available)
 
 
-class FpsPage(GameModulePage):
-    def __init__(self) -> None:
-        super().__init__("FPS Optimizer", catalog.FPS_LEAD)
+class TweakPage(GameModulePage):
+    """A list of catalog settings; grouped by category when the settings have one."""
+
+    def __init__(self, title: str, lead: str, tweaks: tuple[Tweak, ...], note: str = "") -> None:
+        super().__init__(title, lead)
+        self._lead = lead
+        self._catalog = tweaks
+        self._note = note
         self.rows: dict[str, ChoiceRow] = {}
+        self.groups: list[CollapsibleGroup] = []
+        self._group_rows: list[tuple[CollapsibleGroup, list[ChoiceRow]]] = []
         self._tweaks: dict[str, Tweak] = {}
         self._free_before = ""
+        self.risky = QCheckBox(catalog.GAME_RISKY_ACK)
+        self.risky.setVisible(False)
+        self.risky.toggled.connect(self._refresh)
+        self.body.addWidget(self.risky)
         self.apply_button.clicked.connect(self._apply)
 
     def on_enter(self) -> None:
@@ -286,7 +320,7 @@ class FpsPage(GameModulePage):
     def _read(self, svc: GameServices) -> tuple[dict[str, str], str, bool]:
         ops = self.ops()
         states: dict[str, str] = {}
-        for t in FPS_TWEAKS:
+        for t in self._catalog:
             item = tweak_item(t)
             try:
                 saved = ops.capture(item)
@@ -309,8 +343,11 @@ class FpsPage(GameModulePage):
         self._free_before = str(free)
         self.rows = {}
         self._tweaks = {}
-        widgets: list[QWidget] = []
-        for t in FPS_TWEAKS:
+        self.groups = []
+        self._group_rows = []
+        self.risky.setChecked(False)
+        sections: dict[str, list[ChoiceRow]] = {}
+        for t in self._catalog:
             state = states[t.id]
             note = ""
             enabled = state == "todo"
@@ -334,21 +371,46 @@ class FpsPage(GameModulePage):
             row.check.toggled.connect(self._refresh)
             self.rows[t.id] = row
             self._tweaks[t.id] = t
-            widgets.append(row)
-        widgets.append(make_label(catalog.FPS_BACKGROUND_NOTE, "small"))
+            if t.category:
+                key = catalog.MEGA_RISKY_GROUP if t.danger is Danger.AGRESSIVO else t.category
+                sections.setdefault(key, []).append(row)
+        if catalog.MEGA_RISKY_GROUP in sections:  # the risky ones always come last
+            sections[catalog.MEGA_RISKY_GROUP] = sections.pop(catalog.MEGA_RISKY_GROUP)
+        widgets: list[QWidget] = []
+        if sections:
+            for i, (title, rows) in enumerate(sections.items()):
+                risky = title == catalog.MEGA_RISKY_GROUP
+                group = CollapsibleGroup(title, expanded=i == 0, marked_word="marcadas")
+                if risky:
+                    group.content_layout.addWidget(make_label(catalog.MEGA_RISKY_WARNING, "small"))
+                for row in rows:
+                    group.content_layout.addWidget(row)
+                    group.content_layout.addWidget(make_rule())
+                self.groups.append(group)
+                self._group_rows.append((group, rows))
+                widgets.append(group)
+        else:
+            widgets.extend(self.rows.values())
+        if self._note:
+            widgets.append(make_label(self._note, "small"))
         self._fill(widgets)
-        self.status.setText(catalog.FPS_LEAD)
+        self.status.setText(self._lead)
         self._refresh()
 
     def selected(self) -> list[Tweak]:
         return [self._tweaks[k] for k, r in self.rows.items() if r.check.isChecked()]
 
     def _refresh(self) -> None:
-        n = len(self.selected())
+        chosen = self.selected()
+        n = len(chosen)
+        risky = any(t.danger is Danger.AGRESSIVO for t in chosen)
+        for group, rows in self._group_rows:
+            group.set_counts(len(rows), sum(r.check.isChecked() for r in rows))
+        self.risky.setVisible(risky)
         self.apply_button.setText(
             catalog.GAME_APPLY_ONE if n == 1 else catalog.GAME_APPLY_N.format(n=n)
         )
-        self.apply_button.setEnabled(n > 0)
+        self.apply_button.setEnabled(n > 0 and (not risky or self.risky.isChecked()))
 
     def _apply(self) -> None:
         chosen = self.selected()
@@ -381,6 +443,16 @@ class FpsPage(GameModulePage):
         self.undo_button.setEnabled(True)
         self.undo_button.setVisible(False)
         self._back_to_list()
+
+
+class FpsPage(TweakPage):
+    def __init__(self) -> None:
+        super().__init__("FPS Optimizer", catalog.FPS_LEAD, FPS_TWEAKS, catalog.FPS_BACKGROUND_NOTE)
+
+
+class MegaPage(TweakPage):
+    def __init__(self) -> None:
+        super().__init__("MegaTweaker", catalog.MEGA_LEAD, MEGA_TWEAKS)
 
 
 class RamPage(GameModulePage):

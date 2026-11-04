@@ -7,10 +7,12 @@ import pytest
 from pytestqt.qtbot import QtBot
 from ui_helpers import make_window
 
+from zerobirus.core.models import ActionResult
+from zerobirus.core.tweaks import CATALOG, CATEGORIES, MEGA_TWEAKS, Danger
 from zerobirus.platform.fake.ops import FakeOps
 from zerobirus.ui import catalog
 from zerobirus.ui.main_window import MainWindow
-from zerobirus.ui.page_game import FpsPage, RamPage
+from zerobirus.ui.page_game import FpsPage, MegaPage, RamPage
 
 
 @pytest.fixture
@@ -29,14 +31,15 @@ def open_module(qtbot: QtBot, w: MainWindow, key: str, waiting_for: str) -> None
     qtbot.waitUntil(lambda: not page.status.text().startswith(waiting_for), timeout=10_000)
 
 
-def test_the_hub_opens_the_two_built_modules_and_the_third_stays_a_skeleton(
-    window: MainWindow,
-) -> None:
+def test_the_game_hub_opens_all_three_modules(window: MainWindow) -> None:
     window.home_page.cards["jogo"].click()
-    hub = window.hubs["jogo"]
-    assert {"fps", "ram"} == catalog.MODULES_AVAILABLE
-    hub.cards["mega"].click()
-    assert window.screens.currentWidget() is hub
+    assert {"fps", "ram", "mega"} == catalog.MODULES_AVAILABLE
+    for key in ("fps", "ram", "mega"):
+        window.hubs["jogo"].cards[key].click()
+        assert window.screens.currentWidget() is window.modules[key]
+        window.modules[key].wait()
+        window.modules[key].back_button.click()
+        assert window.screens.currentWidget() is window.hubs["jogo"]
 
 
 def test_fps_lists_the_settings_with_the_safe_ones_ticked_and_nothing_changes_until_applied(
@@ -151,3 +154,57 @@ def test_the_plan_is_saved_in_the_session_before_anything_changes(
     page.wait()
     plan = next(window.data_dir.glob("Sessions/*/plan.json"))
     assert "game_mode" in plan.read_text("utf-8")
+
+
+def test_megatweaker_groups_by_category_and_keeps_the_aggressive_ones_unticked(
+    qtbot: QtBot, window: MainWindow
+) -> None:
+    open_module(qtbot, window, "mega", "A ler")
+    page = window.modules["mega"]
+    assert isinstance(page, MegaPage)
+    titles = [g.header.accessibleName().split(",")[0] for g in page.groups]
+    assert titles[:4] == list(CATEGORIES)
+    assert titles[-1] == catalog.MEGA_RISKY_GROUP
+    assert [g.is_expanded() for g in page.groups] == [True, False, False, False, False]
+    for tid, row in page.rows.items():
+        danger = CATALOG[tid].danger
+        assert row.check.isChecked() is (danger is Danger.SEGURO and row.check.isEnabled()), tid
+    assert not page.risky.isVisibleTo(page)
+
+
+def test_ticking_an_aggressive_setting_needs_the_acknowledgement(
+    qtbot: QtBot, window: MainWindow
+) -> None:
+    open_module(qtbot, window, "mega", "A ler")
+    page = window.modules["mega"]
+    assert isinstance(page, MegaPage)
+    assert page.apply_button.isEnabled()
+    page.rows["visual_fx"].check.setChecked(True)
+    assert page.risky.isVisibleTo(page)
+    assert not page.apply_button.isEnabled()
+    page.risky.setChecked(True)
+    assert page.apply_button.isEnabled()
+    page.rows["visual_fx"].check.setChecked(False)
+    assert not page.risky.isVisibleTo(page)
+
+
+def test_megatweaker_applies_only_what_is_ticked_and_resets_one_or_all(
+    qtbot: QtBot, window: MainWindow
+) -> None:
+    open_module(qtbot, window, "mega", "A ler")
+    page = window.modules["mega"]
+    assert isinstance(page, MegaPage)
+    ops = page.ops()
+    assert isinstance(ops, FakeOps)
+    safe_user = [t for t in MEGA_TWEAKS if t.danger is Danger.SEGURO and not t.needs_admin]
+    page.apply_button.click()
+    qtbot.waitUntil(lambda: bool(page.results), timeout=10_000)
+    page.wait()
+    done = [r for r in page.results if r.result is ActionResult.APLICADO]
+    # The fake machine is not elevated, so the safe settings that need administrator stay out.
+    assert len(done) == len(safe_user)
+    assert len(ops.settings) == len(safe_user)
+    assert "restore_point" in ops.calls
+    page.undo_button.click()
+    page.wait()
+    qtbot.waitUntil(lambda: ops.settings == {}, timeout=10_000)

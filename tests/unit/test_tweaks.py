@@ -22,7 +22,16 @@ from zerobirus.core.ram import (
 )
 from zerobirus.core.safety import SignerKind, normalize_windows_path
 from zerobirus.core.session import Session, create_session
-from zerobirus.core.tweaks import CATALOG, FPS_TWEAKS, HIGH_PERFORMANCE_PLAN, tweak_item
+from zerobirus.core.tweaks import (
+    ALL_TWEAKS,
+    CATALOG,
+    CATEGORIES,
+    FPS_TWEAKS,
+    HIGH_PERFORMANCE_PLAN,
+    MEGA_TWEAKS,
+    Danger,
+    tweak_item,
+)
 from zerobirus.platform.fake.memory import FakeMemoryProbe
 from zerobirus.platform.fake.ops import FakeOps
 from zerobirus.remediation.engine import Remediation
@@ -52,9 +61,20 @@ def authorise(*items: PlanItem) -> AuthorizedPlan:
 
 
 def test_catalog_has_unique_ids_and_never_touches_security() -> None:
-    assert len({t.id for t in FPS_TWEAKS}) == len(FPS_TWEAKS)
-    forbidden = ("defender", "firewall", "windows update", "antivirus", "wuauserv", "sense")
-    for t in FPS_TWEAKS:
+    assert len({t.id for t in ALL_TWEAKS}) == len(ALL_TWEAKS)
+    forbidden = (
+        "defender",
+        "firewall",
+        "windows update",
+        "windowsupdate",
+        "antivirus",
+        "wuauserv",
+        "sense",
+        "smartscreen",
+        "securitycenter",
+        "\\system32",
+    )
+    for t in ALL_TWEAKS:
         text = (t.title + " " + " ".join(v for _k, v in t.params)).lower()
         assert not any(f in text for f in forbidden), t.id
         assert t.params
@@ -225,3 +245,37 @@ def test_closing_a_program_whose_pid_was_reused_is_refused(session: Session) -> 
     outcome = Remediation(ops, CTX, session).run(authorise(item))
     assert outcome.results[0].result is ActionResult.IGNORADO
     assert 4101 in ops.processes
+
+
+def test_megatweaker_settings_are_complete_and_only_registry_numbers() -> None:
+    assert {t.category for t in MEGA_TWEAKS} == set(CATEGORIES)
+    assert any(t.danger is Danger.AGRESSIVO for t in MEGA_TWEAKS)
+    for t in MEGA_TWEAKS:
+        assert t.action.value == "set_registry_value", t.id
+        assert t.param("type") == "dword", t.id
+        assert t.param("root") in ("HKCU", "HKLM"), t.id
+        assert t.needs_admin is (t.param("root") == "HKLM"), t.id
+        assert t.title
+        assert t.why
+
+
+def test_every_megatweaker_setting_is_applied_and_put_back(session: Session) -> None:
+    ops = FakeOps()
+    items = [tweak_item(t) for t in MEGA_TWEAKS]
+    eng = Remediation(ops, CTX, session)
+    outcome = eng.run(authorise(*items))
+    assert all(r.result is ActionResult.APLICADO for r in outcome.results)
+    assert len(ops.settings) == len(MEGA_TWEAKS)
+    for r in outcome.results:
+        assert eng.undo_item(r.item_id).ok
+    assert ops.settings == {}
+
+
+def test_a_megatweaker_item_with_a_changed_value_is_refused(session: Session) -> None:
+    good = tweak_item(CATALOG["ad_id"])
+    params = tuple((k, "5" if k == "data" else v) for k, v in good.params)
+    item = dataclasses.replace(good, params=params, id=item_id(good.action, params))
+    ops = FakeOps()
+    outcome = Remediation(ops, CTX, session).run(authorise(item))
+    assert outcome.results[0].result is ActionResult.IGNORADO
+    assert ops.settings == {}

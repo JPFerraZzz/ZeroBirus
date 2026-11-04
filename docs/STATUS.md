@@ -228,6 +228,16 @@ Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyrigh
 - **Desvios do ROADMAP (D-019)**: (1) os "programas em segundo plano que podes fechar" do FPS Optimizer são o RAM Lover; o FPS Optimizer remete para ele. (2) A lista de espera (standby) da RAM **não** está implementada, por precisar de uma chamada nativa que não consigo provar sem Windows; o ecrã diz isso. (3) O agendamento da GPU depende de a chave já existir.
 - Auditoria adversarial em `docs/reviews/phase-8-audit.md`, com 6 riscos residuais (o mais relevante: as definições vão para o `HKCU` do utilizador que abriu o ZeroBirus como administrador).
 
+## Fase 9: MegaTweaker (branch `phase-9/megatweaker`, 2026-10-29)
+
+Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1658 testes). **Não testado em Windows real**; os testes de integração novos (`tests/integration/test_tweaks_windows.py`, 5 testes no total) ainda não correram no CI. A branch parte de `phase-8/game`.
+
+- **MegaTweaker** (cartão do Modo Jogo, ecrã próprio): 16 definições em 4 categorias (Privacidade e recomendações, Aspeto e animações, Jogos e rede, Sistema e arranque), por nível: seguro (marcado), moderado (desmarcado) e agressivo (desmarcado, grupo à parte com aviso e caixa de confirmação para aplicar). Mostra o estado atual de cada uma e se precisa de administrador ou de reiniciar.
+- Mesmo motor da Fase 8: ponto de restauro antes, valor anterior guardado, resultado relido (`APLICADO`), plano gravado na sessão, **Repor por definição e Repor tudo**.
+- Lista negra respeitada por teste: nada de antivírus, Defender, Windows Update, SmartScreen, Security Center nem ficheiros do Windows.
+- **Ainda por fazer do ROADMAP** (não está nesta fase): o "Arranque" (programas que arrancam com o Windows) como categoria do MegaTweaker. Reutilizar a leitura de arranque exige ligar o inspetor ao ecrã e a uma ação de desativar reversível (hoje o motor só remove valores de arranque, com quarentena); fica para uma fase própria ou para o Nerd'O, que já os trata.
+- Os nomes e valores de registo são do meu conhecimento do Windows, não de uma máquina real. Ver a adenda em `docs/reviews/phase-8-audit.md`.
+
 ## Próximo passo
 
-`docs/ROADMAP.md` foi reescrito com o feedback do João às capturas da Fase 6: menu principal com 3 janelas (Modo Jogo, PitStop, Nerd'O), tabela de risco de 5 níveis no diagnóstico e seleção por omissão de Grave e Crítico. A Fase 6 está feita (PR #8 aberto, à espera do CI Windows e do OK do João). Em 2026-10-29 o João aceitou a tabela de risco, o nome PitStop e as decisões 1 a 3 (D-014 a D-017); já não há decisões em aberto. A Fase 7 está na branch `phase-7/restructure` e a Fase 8 em `phase-8/game` (empilhada sobre a 7), à espera da tua revisão. Segue a Fase 9 (MegaTweaker) e a Fase 11 só precisa de confirmar as categorias do Ninite.
+`docs/ROADMAP.md` foi reescrito com o feedback do João às capturas da Fase 6: menu principal com 3 janelas (Modo Jogo, PitStop, Nerd'O), tabela de risco de 5 níveis no diagnóstico e seleção por omissão de Grave e Crítico. A Fase 6 está feita (PR #8 aberto, à espera do CI Windows e do OK do João). Em 2026-10-29 o João aceitou a tabela de risco, o nome PitStop e as decisões 1 a 3 (D-014 a D-017); já não há decisões em aberto. A Fase 7 está na branch `phase-7/restructure` a Fase 8 em `phase-8/game` e a Fase 9 em `phase-9/megatweaker` (empilhadas), à espera da tua revisão. Segue a Fase 10 (BigDiag e AllUp) e a Fase 11 só precisa de confirmar as categorias do Ninite.

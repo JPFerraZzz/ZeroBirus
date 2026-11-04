@@ -28,6 +28,7 @@ POWER_PLANS = frozenset({HIGH_PERFORMANCE_PLAN})
 class Danger(StrEnum):
     SEGURO = "seguro"
     MODERADO = "moderado"
+    AGRESSIVO = "agressivo"
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,6 +41,7 @@ class Tweak:
     params: tuple[tuple[str, str], ...]
     needs_admin: bool = False
     needs_reboot: bool = False
+    category: str = ""  # MegaTweaker groups; empty for the FPS Optimizer list
 
     def param(self, key: str, default: str = "") -> str:
         return next((v for k, v in self.params if k == key), default)
@@ -109,7 +111,231 @@ FPS_TWEAKS: tuple[Tweak, ...] = (
         needs_reboot=True,
     ),
 )
-CATALOG: dict[str, Tweak] = {t.id: t for t in FPS_TWEAKS}
+CAT_PRIVACY = "Privacidade e recomendações"
+CAT_LOOK = "Aspeto e animações"
+CAT_GAMING = "Jogos e rede"
+CAT_SYSTEM = "Sistema e arranque"
+CATEGORIES = (CAT_PRIVACY, CAT_LOOK, CAT_GAMING, CAT_SYSTEM)
+
+_CDM = r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+_EXPLORER = r"Software\Microsoft\Windows\CurrentVersion\Explorer"
+_PROFILE = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile"
+
+
+def _mega(
+    tid: str,
+    category: str,
+    title: str,
+    why: str,
+    danger: Danger,
+    root: str,
+    key: str,
+    value: str,
+    data: int,
+    *,
+    reboot: bool = False,
+) -> Tweak:
+    return Tweak(
+        tid,
+        title,
+        why,
+        danger,
+        ActionType.SET_REGISTRY_VALUE,
+        _reg(root, key, value, data, tweak=tid),
+        needs_admin=root == "HKLM",
+        needs_reboot=reboot,
+        category=category,
+    )
+
+
+# Inspired by the categories of winutil (idea only, reimplemented). Every entry is a single
+# DWORD value; nothing here stops a service or touches security (ROADMAP, decision 3).
+MEGA_TWEAKS: tuple[Tweak, ...] = (
+    _mega(
+        "ad_id",
+        CAT_PRIVACY,
+        "Identificador de publicidade",
+        "Os programas deixam de usar um identificador teu para te mostrar anúncios à medida.",
+        Danger.SEGURO,
+        "HKCU",
+        r"Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo",
+        "Enabled",
+        0,
+    ),
+    _mega(
+        "tailored",
+        CAT_PRIVACY,
+        "Experiências personalizadas com dados de diagnóstico",
+        "O Windows deixa de usar os dados de diagnóstico para te sugerir dicas e anúncios.",
+        Danger.SEGURO,
+        "HKCU",
+        r"Software\Microsoft\Windows\CurrentVersion\Privacy",
+        "TailoredExperiencesWithDiagnosticDataEnabled",
+        0,
+    ),
+    _mega(
+        "start_suggestions",
+        CAT_PRIVACY,
+        "Sugestões no menu Iniciar",
+        "Tira as aplicações sugeridas e promovidas do menu Iniciar.",
+        Danger.SEGURO,
+        "HKCU",
+        _CDM,
+        "SystemPaneSuggestionsEnabled",
+        0,
+    ),
+    _mega(
+        "promoted_apps",
+        CAT_PRIVACY,
+        "Instalação automática de aplicações promovidas",
+        "O Windows deixa de instalar sozinho jogos e aplicações patrocinadas.",
+        Danger.SEGURO,
+        "HKCU",
+        _CDM,
+        "SilentInstalledAppsEnabled",
+        0,
+    ),
+    _mega(
+        "windows_tips",
+        CAT_PRIVACY,
+        "Dicas e sugestões do Windows",
+        "Desliga as notificações de dicas e sugestões.",
+        Danger.SEGURO,
+        "HKCU",
+        _CDM,
+        "SubscribedContent-338389Enabled",
+        0,
+    ),
+    _mega(
+        "lock_screen_ads",
+        CAT_PRIVACY,
+        "Publicidade no ecrã de bloqueio",
+        "Tira as imagens e sugestões rotativas do ecrã de bloqueio.",
+        Danger.SEGURO,
+        "HKCU",
+        _CDM,
+        "RotatingLockScreenOverlayEnabled",
+        0,
+    ),
+    _mega(
+        "bing_search",
+        CAT_PRIVACY,
+        "Resultados da web na pesquisa do Iniciar",
+        "A pesquisa do Iniciar procura só no PC, sem enviar o que escreves para a web.",
+        Danger.SEGURO,
+        "HKCU",
+        r"Software\Policies\Microsoft\Windows\Explorer",
+        "DisableSearchBoxSuggestions",
+        1,
+    ),
+    _mega(
+        "telemetry",
+        CAT_PRIVACY,
+        "Dados de diagnóstico enviados à Microsoft",
+        "Pede o mínimo de dados de diagnóstico. Nas edições Home o Windows ignora o nível zero e "
+        "envia o básico.",
+        Danger.MODERADO,
+        "HKLM",
+        r"SOFTWARE\Policies\Microsoft\Windows\DataCollection",
+        "AllowTelemetry",
+        0,
+    ),
+    _mega(
+        "transparency",
+        CAT_LOOK,
+        "Efeitos de transparência",
+        "Desliga a transparência das janelas e da barra: menos trabalho para a placa gráfica.",
+        Danger.SEGURO,
+        "HKCU",
+        r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+        "EnableTransparency",
+        0,
+    ),
+    _mega(
+        "taskbar_anim",
+        CAT_LOOK,
+        "Animações da barra de tarefas",
+        "A barra de tarefas deixa de animar ao abrir e fechar programas.",
+        Danger.SEGURO,
+        "HKCU",
+        _EXPLORER + r"\Advanced",
+        "TaskbarAnimations",
+        0,
+    ),
+    _mega(
+        "visual_fx",
+        CAT_LOOK,
+        "Efeitos visuais para melhor desempenho",
+        "Escolhe o perfil de melhor desempenho: sombras, animações e suavização de letras "
+        "desaparecem. O Windows fica com aspeto mais simples.",
+        Danger.AGRESSIVO,
+        "HKCU",
+        _EXPLORER + r"\VisualEffects",
+        "VisualFXSetting",
+        2,
+    ),
+    _mega(
+        "fullscreen_opt",
+        CAT_GAMING,
+        "Otimizações de ecrã inteiro",
+        "Os jogos em ecrã inteiro usam o modo clássico, que costuma dar menos atraso.",
+        Danger.MODERADO,
+        "HKCU",
+        r"System\GameConfigStore",
+        "GameDVR_FSEBehaviorMode",
+        2,
+    ),
+    _mega(
+        "net_throttle",
+        CAT_GAMING,
+        "Limite de rede para multimédia",
+        "Tira o limite que o Windows põe à rede enquanto reproduz multimédia. Pode ajudar a "
+        "baixar o atraso nos jogos online.",
+        Danger.MODERADO,
+        "HKLM",
+        _PROFILE,
+        "NetworkThrottlingIndex",
+        0xFFFFFFFF,
+    ),
+    _mega(
+        "responsiveness",
+        CAT_GAMING,
+        "Reserva de processador para tarefas em segundo plano",
+        "Põe a zero a parte do processador reservada ao que corre em segundo plano. Pode "
+        "estragar o som e o vídeo de outros programas enquanto jogas.",
+        Danger.AGRESSIVO,
+        "HKLM",
+        _PROFILE,
+        "SystemResponsiveness",
+        0,
+    ),
+    _mega(
+        "startup_delay",
+        CAT_SYSTEM,
+        "Atraso dos programas de arranque",
+        "Tira o atraso que o Windows põe antes de abrir os programas de arranque.",
+        Danger.SEGURO,
+        "HKCU",
+        _EXPLORER + r"\Serialize",
+        "StartupDelayInMSec",
+        0,
+    ),
+    _mega(
+        "fast_startup",
+        CAT_SYSTEM,
+        "Arranque rápido",
+        "Desliga o arranque rápido: o PC desliga e arranca de verdade. Resolve problemas de "
+        "drivers e de atualizações que não aplicam, mas o arranque demora mais.",
+        Danger.MODERADO,
+        "HKLM",
+        r"SYSTEM\CurrentControlSet\Control\Session Manager\Power",
+        "HiberbootEnabled",
+        0,
+        reboot=True,
+    ),
+)
+ALL_TWEAKS: tuple[Tweak, ...] = FPS_TWEAKS + MEGA_TWEAKS
+CATALOG: dict[str, Tweak] = {t.id: t for t in ALL_TWEAKS}
 TWEAK_ACTIONS = frozenset({ActionType.SET_REGISTRY_VALUE, ActionType.SET_POWER_PLAN})
 
 
