@@ -10,7 +10,13 @@ import sys
 if sys.platform != "win32":  # pragma: no cover
     raise ImportError("zerobirus.platform.windows only works on Windows")
 
-from zerobirus.platform.base import DefenderScanner, Inspector, MemoryProbe
+from zerobirus.platform.base import (
+    DefenderScanner,
+    DiagProbe,
+    Inspector,
+    MemoryProbe,
+    PackageUpdater,
+)
 from zerobirus.remediation.ops import SystemOps
 
 
@@ -34,6 +40,22 @@ def create_memory_probe() -> MemoryProbe:
     from zerobirus.platform.windows.memory import WindowsMemoryProbe
 
     return WindowsMemoryProbe()
+
+
+def create_diag_probe() -> DiagProbe:
+    """The read-only BigDiag reading."""
+    from zerobirus.platform.windows.diag import WindowsDiagProbe
+    from zerobirus.platform.windows.inspector import windows_directory
+
+    return WindowsDiagProbe(windows_directory())
+
+
+def create_package_updater() -> PackageUpdater:
+    """winget, by absolute path."""
+    from zerobirus.platform.windows.inspector import windows_directory
+    from zerobirus.platform.windows.winget import WindowsPackageUpdater
+
+    return WindowsPackageUpdater(windows_directory())
 
 
 def restart_computer() -> None:
@@ -61,8 +83,10 @@ from zerobirus.platform.windows.uiprefs import (  # noqa: E402
 __all__ = [
     "animations_enabled",
     "create_defender_scanner",
+    "create_diag_probe",
     "create_inspector",
     "create_memory_probe",
+    "create_package_updater",
     "create_remediation_ops",
     "high_contrast_active",
     "relaunch_elevated",

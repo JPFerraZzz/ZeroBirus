@@ -34,3 +34,20 @@ O MegaTweaker usa o mesmo motor e o mesmo catálogo: 16 definições novas em 4 
 - Os nomes e valores de registo vêm do meu conhecimento do Windows 10 e 11, **não** de uma verificação numa máquina real. Algumas definições (telemetria, arranque rápido, otimizações de ecrã inteiro) podem não ter efeito nalgumas edições ou versões; nesse caso a verificação relê o valor e dá `APLICADO` por o valor estar lá, o que não prova o efeito. O teste manual do João é a prova.
 - `AllowTelemetry` fica numa chave de política: se o PC estiver gerido por uma organização, a política dela pode mandar mais do que isto.
 - O valor `0xFFFFFFFF` (`NetworkThrottlingIndex`) passa pelo mesmo caminho dos outros, mas é o único acima de 2 mil milhões; coberto só pelo backend de demonstração.
+
+## Adenda da Fase 10 (BigDiag e AllUp)
+
+**BigDiag** é só de leitura: `bigdiag.ps1` passa pelo teste estático que proíbe qualquer verbo que altere estado, e não recolhe nomes de pessoas nem do PC. Cada parte lê-se à parte; o que falha aparece como "não foi possível ler", nunca como "tudo bem" (testado). O ficheiro exportado passa pelo redator inteiro (testado com um caminho pessoal e uma palavra-passe na linha de comando). Riscos: o ficheiro de texto do MRT (`mrt.log`) é lido como dados e só procura duas frases; a temperatura do processador depende de o fabricante expor o sensor ACPI e muitas vezes não expõe (o relatório diz isso).
+
+**AllUp** instala software, o que o ZeroBirus não consegue desfazer. Barreiras:
+
+| Ameaça | Barreira | Teste |
+| --- | --- | --- |
+| Texto do winget que parece um pacote mas é uma opção ou um comando (`--force`, `a;b`, `$(x)`) | O id só passa se casar com `^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$`; linhas que não casam são deixadas de fora | `test_parse_ignores_anything_that_is_not_a_table`, `test_package_ids_that_could_be_options_or_commands_are_not_ids` |
+| Atualizar algo que a pessoa não viu | O plano só aceita ids que estavam na lista; um id desconhecido é erro | `test_the_plan_only_takes_listed_ids` |
+| Plano alterado depois de autorizado | A soma de controlo do plano é verificada antes de correr; nada corre se não coincidir | `test_a_plan_altered_after_authorising_is_refused_and_nothing_runs` |
+| O winget diz que correu bem mas não ficou | "Confirmada" só se uma nova listagem já não mostrar o pacote | `test_a_success_that_does_not_stick_is_not_claimed` |
+| Um pacote falha | Os seguintes continuam; o falhado diz porquê | `test_a_failing_package_does_not_stop_the_next_one` |
+| Plano só em memória | `allup-plan.json` fica na sessão antes de instalar | `test_allup_updates_the_ticked_ones_writes_the_plan_first_and_confirms_each` |
+
+Riscos residuais: (1) o `winget` é encontrado pela pasta `WindowsApps` do utilizador (via `SHGetKnownFolderPath`), não por uma pasta sob `%SystemRoot%` como as outras ferramentas, porque é um alias de aplicação por utilizador; (2) o analisador da tabela lê por posição das palavras a partir da direita e foi escrito para saídas em inglês e português, não testado com a saída real do winget; (3) o winget pode atualizar um antivírus de terceiros: não filtramos, e uma atualização não é desativar; (4) pacotes que pedem reinício ou administrador falham e ficam como "não confirmada"; (5) as atualizações do próprio Windows (Windows Update) não estão no AllUp.

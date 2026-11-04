@@ -33,7 +33,7 @@ def open_module(qtbot: QtBot, w: MainWindow, key: str, waiting_for: str) -> None
 
 def test_the_game_hub_opens_all_three_modules(window: MainWindow) -> None:
     window.home_page.cards["jogo"].click()
-    assert {"fps", "ram", "mega"} == catalog.MODULES_AVAILABLE
+    assert {"fps", "ram", "mega"} <= catalog.MODULES_AVAILABLE
     for key in ("fps", "ram", "mega"):
         window.hubs["jogo"].cards[key].click()
         assert window.screens.currentWidget() is window.modules[key]
