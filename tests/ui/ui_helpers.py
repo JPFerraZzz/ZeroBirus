@@ -34,6 +34,7 @@ def make_window(
     *,
     size: tuple[int, int] = (1100, 700),
     animations: bool = True,
+    home: bool = False,
 ) -> MainWindow:
     app = QApplication.instance()
     if isinstance(app, QApplication):
@@ -47,6 +48,8 @@ def make_window(
     )
     qtbot.addWidget(window)
     window.resize(*size)
+    if not home:
+        window.show_flow()  # most tests drive the seven stages, not the menu
     window.show()
     qtbot.waitExposed(window)
     return window

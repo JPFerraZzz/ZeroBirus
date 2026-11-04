@@ -207,3 +207,36 @@ CLEAN_WORK_ASK = (
 )
 PENDING_RESTART = "Há uma verificação pós-reinício por fazer (sessão {sid})."
 BTN_POST_RESTART = "Fazer a verificação &pós-reinício"
+
+# Home menu (docs/DESIGN.md 3.11). The last entry is the deep analysis, always at the bottom.
+HOME_TITLE = "O que queres fazer?"
+HOME_LEAD = (
+    "Escolhe uma opção. Nada é alterado sem o autorizares e tudo o que se remove pode ser desfeito."
+)
+HOME_BACK = "← Menu inicial"
+HOME_SOON = "Em breve"
+HOME_SOON_NOTE = "Esta função chega numa versão seguinte."
+HOME_DEEP = "deep"
+# key, title, one plain sentence, available now
+HOME_CARDS: tuple[tuple[str, str, str, bool], ...] = (
+    ("clean", "Limpeza", "Apaga lixo, temporários e caches. Vês quanto espaço libertas.", False),
+    ("game", "FPS / Modo jogo", "Prepara o PC para jogar. Mudanças pequenas e reversíveis.", False),
+    ("startup", "Arranque", "Vê o que arranca com o Windows e desativa o que não queres.", False),
+    ("apps", "Atualizar apps", "Atualiza os teus programas, uns a uns ou todos de uma vez.", False),
+    (
+        "drivers",
+        "Drivers",
+        "Vê a versão dos drivers e abre as páginas certas para atualizar.",
+        False,
+    ),
+)
+HOME_DEEP_TITLE = "Análise profunda"
+HOME_DEEP_LEAD = (
+    "Procura mineradores de criptomoeda, trojans e outro malware. Mostra tudo o que encontra "
+    "e só remove o que autorizares."
+)
+
+# Collapsible groups on the authorisation page (docs/DESIGN.md 3.12).
+GROUP_OPEN_ALL = "&Abrir tudo"
+GROUP_CLOSE_ALL = "&Fechar tudo"
+GROUP_HEADER = "{arrow}  {title}  ({n} {itens}, {k} para remover)"

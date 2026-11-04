@@ -57,10 +57,11 @@ from zerobirus.scanners.runner import ScanResult
 from zerobirus.ui import catalog
 from zerobirus.ui.page_after import AfterPage
 from zerobirus.ui.page_authorize import AuthorizePage
-from zerobirus.ui.page_base import Page
+from zerobirus.ui.page_base import Page, button
 from zerobirus.ui.page_confirm import ConfirmPage
 from zerobirus.ui.page_context import ContextPage
 from zerobirus.ui.page_diagnosis import DiagnosisPage
+from zerobirus.ui.page_home import HomePage
 from zerobirus.ui.page_removal import CallWorker, RemovalPage
 from zerobirus.ui.page_scan import ScanPage
 from zerobirus.ui.theme import MIN_WINDOW, NARROW_BELOW, TOKENS
@@ -106,10 +107,13 @@ class MainWindow(QMainWindow):
         self._unlocked = 0
         self._compact = False
 
-        root = QWidget()
-        root.setObjectName("root")
-        root.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        layout = QHBoxLayout(root)
+        # Two screens: the home menu, and the seven-stage flow of the deep analysis.
+        self.screens = QStackedWidget()
+        self.home_page = HomePage()
+        flow = QWidget()
+        flow.setObjectName("root")
+        flow.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        layout = QHBoxLayout(flow)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
@@ -119,15 +123,20 @@ class MainWindow(QMainWindow):
         side_layout = QVBoxLayout(side)
         side_layout.setContentsMargins(TOKENS.space_4, TOKENS.space_5, 0, TOKENS.space_4)
         side_layout.setSpacing(TOKENS.space_3)
-        self.logo = QSvgWidget(str(resources.files("zerobirus.ui").joinpath("assets/logo.svg")))
+        self.logo = QSvgWidget(
+            str(resources.files("zerobirus.ui").joinpath("assets/logo-dark.svg"))
+        )
         self.logo.setFixedSize(40, 40)
         self.logo.setAccessibleName("Sinal do ZeroBirus")
         self.brand = make_label(catalog.APP_NAME, "title", wrap=False, name="ZeroBirus")
         self.signature = make_label(catalog.SIGNATURE, "signature", wrap=False)
+        self.home_button = button(catalog.HOME_BACK, "link")
+        self.home_button.clicked.connect(self.show_home)
         side_layout.addWidget(self.logo)
         side_layout.addWidget(self.brand)
         side_layout.addWidget(self.signature)
         side_layout.addWidget(make_rule())
+        side_layout.addWidget(self.home_button)
         self.rail = QListWidget()
         self.rail.setObjectName("rail")
         self.rail.setAccessibleName("Etapas")
@@ -141,7 +150,9 @@ class MainWindow(QMainWindow):
 
         self.stack = QStackedWidget()
         layout.addWidget(self.stack, 1)
-        self.setCentralWidget(root)
+        self.screens.addWidget(self.home_page)
+        self.screens.addWidget(flow)
+        self.setCentralWidget(self.screens)
 
         # pages
         self.context_page = ContextPage(
@@ -157,6 +168,7 @@ class MainWindow(QMainWindow):
             None if demo else restart_computer,
         )
         self.after_page = AfterPage()
+        self.home_page.chosen.connect(self._on_home_choice)
         self.pages: list[Page] = [
             self.context_page,
             self.scan_page,
@@ -191,8 +203,26 @@ class MainWindow(QMainWindow):
 
         self._refresh_rail()
         self.go("context")
+        self.show_home()
 
     # navigation -----------------------------------------------------------------------
+
+    def show_home(self) -> None:
+        self.screens.setCurrentWidget(self.home_page)
+        self.setWindowTitle(f"{catalog.APP_NAME} {catalog.SIGNATURE}")
+        self.home_page.on_enter()
+
+    def show_flow(self) -> None:
+        self.screens.setCurrentIndex(1)
+        self._refresh_rail()
+        self.pages[self.stack.currentIndex()].on_enter()
+
+    def at_home(self) -> bool:
+        return self.screens.currentWidget() is self.home_page
+
+    def _on_home_choice(self, key: str) -> None:
+        if key == catalog.HOME_DEEP:
+            self.show_flow()
 
     def stage(self) -> str:
         return STAGE_KEYS[self.stack.currentIndex()]
@@ -204,6 +234,8 @@ class MainWindow(QMainWindow):
         index = STAGE_KEYS.index(key)
         if index > self._unlocked:
             return  # the gates: nothing opens before the previous stage is finished
+        if not self.at_home():
+            self.screens.setCurrentIndex(1)
         self.stack.setCurrentIndex(index)
         self.rail.blockSignals(True)
         self.rail.setCurrentRow(index)
@@ -237,11 +269,16 @@ class MainWindow(QMainWindow):
             item.setFlags(
                 flags | Qt.ItemFlag.ItemIsEnabled if enabled else flags & ~Qt.ItemFlag.ItemIsEnabled
             )
-        self.setWindowTitle(f"{catalog.APP_NAME} {catalog.SIGNATURE}: {catalog.STAGES[current][1]}")
+        # Leaving mid-scan or mid-removal would hide work that is still running.
+        self.home_button.setEnabled(STAGE_KEYS[current] not in ("verify", "removal", "confirm"))
+        if not self.at_home():
+            self.setWindowTitle(
+                f"{catalog.APP_NAME} {catalog.SIGNATURE}: {catalog.STAGES[current][1]}"
+            )
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
-        for page in self.pages:
+        for page in (self.home_page, *self.pages):
             page.set_compact(self.height() < COMPACT_HEIGHT)
         compact = self.width() < NARROW_BELOW
         if compact != self._compact:
@@ -249,6 +286,8 @@ class MainWindow(QMainWindow):
             self.side.setFixedWidth(64 if compact else 200)
             self.brand.setVisible(not compact)
             self.signature.setVisible(not compact)
+            self.home_button.setText("←" if compact else catalog.HOME_BACK)
+            self.home_button.setToolTip("Menu inicial")
             self._refresh_rail()
         elif self.side.minimumWidth() == 0:
             self.side.setFixedWidth(64 if compact else 200)
