@@ -284,7 +284,7 @@ TEMP_GROUP_TITLE = "Arquivos Temporários"
 
 
 # Modo Jogo modules (docs/ROADMAP.md, Fase 8)
-MODULES_AVAILABLE = frozenset({"fps", "ram", "mega", "bigdiag", "allup"})
+MODULES_AVAILABLE = frozenset({"fps", "ram", "mega", "bigdiag", "allup", "first", "drivers"})
 GAME_BACK = "← &Modo Jogo"
 GAME_APPLY_N = "&Aplicar {n} definições"
 GAME_APPLY_ONE = "&Aplicar a definição"
@@ -365,3 +365,24 @@ ALLUP_APPLY_N = "&Atualizar {n} aplicações"
 ALLUP_APPLY_ONE = "&Atualizar a aplicação"
 ALLUP_RUNNING = "A atualizar... pode demorar vários minutos. Não feches o ZeroBirus."
 ALLUP_DONE = "{ok} de {n} atualizadas e confirmadas numa nova lista do winget."
+FIRST_LEAD = (
+    "Escolhe as apps de sempre, ao estilo do Ninite. O ZeroBirus cria um instalador no Ambiente "
+    "de trabalho; quando o abrires, o winget do Windows descarrega e instala."
+)
+FIRST_COUNT = "{n} aplicações escolhidas."
+FIRST_NONE = "Escolhe pelo menos uma aplicação."
+FIRST_CREATE_N = "&Criar o instalador ({n})"
+FIRST_CREATE_ONE = "&Criar o instalador (1)"
+FIRST_DONE = (
+    "Instalador criado: {path}. Abre-o com duplo clique quando quiseres. Só no fim ele diz o que "
+    "ficou instalado de facto."
+)
+FIRST_UNVERIFIED = " (id por confirmar)"
+DRIVERS_LEAD = (
+    "Vê a versão e a data dos drivers do PC e o que o Windows Update tem de novo. O ZeroBirus "
+    "não instala drivers: abre a página certa para o Windows ou o fabricante o fazerem."
+)
+DRIVERS_RUN = "&Ver os drivers"
+DRIVERS_RUNNING = "A ler os drivers e a perguntar ao Windows Update... pode demorar um minuto."
+DRIVERS_DONE = "Lista pronta. Para atualizar, usa os botões abaixo."
+DRIVERS_OPEN_FAILED = "Não foi possível abrir a página ({reason})."

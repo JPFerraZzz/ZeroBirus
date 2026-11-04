@@ -1,7 +1,7 @@
 """BigDiag and winget on windows-latest. Read only: nothing is installed or changed."""
 
 import importlib
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -34,3 +34,14 @@ def test_winget_lists_without_installing_anything() -> None:
         pytest.skip(f"winget is not available on this runner: {exc}")
     print(ascii([u.id for u in found]))
     assert isinstance(found, tuple)
+
+
+def test_the_driver_reading_works_and_never_installs_anything() -> None:
+    windows: Any = importlib.import_module("zerobirus.platform.windows")
+    raw: dict[str, Any] = windows.create_driver_probe().read()
+    sizes: dict[str, Any] = {}
+    for key, value in raw.items():
+        shown: object = value
+        sizes[key] = len(cast("list[object]", shown)) if isinstance(shown, list) else shown
+    print(ascii(sizes))
+    assert raw.get("installed")  # a runner has display and network drivers

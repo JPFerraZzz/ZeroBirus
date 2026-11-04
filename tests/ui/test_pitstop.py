@@ -26,9 +26,7 @@ def open_module(w: MainWindow, key: str) -> None:
     assert w.screens.currentWidget() is w.modules[key]
 
 
-def test_the_pitstop_hub_opens_bigdiag_and_allup_and_the_rest_stay_skeletons(
-    window: MainWindow,
-) -> None:
+def test_the_pitstop_hub_opens_bigdiag_and_allup(window: MainWindow) -> None:
     assert {"bigdiag", "allup"} <= catalog.MODULES_AVAILABLE
     window.home_page.cards["pitstop"].click()
     hub = window.hubs["pitstop"]
@@ -37,9 +35,6 @@ def test_the_pitstop_hub_opens_bigdiag_and_allup_and_the_rest_stay_skeletons(
         window.modules[key].wait()
         window.modules[key].back_button.click()
         assert window.screens.currentWidget() is hub
-    hub.cards["first"].click()
-    assert window.screens.currentWidget() is hub
-    assert "chega numa versão seguinte" in hub.note.text()
 
 
 def test_bigdiag_reads_shows_every_section_and_saves_a_redacted_file(

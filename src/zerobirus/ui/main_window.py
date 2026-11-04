@@ -51,15 +51,18 @@ from zerobirus.platform.base import (
 )
 from zerobirus.platform.fake.defender_scan import FakeDefenderScanner
 from zerobirus.platform.fake.diag import FakeDiagProbe
+from zerobirus.platform.fake.drivers import FakeDriverProbe
 from zerobirus.platform.fake.memory import FakeMemoryProbe
 from zerobirus.platform.fake.ops import FakeOps
 from zerobirus.platform.fake.winget import FakePackageUpdater
 from zerobirus.platform.loader import (
     create_defender_scanner,
     create_diag_probe,
+    create_driver_probe,
     create_memory_probe,
     create_package_updater,
     create_remediation_ops,
+    open_uri,
     restart_computer,
 )
 from zerobirus.remediation.cleanup import purge_session_work
@@ -75,7 +78,14 @@ from zerobirus.ui.page_context import ContextPage
 from zerobirus.ui.page_diagnosis import DiagnosisPage
 from zerobirus.ui.page_game import FpsPage, GameModulePage, GameServices, MegaPage, RamPage
 from zerobirus.ui.page_home import HomePage, HubPage
-from zerobirus.ui.page_pitstop import AllUpPage, BigDiagPage, PitstopPage, PitstopServices
+from zerobirus.ui.page_pitstop import (
+    AllUpPage,
+    BigDiagPage,
+    DriversPage,
+    FirstSetupPage,
+    PitstopPage,
+    PitstopServices,
+)
 from zerobirus.ui.page_removal import CallWorker, RemovalPage
 from zerobirus.ui.page_scan import ScanPage
 from zerobirus.ui.theme import MIN_WINDOW, NARROW_BELOW, TOKENS
@@ -101,6 +111,8 @@ class MainWindow(QMainWindow):
         memory_factory: Callable[[], MemoryProbe] | None = None,
         diag_factory: Callable[[], DiagProbe] | None = None,
         updater_factory: Callable[[], PackageUpdater] | None = None,
+        driver_factory: Callable[[], DiagProbe] | None = None,
+        opener: Callable[[str], None] | None = None,
     ) -> None:
         super().__init__()
         self.setWindowTitle(f"{catalog.APP_NAME} {catalog.SIGNATURE}")
@@ -180,7 +192,12 @@ class MainWindow(QMainWindow):
             "ram": RamPage(),
             "mega": MegaPage(),
         }
-        pit_pages: dict[str, PitstopPage] = {"bigdiag": BigDiagPage(), "allup": AllUpPage()}
+        pit_pages: dict[str, PitstopPage] = {
+            "first": FirstSetupPage(),
+            "allup": AllUpPage(),
+            "bigdiag": BigDiagPage(),
+            "drivers": DriversPage(),
+        }
         self.modules: dict[str, GameModulePage | PitstopPage] = {**game_pages, **pit_pages}
         services = GameServices(
             inspector,
@@ -194,6 +211,8 @@ class MainWindow(QMainWindow):
             diag_factory or (FakeDiagProbe if demo else create_diag_probe),
             memory_factory or (FakeMemoryProbe if demo else create_memory_probe),
             updater_factory or (FakePackageUpdater if demo else create_package_updater),
+            driver_factory or (FakeDriverProbe if demo else create_driver_probe),
+            opener or (self._demo_open if demo else open_uri),
             data_dir,
             desktop_dir,
             clock,
@@ -285,6 +304,10 @@ class MainWindow(QMainWindow):
         self.screens.setCurrentWidget(module)
         self.setWindowTitle(f"{catalog.APP_NAME} {catalog.SIGNATURE}: {module.title_label.text()}")
         module.on_enter()
+
+    @staticmethod
+    def _demo_open(uri: str) -> None:
+        """The demo opens nothing; the page records that it was asked to."""
 
     def _default_ops(self) -> SystemOps:
         if self.demo:
