@@ -253,7 +253,7 @@ Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyrigh
 Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1762 testes). **Não testado em Windows real**; PR #19 aberto, CI verde a 2026-11-04 (a 1.ª corrida falhou, a 2.ª passou; só no runner windows-latest). A branch parte de `phase-10/pitstop`.
 
 - **FirstSetup**: as 16 categorias do Ninite (lidas em ninite.com a 2026-10-29: Web Browsers, Messaging, Media, .NET, Java, Imaging, 3D Printing, Documents, Security, File Sharing, Online Storage, Other, Utilities, Compression, VC++ Redistributables, Developer Tools), 90 apps com id do winget. A pessoa marca e o ZeroBirus cria `ZeroBirus-FirstSetup.cmd` no Ambiente de trabalho (D-021). O script instala com o winget e confirma cada app voltando a perguntar ao winget se ficou instalada.
-- **Ids**: 55 foram verificados no repositório `winget-pkgs`; 3 não existem (WhatsApp, MusicBee, GhostScript) e foram retirados; 35 não foram verificados por limite de pedidos do GitHub e aparecem no ecrã com "(id por confirmar)". Para os verificares: `uv run python tools/check_winget_ids.py` (usa a rede; é uma ferramenta de desenvolvimento, não o produto). Várias apps do Ninite não têm id verificado (Winamp, Trillian, CCCP, MediaMonkey, Avast, AVG, Avira, Spybot, SUPERAntiSpyware, Glary, Revo, Launchy...) e ficaram de fora.
+- **Ids**: Todos os ids foram verificados no repositório `winget-pkgs` (2026-11-05, com `GITHUB_TOKEN=$(gh auth token) uv run python tools/check_winget_ids.py`; usa a rede, é uma ferramenta de desenvolvimento). Corrigidos: AnyDesk (`AnyDesk.AnyDesk`), Tailscale (`Tailscale.Tailscale`), PeaZip (`Giorgiotani.Peazip`). Retirados por não existirem: WhatsApp, MusicBee, GhostScript, RustDesk, FileZilla. Isto prova que o id existe no repositório, não que a instalação funciona em Windows real. Várias apps do Ninite não têm id verificado (Winamp, Trillian, CCCP, MediaMonkey, Avast, AVG, Avira, Spybot, SUPERAntiSpyware, Glary, Revo, Launchy...) e ficaram de fora.
 - **AllDrivers**: lê os drivers do PC (versão e data; avisa nos com mais de 3 anos), pergunta ao Windows Update o que tem pendente e abre as «Atualizações opcionais» do Windows e a página do fabricante da placa gráfica (NVIDIA, AMD ou Intel). Não instala drivers (D-016, auditoria).
 - Auditoria: adenda da Fase 11 em `docs/reviews/phase-8-audit.md`.
 
@@ -262,7 +262,6 @@ Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyrigh
 Situação a 2026-11-05: PRs #8 (Fase 6) e #15 a #19 (Fases 7 a 11, empilhados) abertos, todos com CI verde (Ubuntu, Windows no runner, build do executável, capturas). Nada fundido, nada testado em Windows real. O que falta:
 
 - Teste manual do João das Fases 6 a 11 (`docs/WINDOWS_TEST_PLAN.md`). O analisador do `winget upgrade` (AllUp) nunca viu saída real.
-- 35 ids do winget do FirstSetup por confirmar (`tools/check_winget_ids.py`).
 - Fundir pela ordem #8, #15, #16, #17, #18, #19, com o OK do João em cada um.
 - Decisões do João: categoria "Arranque" do MegaTweaker (recomendado: fase pequena depois do teste, ou abrir `ms-settings:startupapps`) e flush da standby list (recomendado: deixar de fora, D-019).
 - PRs do Dependabot #9 a #13 por rever.
