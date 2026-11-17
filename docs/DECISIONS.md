@@ -82,3 +82,11 @@ O FPS Optimizer muda só definições de um catálogo fixo e reversível; os pro
 ## D-020 AllUp só com apps (winget) e plano gravado
 
 O AllUp atualiza aplicações pelo `winget`, não o Windows Update. Instalar não se desfaz, por isso exige marcar item a item, uma confirmação explícita e o plano gravado na sessão; "confirmado" só depois de uma nova listagem do winget. Se estiver errado: juntar o Windows Update numa fase própria.
+
+## D-021 O instalador do FirstSetup é um script .cmd, não um .exe
+
+O João pediu um executável com a marca no Ambiente de trabalho. Gero um `ZeroBirus-FirstSetup.cmd`: texto ASCII que ele pode ler antes de abrir, com a marca "ZeroBirus - by Ferraz", que chama o `winget` e confirma cada app. Razões: um `.exe` gerado a cada pedido e sem assinatura seria o falso positivo perfeito para os antivírus (e o ZeroBirus não deve parecer malware), não há compilador na pen, e um script legível é mais fácil de confiar. Se estiver errado: gerar um `.exe` assinado (Fase 12, SignPath) a partir de um modelo fixo com a lista como dados.
+
+## D-022 AllDrivers abre a atualização, não a instala
+
+Em vez de instalar drivers pelo Windows Update por COM, o AllDrivers abre as «Atualizações opcionais» do Windows e a página do fabricante da placa gráfica. Instalar drivers é o gesto com mais risco de ecrã preto; fica com o Windows. Se estiver errado: acrescentar a instalação por COM com plano autorizado e ponto de restauro.

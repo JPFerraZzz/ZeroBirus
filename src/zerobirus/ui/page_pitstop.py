@@ -13,7 +13,21 @@ from PySide6.QtWidgets import QCheckBox, QScrollArea, QVBoxLayout, QWidget
 
 from zerobirus import __version__
 from zerobirus.core.allup import UpdatePlan, UpdateResult, Upgrade, authorize_updates
-from zerobirus.core.bigdiag import STATUS_WORD, DiagReport, build_report, render_text
+from zerobirus.core.bigdiag import STATUS_WORD, DiagReport, Section, build_report, render_text
+from zerobirus.core.drivers import (
+    LINKS,
+    OPTIONAL_UPDATES,
+    installed_section,
+    pending_section,
+    vendor_links,
+)
+from zerobirus.core.firstsetup import (
+    CATEGORIES,
+    SCRIPT_NAME,
+    SECURITY_NOTE,
+    by_category,
+    render_script,
+)
 from zerobirus.core.session import Session, create_session
 from zerobirus.platform.base import DiagProbe, Inspector, MemoryProbe, PackageUpdater
 from zerobirus.remediation.updates import run_updates
@@ -22,7 +36,7 @@ from zerobirus.ui.page_base import Page, button
 from zerobirus.ui.page_game import ChoiceRow
 from zerobirus.ui.page_removal import CallWorker
 from zerobirus.ui.theme import TOKENS
-from zerobirus.ui.widgets import clear_layout, make_label, make_rule
+from zerobirus.ui.widgets import CollapsibleGroup, clear_layout, make_label, make_rule
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,6 +45,8 @@ class PitstopServices:
     diag_factory: Callable[[], DiagProbe]
     memory_factory: Callable[[], MemoryProbe]
     updater_factory: Callable[[], PackageUpdater]
+    driver_factory: Callable[[], DiagProbe]
+    opener: Callable[[str], None]
     data_dir: Path
     desktop_dir: Path | None
     clock: Callable[[], datetime]
@@ -285,3 +301,141 @@ class AllUpPage(PitstopPage):
             widgets.append(make_label(r.detail, "small"))
             widgets.append(make_rule())
         self._fill(widgets)
+
+
+def _section_widgets(sections: list[Section]) -> list[QWidget]:
+    widgets: list[QWidget] = []
+    for s in sections:
+        widgets.append(
+            make_label(f"{s.title}: {STATUS_WORD[s.status.value]}", "subtitle", wrap=False)
+        )
+        for line in s.lines:
+            widgets.append(
+                make_label(f"{line.label}: {line.value} ({STATUS_WORD[line.status.value]})")
+            )
+        if s.note:
+            widgets.append(make_label(s.note, "small"))
+        widgets.append(make_rule())
+    return widgets
+
+
+class FirstSetupPage(PitstopPage):
+    def __init__(self) -> None:
+        super().__init__("FirstSetup", catalog.FIRST_LEAD)
+        self.boxes: dict[str, QCheckBox] = {}
+        self.groups: dict[str, CollapsibleGroup] = {}
+        self.saved_path: Path | None = None
+        widgets: list[QWidget] = []
+        for category in CATEGORIES:
+            group = CollapsibleGroup(
+                category, expanded=category == CATEGORIES[0], marked_word="marcadas"
+            )
+            if category == "Security":
+                group.content_layout.addWidget(make_label(SECURITY_NOTE, "small"))
+            for app in by_category(category):
+                label = app.name + ("" if app.verified else catalog.FIRST_UNVERIFIED)
+                box = QCheckBox(label)
+                box.setAccessibleName(app.name)
+                box.toggled.connect(self._refresh)
+                group.content_layout.addWidget(box)
+                self.boxes[app.id] = box
+            self.groups[category] = group
+            widgets.append(group)
+        self._fill(widgets)
+        self.create_button = button(catalog.FIRST_CREATE_N.format(n=0), "primary")
+        self.create_button.clicked.connect(self._create)
+        self.right_actions.addWidget(self.create_button)
+        self._refresh()
+
+    def on_enter(self) -> None:
+        super().on_enter()
+        self.status.setText(catalog.FIRST_LEAD)
+
+    def selected(self) -> list[str]:
+        return [i for i, b in self.boxes.items() if b.isChecked()]
+
+    def _refresh(self) -> None:
+        chosen = set(self.selected())
+        for category, group in self.groups.items():
+            apps = by_category(category)
+            group.set_counts(len(apps), sum(a.id in chosen for a in apps))
+        n = len(chosen)
+        self.create_button.setText(
+            catalog.FIRST_CREATE_ONE if n == 1 else catalog.FIRST_CREATE_N.format(n=n)
+        )
+        self.create_button.setEnabled(n > 0)
+
+    def _create(self) -> None:
+        ids = self.selected()
+        if not ids:
+            self.status.setText(catalog.FIRST_NONE)
+            return
+        svc = self.svc
+        try:
+            text = render_script(ids, version=__version__)
+            folder = svc.desktop_dir or svc.data_dir
+            folder.mkdir(parents=True, exist_ok=True)
+            path = folder / SCRIPT_NAME
+            n = 2
+            while path.exists():  # never overwrite a file the person may have kept
+                path = folder / SCRIPT_NAME.replace(".cmd", f"-{n}.cmd")
+                n += 1
+            path.write_bytes(text.encode("ascii"))
+        except (OSError, ValueError) as exc:
+            self.status.setText(f"Não foi possível criar o instalador ({exc}).")
+            return
+        self.saved_path = path
+        self.status.setText(catalog.FIRST_DONE.format(path=path))
+
+
+class DriversPage(PitstopPage):
+    def __init__(self) -> None:
+        super().__init__("AllDrivers", catalog.DRIVERS_LEAD)
+        self.sections: list[Section] = []
+        self.links: list[str] = []
+        self.opened: list[str] = []
+        self.link_buttons: list[QWidget] = []
+        self.run_button = button(catalog.DRIVERS_RUN, "primary")
+        self.run_button.clicked.connect(self._run)
+        self.open_button = button("&Atualizações opcionais do Windows")
+        self.open_button.clicked.connect(lambda: self._open(OPTIONAL_UPDATES))
+        self.left_actions.addWidget(self.open_button)
+        self.right_actions.addWidget(self.run_button)
+
+    def on_enter(self) -> None:
+        super().on_enter()
+        self.status.setText(catalog.DRIVERS_LEAD)
+
+    def _run(self) -> None:
+        svc = self.svc
+        self.run_button.setEnabled(False)
+        self.status.setText(catalog.DRIVERS_RUNNING)
+        self._start(lambda: dict(svc.driver_factory().read()), self._on_done)
+
+    def _on_done(self, value: object) -> None:
+        self.run_button.setEnabled(True)
+        if isinstance(value, BaseException):
+            self.status.setText(catalog.REMOVAL_FAILED.format(reason=str(value)[:200]))
+            return
+        raw = cast("dict[str, Any]", value)
+        today = self.svc.clock().date()
+        self.sections = [installed_section(raw, today), pending_section(raw)]
+        widgets = _section_widgets(self.sections)
+        self.links = vendor_links(raw)
+        for url in self.links:
+            link = button(LINKS[url], "link")
+            link.clicked.connect(lambda _=False, u=url: self._open(u))
+            widgets.append(link)
+        self._fill(widgets)
+        self.status.setText(catalog.DRIVERS_DONE)
+
+    def _open(self, uri: str) -> None:
+        self.open_with(self.svc.opener, uri)
+
+    def open_with(self, opener: Callable[[str], None], uri: str) -> None:
+        try:
+            opener(uri)
+        except (OSError, ValueError, RuntimeError) as exc:
+            self.status.setText(catalog.DRIVERS_OPEN_FAILED.format(reason=str(exc)[:120]))
+            return
+        self.opened.append(uri)

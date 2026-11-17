@@ -73,7 +73,7 @@ Todas as alterações são reversíveis (valor anterior guardado, verificado a r
 | **8. Modo Jogo (FPS Optimizer e RAM Lover)** (feita, ver STATUS e D-019) | Operações reversíveis novas no motor (valor de registo, plano de energia, fecho de processo), "Repor". Auditoria adversarial. | Integração Windows com desfazer; auditoria em docs/reviews. |
 | **9. MegaTweaker** (feita, sem a categoria Arranque; ver STATUS) | Catálogo de tweaks por categoria e nível, submenu próprio, ponto de restauro, "Repor" por tweak e total. Auditoria. | Integração Windows; teste manual do João. |
 | **10. PitStop (BigDiag e AllUp)** (feita, ver STATUS) | Relatório completo e atualizador winget. | Teste manual do João. |
-| **11. FirstSetup e AllDrivers** | FirstSetup via `winget` (decisão 1); AllDrivers só por Windows Update (decisão 2). Confirmar as categorias no site do Ninite. | Teste manual do João. |
+| **11. FirstSetup e AllDrivers** (feita, ver STATUS e D-021) | FirstSetup via `winget` (decisão 1); AllDrivers só por Windows Update (decisão 2). Confirmar as categorias no site do Ninite. | Teste manual do João. |
 | **12. Release 1.1** | Instalador opcional, assinatura de código (SignPath), formulário de falsos positivos da Microsoft. | Teste manual completo. |
 
 ## Regras que continuam (BRIEF, secção 4 e CLAUDE.md)
