@@ -259,17 +259,18 @@ Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyrigh
 
 ## Fase 11b: Arranque no MegaTweaker (branch `phase-11b/startup-link`, 2026-11-18)
 
-Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1765 testes). **Não testado em Windows real**; sem PR ainda. A branch parte de `phase-11/firstsetup`.
+Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1765 testes). **Não testado em Windows real**; PR #20 aberto (base `phase-11/firstsetup`), CI verde a 2026-11-18 (Ubuntu, Windows, build e capturas; só no runner windows-latest).
 
 - Botão "Programas de arranque do Windows" no MegaTweaker: abre `ms-settings:startupapps` pelo mesmo abridor restrito do AllDrivers (`core.drivers.LINKS`). O ZeroBirus não altera nada do arranque (decisão do João, 2026-11-18). Não há ação nova no motor.
 - Por provar em Windows real: que o URI abre a página de arranque.
+- Também no PR: `docs/PHASE12_PLAN.md` (rascunho da Fase 12) e D-023 (instalador opcional em MSI com WiX, decisão do João a 2026-11-18).
 
 ## Próximo passo
 
-Situação a 2026-11-05: PRs #8 (Fase 6) e #15 a #19 (Fases 7 a 11, empilhados) abertos, todos com CI verde (Ubuntu, Windows no runner, build do executável, capturas). Nada fundido, nada testado em Windows real. O que falta:
+Situação a 2026-11-18: PRs #8 (Fase 6) e #15 a #20 (Fases 7 a 11b, empilhados) abertos, todos com CI verde (Ubuntu, Windows no runner, build do executável, capturas). Nada fundido, nada testado em Windows real. O João só quer fundir depois do teste manual. O que falta:
 
 - Teste manual do João das Fases 6 a 11 (`docs/WINDOWS_TEST_PLAN.md`). O analisador do `winget upgrade` (AllUp) nunca viu saída real.
-- Fundir pela ordem #8, #15, #16, #17, #18, #19, com o OK do João em cada um.
-- Decisões do João: categoria "Arranque" do MegaTweaker (recomendado: fase pequena depois do teste, ou abrir `ms-settings:startupapps`) e flush da standby list (recomendado: deixar de fora, D-019).
-- PRs do Dependabot #9 a #13 por rever.
-- Depois: Fase 12 (release 1.1: instalador opcional, assinatura de código, formulário de falsos positivos da Microsoft).
+- Fundir pela ordem #8, #15, #16, #17, #18, #19, #20, com o OK do João em cada um.
+- Decididas a 2026-11-18: "Arranque" do MegaTweaker só abre `ms-settings:startupapps` (PR #20); flush da standby list fica de fora (D-019); `C:\Windows\Temp` continua protegido; D-018 mantido.
+- PRs do Dependabot #9 a #13: revistos e verdes, a fundir só depois dos das fases. O #14 (pytest 9.2.0) foi fechado: o job Windows falhou e bloqueou.
+- Depois: Fase 12 (release 1.1: instalador MSI com WiX, assinatura de código, formulário de falsos positivos da Microsoft). Plano em `docs/PHASE12_PLAN.md`; por decidir a SignPath e a instalação por utilizador ou por máquina.
