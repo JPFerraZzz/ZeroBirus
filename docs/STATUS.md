@@ -257,6 +257,13 @@ Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyrigh
 - **AllDrivers**: lê os drivers do PC (versão e data; avisa nos com mais de 3 anos), pergunta ao Windows Update o que tem pendente e abre as «Atualizações opcionais» do Windows e a página do fabricante da placa gráfica (NVIDIA, AMD ou Intel). Não instala drivers (D-016, auditoria).
 - Auditoria: adenda da Fase 11 em `docs/reviews/phase-8-audit.md`.
 
+## Fase 11b: Arranque no MegaTweaker (branch `phase-11b/startup-link`, 2026-11-18)
+
+Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1765 testes). **Não testado em Windows real**; sem PR ainda. A branch parte de `phase-11/firstsetup`.
+
+- Botão "Programas de arranque do Windows" no MegaTweaker: abre `ms-settings:startupapps` pelo mesmo abridor restrito do AllDrivers (`core.drivers.LINKS`). O ZeroBirus não altera nada do arranque (decisão do João, 2026-11-18). Não há ação nova no motor.
+- Por provar em Windows real: que o URI abre a página de arranque.
+
 ## Próximo passo
 
 Situação a 2026-11-05: PRs #8 (Fase 6) e #15 a #19 (Fases 7 a 11, empilhados) abertos, todos com CI verde (Ubuntu, Windows no runner, build do executável, capturas). Nada fundido, nada testado em Windows real. O que falta:

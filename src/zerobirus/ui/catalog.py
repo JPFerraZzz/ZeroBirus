@@ -330,6 +330,14 @@ MEGA_LEAD = (
     "Definições que quem monta um PC para jogar costuma desligar, por categoria. Cada uma "
     "diz o que muda, guarda o valor anterior, é confirmada depois e dá para repor."
 )
+MEGA_STARTUP_BUTTON = "Programas de a&rranque do Windows"
+MEGA_STARTUP_HINT = (
+    "Abre as Definições do Windows para escolheres que programas arrancam com o PC. "
+    "O ZeroBirus não altera nada aí."
+)
+MEGA_STARTUP_OPENED = (
+    "Abri as Definições do Windows. Desativa lá os programas de arranque que não queres."
+)
 MEGA_RISKY_GROUP = "Agressivas (por tua conta e risco)"
 MEGA_RISKY_WARNING = (
     "Mudam o aspeto ou o comportamento do Windows de forma notada. Vêm desmarcadas. Dão para "
