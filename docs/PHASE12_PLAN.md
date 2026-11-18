@@ -6,7 +6,7 @@ verified. Starts only after the manual Windows test of phases 6 to 11 and the Jo
 ## Scope
 
 1. **Optional installer.** Per-user or per-machine install, uninstall entry, no auto-update, no network.
-   Open question: MSI (WiX), Inno Setup or MSIX. Needs a decision from the João.
+   Decided: MSI built with WiX (D-023, 2026-11-18). Per-user vs per-machine still open.
 2. **Code signing.** SignPath Foundation (free for open source). Eligibility and onboarding
    requirements are **not confirmed**; check the programme's current terms before relying on it.
    Signing must happen in CI from a tagged release, never with a key on a developer machine.
@@ -20,7 +20,7 @@ verified. Starts only after the manual Windows test of phases 6 to 11 and the Jo
 
 | Step | Output | Verified by |
 | --- | --- | --- |
-| A. Decide installer technology | decision D-022 | João |
+| A. Installer technology | decided: MSI with WiX, D-023 | João (done) |
 | B. Installer definition and build job | installer artefact in CI | windows-latest run (install, launch, uninstall in a throwaway runner) |
 | C. Signing in `release.yml` | signed ZIP and installer, provenance attestation | CI log; `Get-AuthenticodeSignature` on the artefact |
 | D. `docs/RELEASING.md` | checklist incl. Microsoft submission | review |
@@ -34,6 +34,6 @@ verified. Starts only after the manual Windows test of phases 6 to 11 and the Jo
 
 ## Decisions needed from the João
 
-- Installer technology (step A).
+- ~~Installer technology (step A)~~: decided, MSI with WiX (D-023).
 - Whether to apply to SignPath now or after the manual test.
 - Per-user vs per-machine install (ZeroBirus needs admin to run, so per-machine is likely, but this is his call).
