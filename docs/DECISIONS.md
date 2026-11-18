@@ -90,3 +90,7 @@ O João pediu um executável com a marca no Ambiente de trabalho. Gero um `ZeroB
 ## D-022 AllDrivers abre a atualização, não a instala
 
 Em vez de instalar drivers pelo Windows Update por COM, o AllDrivers abre as «Atualizações opcionais» do Windows e a página do fabricante da placa gráfica. Instalar drivers é o gesto com mais risco de ecrã preto; fica com o Windows. Se estiver errado: acrescentar a instalação por COM com plano autorizado e ponto de restauro.
+
+## D-023 O instalador opcional da versão 1.1 é um MSI feito com WiX
+
+Decisão do João, 2026-11-18. O instalador opcional (Fase 12) é um pacote MSI construído com WiX, em vez de Inno Setup ou MSIX. Razões: o MSI é o formato que o Windows e as ferramentas de administração entendem sem mais nada (instalar, reparar, desinstalar pelo próprio Windows), e não depende de um motor de terceiros no PC. Por confirmar na implementação: a versão atual do WiX e como a obter no runner windows-latest (confirmar no PyPI, NuGet e na documentação na altura, não pela memória), e como o MSI é assinado no CI. O ZIP `--onedir` continua a ser a distribuição principal para a pen USB. Se estiver errado: MSIX ou Inno Setup, só muda o passo B do plano.

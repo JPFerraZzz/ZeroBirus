@@ -208,3 +208,32 @@ def test_megatweaker_applies_only_what_is_ticked_and_resets_one_or_all(
     page.undo_button.click()
     page.wait()
     qtbot.waitUntil(lambda: ops.settings == {}, timeout=10_000)
+
+
+def test_mega_startup_button_only_opens_the_windows_startup_settings(
+    qtbot: QtBot, window: MainWindow
+) -> None:
+    open_module(qtbot, window, "mega", "A ler")
+    page = window.modules["mega"]
+    assert isinstance(page, MegaPage)
+    ops = page.ops()
+    assert isinstance(ops, FakeOps)
+    page.startup_button.click()
+    assert page.opened == ["ms-settings:startupapps"]
+    assert ops.settings == {}  # nothing about startup is changed by ZeroBirus
+    assert page.status.text() == catalog.MEGA_STARTUP_OPENED
+
+
+def test_mega_startup_button_shows_a_refusal_instead_of_crashing(
+    qtbot: QtBot, window: MainWindow
+) -> None:
+    open_module(qtbot, window, "mega", "A ler")
+    page = window.modules["mega"]
+    assert isinstance(page, MegaPage)
+
+    def refuse(uri: str) -> None:
+        raise ValueError("este endereço não é um dos permitidos")
+
+    page.open_with(refuse, "https://evil.example/")
+    assert "Não foi possível abrir" in page.status.text()
+    assert page.opened == []
