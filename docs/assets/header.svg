@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="220" viewBox="0 0 900 220"><rect width="900" height="220" rx="22" fill="#BDE0FE"/>
+<circle cx="80" cy="170" r="75" fill="#FFE9A0" opacity=".85"/><circle cx="840" cy="40" r="55" fill="#FFE9A0" opacity=".75"/><circle cx="770" cy="185" r="26" fill="#FFF3C4"/>
+<g transform="translate(450 62)"><path d="M0-34 L28-22 V6 C28 22 14 32 0 38 C-14 32 -28 22 -28 6 V-22 Z" fill="#FFF3C4" stroke="#3A4A5C" stroke-width="3"/><path d="M-12 2 L-3 11 L13 -9" fill="none" stroke="#3A4A5C" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g font-family="Segoe UI,Helvetica,Arial,sans-serif" text-anchor="middle" fill="#3A4A5C"><text x="450" y="148" font-size="54" font-weight="700"><animate attributeName="opacity" from="0" to="1" dur="1.2s" fill="freeze"/>ZeroBirus</text>
+<text x="450" y="184" font-size="18" opacity=".85">Portable malware and crypto-miner removal for Windows · by Ferraz</text></g></svg>
