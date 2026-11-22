@@ -42,11 +42,13 @@ from zerobirus.core.session import (
     open_session,
     update_session,
 )
-from zerobirus.platform.base import DefenderScanner, Inspector
+from zerobirus.platform.base import DefenderScanner, Inspector, MemoryProbe
 from zerobirus.platform.fake.defender_scan import FakeDefenderScanner
+from zerobirus.platform.fake.memory import FakeMemoryProbe
 from zerobirus.platform.fake.ops import FakeOps
 from zerobirus.platform.loader import (
     create_defender_scanner,
+    create_memory_probe,
     create_remediation_ops,
     restart_computer,
 )
@@ -61,6 +63,7 @@ from zerobirus.ui.page_base import Page, button
 from zerobirus.ui.page_confirm import ConfirmPage
 from zerobirus.ui.page_context import ContextPage
 from zerobirus.ui.page_diagnosis import DiagnosisPage
+from zerobirus.ui.page_game import FpsPage, GameModulePage, GameServices, RamPage
 from zerobirus.ui.page_home import HomePage, HubPage
 from zerobirus.ui.page_removal import CallWorker, RemovalPage
 from zerobirus.ui.page_scan import ScanPage
@@ -84,6 +87,7 @@ class MainWindow(QMainWindow):
         clock: Callable[[], datetime] = datetime.now,
         ops_factory: Callable[[], SystemOps] | None = None,
         defender_factory: Callable[[], DefenderScanner] | None = None,
+        memory_factory: Callable[[], MemoryProbe] | None = None,
     ) -> None:
         super().__init__()
         self.setWindowTitle(f"{catalog.APP_NAME} {catalog.SIGNATURE}")
@@ -156,6 +160,20 @@ class MainWindow(QMainWindow):
         for hub in self.hubs.values():
             self.screens.addWidget(hub)
             hub.back_requested.connect(self.show_home)
+            hub.opened.connect(self.show_module)
+        # Modo Jogo modules that exist; the others are skeleton cards in their hub.
+        self.modules: dict[str, GameModulePage] = {"fps": FpsPage(), "ram": RamPage()}
+        services = GameServices(
+            inspector,
+            ops_factory or self._default_ops,
+            memory_factory or (FakeMemoryProbe if demo else create_memory_probe),
+            data_dir,
+            clock,
+        )
+        for module in self.modules.values():
+            module.configure(services)
+            self.screens.addWidget(module)
+            module.back_requested.connect(lambda: self.show_hub(catalog.HOME_GAME))
         self.setCentralWidget(self.screens)
 
         # pages
@@ -230,6 +248,20 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"{catalog.APP_NAME} {catalog.SIGNATURE}: {catalog.HUBS[key][0]}")
         hub.on_enter()
 
+    def show_module(self, key: str) -> None:
+        module = self.modules[key]
+        self.screens.setCurrentWidget(module)
+        self.setWindowTitle(f"{catalog.APP_NAME} {catalog.SIGNATURE}: {module.title_label.text()}")
+        module.on_enter()
+
+    def _default_ops(self) -> SystemOps:
+        if self.demo:
+            ops = FakeOps()
+            for p in FakeMemoryProbe().snapshot().processes:  # the demo programs can be closed
+                ops.processes[p.pid] = p.path or ""
+            return ops
+        return create_remediation_ops()
+
     def _on_home_choice(self, key: str) -> None:
         if key == catalog.HOME_DEEP:
             self.show_flow()
@@ -288,7 +320,7 @@ class MainWindow(QMainWindow):
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
-        for page in (self.home_page, *self.hubs.values(), *self.pages):
+        for page in (self.home_page, *self.hubs.values(), *self.modules.values(), *self.pages):
             page.set_compact(self.height() < COMPACT_HEIGHT)
         compact = self.width() < NARROW_BELOW
         if compact != self._compact:
@@ -491,3 +523,5 @@ class MainWindow(QMainWindow):
         self.scan_page.wait()
         self.removal_page.wait()
         self.confirm_page.wait()
+        for module in self.modules.values():
+            module.wait()

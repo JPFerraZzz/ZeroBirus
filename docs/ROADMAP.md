@@ -70,7 +70,7 @@ Todas as alterações são reversíveis (valor anterior guardado, verificado a r
 | --- | --- | --- |
 | **6. Ecrã inicial e tema** (feita, PR #8 aberto, à espera do CI Windows e do OK do João) | Tema escuro, cartões, grupos recolhíveis na Autorização. | Capturas revistas; CI verde. |
 | **7. Reorganização** | DESIGN.md primeiro. Menu principal com 3 cartões e janelas por módulo (esqueleto, módulos "Em breve"). Nerd'O: tabela de risco de 5 níveis, novo sinal de seleção (Grave e Crítico marcados), grupo "Arquivos Temporários". | Golden tests dos níveis; capturas a 100% e 150%; CI verde. |
-| **8. Modo Jogo (FPS Optimizer e RAM Lover)** | Operações reversíveis novas no motor (valor de registo, plano de energia, fecho de processo), "Repor". Auditoria adversarial. | Integração Windows com desfazer; auditoria em docs/reviews. |
+| **8. Modo Jogo (FPS Optimizer e RAM Lover)** (feita, ver STATUS e D-019) | Operações reversíveis novas no motor (valor de registo, plano de energia, fecho de processo), "Repor". Auditoria adversarial. | Integração Windows com desfazer; auditoria em docs/reviews. |
 | **9. MegaTweaker** | Catálogo de tweaks por categoria e nível, submenu próprio, ponto de restauro, "Repor" por tweak e total. Auditoria. | Integração Windows; teste manual do João. |
 | **10. PitStop (BigDiag e AllUp)** | Relatório completo e atualizador winget. | Teste manual do João. |
 | **11. FirstSetup e AllDrivers** | FirstSetup via `winget` (decisão 1); AllDrivers só por Windows Update (decisão 2). Confirmar as categorias no site do Ninite. | Teste manual do João. |

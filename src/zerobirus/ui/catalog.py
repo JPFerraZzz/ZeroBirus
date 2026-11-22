@@ -168,6 +168,7 @@ DELETE_QUARANTINE_ASK = (
 )
 RESULT_LABEL = {
     "REMOVIDO": "Feito e confirmado",
+    "APLICADO": "Aplicado e confirmado",
     "EM_QUARENTENA": "Em quarentena",
     "FALHOU": "Falhou",
     "PENDENTE_REINICIO": "Falta reiniciar",
@@ -280,3 +281,46 @@ RISK_INTRO = {
     "INCOMUM": "Fora do normal, mas explicável. Só para saberes.",
 }
 TEMP_GROUP_TITLE = "Arquivos Temporários"
+
+
+# Modo Jogo modules (docs/ROADMAP.md, Fase 8)
+MODULES_AVAILABLE = frozenset({"fps", "ram"})
+GAME_BACK = "← &Modo Jogo"
+GAME_APPLY_N = "&Aplicar {n} definições"
+GAME_APPLY_ONE = "&Aplicar a definição"
+GAME_UNDO_ALL = "&Repor tudo"
+GAME_CONTINUE_NO_RESTORE = "&Continuar sem ponto de restauro"
+GAME_NO_RESTORE = (
+    "O Windows não criou o ponto de restauro ({reason}). Podes parar e nada é alterado, ou "
+    "continuar sem ele: cada definição guarda o valor anterior e dá para repor na mesma."
+)
+FPS_LEAD = (
+    "Escolhe as definições que ajudam a jogar. Cada uma guarda o valor anterior, é confirmada "
+    "depois de aplicada e dá para repor."
+)
+FPS_STATE_DONE = "Já está assim."
+FPS_STATE_UNSUPPORTED = "Não existe neste PC."
+FPS_STATE_ADMIN = "Precisa de administrador: abre o ZeroBirus como administrador."
+FPS_STATE_REBOOT = "Só fica ativa depois de reiniciar o PC."
+FPS_STATE_UNREADABLE = "Não foi possível ler o estado atual."
+FPS_BACKGROUND_NOTE = "Para fechar programas em segundo plano enquanto jogas, usa o RAM Lover."
+FPS_RAM_LINE = "RAM livre: {before} antes, {after} depois."
+GAME_RESULT_DONE = "{n} definições aplicadas e confirmadas."
+GAME_RESULT_FAILED = (
+    "{n} não foram aplicadas (ver abaixo). Nada foi dado como feito sem confirmação."
+)
+RAM_LEAD = (
+    "Vê como está a memória e fecha os programas que não precisas. Fechar não se desfaz: "
+    "o trabalho não guardado nesses programas perde-se."
+)
+RAM_SUMMARY = "RAM em uso: {used} de {total} ({percent}%). Livre: {free}. Pressão: {pressure}."
+RAM_PRESSURE_WORD = {"BAIXA": "baixa", "MEDIA": "média", "ALTA": "alta"}
+RAM_NONE = "Não há programas que valha a pena fechar."
+RAM_ACK = "Percebo que fechar um programa perde o trabalho não guardado nele"
+RAM_CLOSE_N = "&Fechar {n} programas"
+RAM_CLOSE_ONE = "&Fechar o programa"
+RAM_AFTER = "Fechados {done} de {n}. RAM livre: {before} antes, {after} depois."
+RAM_NO_STANDBY = (
+    "Esvaziar a lista de espera da memória (standby) não está nesta versão: só se mostra o que "
+    "mudou de facto."
+)

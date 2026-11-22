@@ -55,8 +55,8 @@ def test_each_hub_shows_its_modules_as_skeleton_and_goes_back(
     hub = home.hubs[card]
     assert home.screens.currentWidget() is hub
     assert list(hub.cards) == modules
-    first = hub.cards[modules[0]]
-    first.click()
+    skeleton = hub.cards[modules[-1]]  # the last one of each hub is not built yet
+    skeleton.click()
     assert "chega numa versão seguinte" in hub.note.text()
     assert home.screens.currentWidget() is hub  # a skeleton module changes nothing
     hub.back_button.click()

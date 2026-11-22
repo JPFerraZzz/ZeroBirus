@@ -74,8 +74,12 @@ class HubPage(Page):
         self.grid.setHorizontalSpacing(TOKENS.space_4)
         self.grid.setVerticalSpacing(TOKENS.space_4)
         for i, (mkey, mtitle, mlead, _submenu) in enumerate(modules):
-            card = HomeCard(mtitle, mlead, soon=True)
-            card.clicked.connect(lambda _=False, t=mtitle: self.note.setText(self._note(t)))
+            ready = mkey in catalog.MODULES_AVAILABLE
+            card = HomeCard(mtitle, mlead, soon=not ready)
+            if ready:
+                card.clicked.connect(lambda _=False, k=mkey: self.opened.emit(k))
+            else:
+                card.clicked.connect(lambda _=False, t=mtitle: self.note.setText(self._note(t)))
             self.cards[mkey] = card
             self.grid.addWidget(card, i // 2, i % 2)
         for c in range(2):
