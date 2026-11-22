@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QPushButton
 from pytestqt.qtbot import QtBot
 from ui_helpers import make_window, qt_warnings, run_scan
 
+from zerobirus.ui import catalog
 from zerobirus.ui.main_window import MainWindow
 
 
@@ -55,10 +56,11 @@ def test_each_hub_shows_its_modules_as_skeleton_and_goes_back(
     hub = home.hubs[card]
     assert home.screens.currentWidget() is hub
     assert list(hub.cards) == modules
-    skeleton = hub.cards[modules[-1]]  # the last one of each hub is not built yet
-    skeleton.click()
-    assert "chega numa versão seguinte" in hub.note.text()
-    assert home.screens.currentWidget() is hub  # a skeleton module changes nothing
+    skeleton = [k for k in modules if k not in catalog.MODULES_AVAILABLE]
+    if skeleton:  # PitStop is not built yet; Modo Jogo has all three
+        hub.cards[skeleton[-1]].click()
+        assert "chega numa versão seguinte" in hub.note.text()
+        assert home.screens.currentWidget() is hub  # a skeleton module changes nothing
     hub.back_button.click()
     assert home.at_home()
 

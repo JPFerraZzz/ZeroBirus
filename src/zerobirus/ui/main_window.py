@@ -63,7 +63,7 @@ from zerobirus.ui.page_base import Page, button
 from zerobirus.ui.page_confirm import ConfirmPage
 from zerobirus.ui.page_context import ContextPage
 from zerobirus.ui.page_diagnosis import DiagnosisPage
-from zerobirus.ui.page_game import FpsPage, GameModulePage, GameServices, RamPage
+from zerobirus.ui.page_game import FpsPage, GameModulePage, GameServices, MegaPage, RamPage
 from zerobirus.ui.page_home import HomePage, HubPage
 from zerobirus.ui.page_removal import CallWorker, RemovalPage
 from zerobirus.ui.page_scan import ScanPage
@@ -162,7 +162,11 @@ class MainWindow(QMainWindow):
             hub.back_requested.connect(self.show_home)
             hub.opened.connect(self.show_module)
         # Modo Jogo modules that exist; the others are skeleton cards in their hub.
-        self.modules: dict[str, GameModulePage] = {"fps": FpsPage(), "ram": RamPage()}
+        self.modules: dict[str, GameModulePage] = {
+            "fps": FpsPage(),
+            "ram": RamPage(),
+            "mega": MegaPage(),
+        }
         services = GameServices(
             inspector,
             ops_factory or self._default_ops,

@@ -349,9 +349,10 @@ class CollapsibleGroup(QWidget):
 
     toggled = Signal(bool)
 
-    def __init__(self, title: str, *, expanded: bool) -> None:
+    def __init__(self, title: str, *, expanded: bool, marked_word: str = "para remover") -> None:
         super().__init__()
         self._title = title
+        self._marked_word = marked_word
         self._count = 0
         self._marked = 0
         self.header = QPushButton()
@@ -396,9 +397,10 @@ class CollapsibleGroup(QWidget):
             n=self._count,
             itens="item" if self._count == 1 else "itens",
             k=self._marked,
+            what=self._marked_word,
         )
         self.header.setText(text)
         self.header.setAccessibleName(
             f"{self._title}, {'aberto' if expanded else 'fechado'}: {self._count} "
-            f"{'item' if self._count == 1 else 'itens'}, {self._marked} para remover"
+            f"{'item' if self._count == 1 else 'itens'}, {self._marked} {self._marked_word}"
         )
