@@ -17,6 +17,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QCheckBox, QScrollArea, QVBoxLayout, QWidget
 
 from zerobirus import __version__
+from zerobirus.core.drivers import STARTUP_APPS
 from zerobirus.core.models import ActionResult
 from zerobirus.core.plan import (
     ActionType,
@@ -70,6 +71,7 @@ class GameServices:
     memory_factory: Callable[[], MemoryProbe]
     data_dir: Path
     clock: Callable[[], datetime]
+    opener: Callable[[str], None]
 
 
 class ChoiceRow(QWidget):
@@ -453,6 +455,24 @@ class FpsPage(TweakPage):
 class MegaPage(TweakPage):
     def __init__(self) -> None:
         super().__init__("MegaTweaker", catalog.MEGA_LEAD, MEGA_TWEAKS)
+        self.opened: list[str] = []
+        self.startup_button = button(catalog.MEGA_STARTUP_BUTTON)
+        self.startup_button.setToolTip(catalog.MEGA_STARTUP_HINT)
+        self.startup_button.clicked.connect(self._open_startup)
+        self.left_actions.addWidget(self.startup_button)
+
+    def _open_startup(self) -> None:
+        """Only opens the Windows Settings page; ZeroBirus changes nothing about startup."""
+        self.open_with(self.svc.opener, STARTUP_APPS)
+
+    def open_with(self, opener: Callable[[str], None], uri: str) -> None:
+        try:
+            opener(uri)
+        except (OSError, ValueError, RuntimeError) as exc:
+            self.status.setText(catalog.DRIVERS_OPEN_FAILED.format(reason=str(exc)[:120]))
+            return
+        self.opened.append(uri)
+        self.status.setText(catalog.MEGA_STARTUP_OPENED)
 
 
 class RamPage(GameModulePage):

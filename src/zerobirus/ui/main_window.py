@@ -205,6 +205,7 @@ class MainWindow(QMainWindow):
             memory_factory or (FakeMemoryProbe if demo else create_memory_probe),
             data_dir,
             clock,
+            opener or (self._demo_open if demo else open_uri),
         )
         pit_services = PitstopServices(
             inspector,

@@ -12,6 +12,7 @@ from zerobirus.core.drivers import (
     LINKS,
     NVIDIA_PAGE,
     OPTIONAL_UPDATES,
+    STARTUP_APPS,
     installed_section,
     is_allowed_link,
     pending_section,
@@ -139,3 +140,8 @@ def test_only_the_listed_links_can_be_opened() -> None:
     assert all(is_allowed_link(u) for u in LINKS)
     for bad in ("calc.exe", "file:///C:/Windows/System32/cmd.exe", "https://evil.example/", ""):
         assert not is_allowed_link(bad)
+
+
+def test_the_startup_settings_page_is_an_allowed_link() -> None:
+    assert STARTUP_APPS == "ms-settings:startupapps"
+    assert is_allowed_link(STARTUP_APPS)
