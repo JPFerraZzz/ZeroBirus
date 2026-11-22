@@ -12,7 +12,15 @@ from PySide6.QtCore import (
     Qt,
     Signal,
 )
-from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen, QPolygonF, QResizeEvent, QTextOption
+from PySide6.QtGui import (
+    QColor,
+    QPainter,
+    QPainterPath,
+    QPen,
+    QPolygonF,
+    QResizeEvent,
+    QTextOption,
+)
 from PySide6.QtWidgets import (
     QFrame,
     QLabel,
@@ -316,10 +324,88 @@ class RiskBadge(QWidget):
         )
 
 
+class CardIcon(QWidget):
+    """A gamer line icon drawn in code on a 100 x 100 grid: gamepad, flag (pit stop) or bug."""
+
+    KINDS = ("gamepad", "flag", "bug")
+
+    def __init__(self, kind: str, size: int = 72) -> None:
+        super().__init__()
+        if kind not in self.KINDS:
+            raise ValueError(f"unknown icon: {kind}")
+        self.kind = kind
+        self.setFixedSize(size, size)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        self.setAccessibleName("")  # decorative: the card's own name says it all
+
+    def paintEvent(self, event: object) -> None:
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.scale(self.width() / 100, self.height() / 100)
+        colour = QColor(TOKENS.accent)
+        pen = QPen(colour, 6)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+        p.setPen(pen)
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        getattr(self, f"_draw_{self.kind}")(p, colour)
+        p.end()
+
+    @staticmethod
+    def _draw_gamepad(p: QPainter, colour: QColor) -> None:
+        body = QPainterPath()
+        body.moveTo(28, 28)
+        body.lineTo(72, 28)
+        body.cubicTo(88, 28, 96, 44, 92, 66)
+        body.cubicTo(90, 78, 80, 80, 74, 72)
+        body.lineTo(68, 62)
+        body.lineTo(32, 62)
+        body.lineTo(26, 72)
+        body.cubicTo(20, 80, 10, 78, 8, 66)
+        body.cubicTo(4, 44, 12, 28, 28, 28)
+        p.drawPath(body)
+        p.drawLine(30, 38, 30, 54)  # d-pad
+        p.drawLine(22, 46, 38, 46)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(colour)
+        p.drawEllipse(QPointF(66, 40), 4.5, 4.5)  # buttons
+        p.drawEllipse(QPointF(76, 50), 4.5, 4.5)
+
+    @staticmethod
+    def _draw_flag(p: QPainter, colour: QColor) -> None:
+        p.drawLine(22, 90, 22, 14)  # pole
+        p.drawRect(QRectF(22, 14, 64, 44))  # the flag
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(colour)
+        for row in range(3):  # a chequered pattern, 4 x 3 squares of 16 x ~14.7
+            for col in range(4):
+                if (row + col) % 2 == 0:
+                    p.drawRect(QRectF(25 + col * 15.25, 17 + row * 12.7, 15.25, 12.7))
+
+    @staticmethod
+    def _draw_bug(p: QPainter, colour: QColor) -> None:
+        p.drawEllipse(QPointF(50, 58), 20, 26)  # body
+        p.drawEllipse(QPointF(50, 26), 10, 10)  # head
+        p.drawLine(50, 34, 50, 84)  # the shell's seam
+        for y, dx in ((48, 20), (60, 24), (72, 20)):  # legs
+            p.drawLine(30, y, 30 - dx + 8, y - 6)
+            p.drawLine(70, y, 70 + dx - 8, y - 6)
+        p.drawLine(45, 18, 38, 8)  # antennae
+        p.drawLine(55, 18, 62, 8)
+
+
 class HomeCard(QPushButton):
     """One entry of the home menu: a single button (keyboard, accessible name = title + lead)."""
 
-    def __init__(self, title: str, lead: str, *, soon: bool = False, deep: bool = False) -> None:
+    def __init__(
+        self,
+        title: str,
+        lead: str,
+        *,
+        soon: bool = False,
+        deep: bool = False,
+        icon: str | None = None,
+    ) -> None:
         super().__init__()
         self.setProperty("role", "card")
         if deep:
@@ -332,8 +418,17 @@ class HomeCard(QPushButton):
         lay = QVBoxLayout(self)
         lay.setContentsMargins(TOKENS.space_4, TOKENS.space_3, TOKENS.space_4, TOKENS.space_3)
         lay.setSpacing(TOKENS.space_1)
+        self.glyph: CardIcon | None = None
+        if icon:
+            self.glyph = CardIcon(icon)
+            lay.addStretch(1)
+            lay.addWidget(self.glyph, 0, Qt.AlignmentFlag.AlignHCenter)
+            lay.addSpacing(TOKENS.space_2)
         self.title_label = make_label(title, "subtitle", wrap=False)
         self.lead_label = make_label(lead, "lead")
+        if icon:
+            self.title_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+            self.lead_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         lay.addWidget(self.title_label)
         lay.addWidget(self.lead_label)
         if soon:

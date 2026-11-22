@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import QEvent, QObject, Signal
 from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import QGridLayout, QWidget
 
@@ -12,6 +12,7 @@ from zerobirus.ui.theme import TOKENS
 from zerobirus.ui.widgets import HomeCard, make_label
 
 WIDE = 760  # logical points: three columns from here, one below it
+MAX_SQUARE = 340  # the biggest side of a menu square, in logical points
 
 
 class HomePage(Page):
@@ -27,12 +28,15 @@ class HomePage(Page):
         self.grid.setHorizontalSpacing(TOKENS.space_4)
         self.grid.setVerticalSpacing(TOKENS.space_4)
         for key, title, lead in catalog.HOME_CARDS:
-            card = HomeCard(title, lead, deep=key == catalog.HOME_DEEP)
+            card = HomeCard(
+                title, lead, deep=key == catalog.HOME_DEEP, icon=catalog.HOME_ICONS.get(key)
+            )
             card.clicked.connect(lambda _=False, k=key: self.chosen.emit(k))
             self.cards[key] = card
         self.deep = self.cards[catalog.HOME_DEEP]
         self.body.addWidget(self.grid_host)
         self.body.addStretch(1)
+        self.grid_host.installEventFilter(self)  # the squares follow the grid's real width
         self._columns = 0
         self._layout_cards(3)
 
@@ -49,7 +53,21 @@ class HomePage(Page):
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
-        self._layout_cards(3 if self.width() >= WIDE else 1)
+        columns = 3 if self.width() >= WIDE else 1
+        self._layout_cards(columns)
+        self._square_cards(columns)
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if watched is self.grid_host and event.type() == QEvent.Type.Resize:
+            self._square_cards(self._columns)
+        return super().eventFilter(watched, event)
+
+    def _square_cards(self, columns: int) -> None:
+        """Make every card as tall as it is wide (never above MAX_SQUARE)."""
+        gap = TOKENS.space_4 * (columns - 1)
+        side = min((self.grid_host.width() - gap) // columns, MAX_SQUARE)
+        for card in self.cards.values():
+            card.setMinimumHeight(max(side, 120))
 
     def on_enter(self) -> None:
         self.cards[catalog.HOME_CARDS[0][0]].setFocus()
