@@ -210,7 +210,7 @@ def test_every_button_has_a_name_a_shortcut_and_every_label_is_plain_text(
         assert label.textFormat() == Qt.TextFormat.PlainText, label.text()
     for b in window.findChildren(QPushButton):
         assert b.accessibleName(), b.text()
-        if b.property("role") != "link":
+        if b.property("role") not in ("link", "card", "group"):  # Tab + Enter, no Alt letter
             assert "&" in b.text(), f"no Alt shortcut on {b.text()!r}"
     for box in window.findChildren(QCheckBox) + window.findChildren(QRadioButton):
         assert box.accessibleName() or box.text()

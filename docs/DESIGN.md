@@ -15,15 +15,17 @@ Daqui saem quatro exigências que decidem o resto:
 
 ## 2. Carácter
 
-Um formulário bem impresso, não um painel de controlo. A referência é o relatório de um técnico ou um manual de oficina: papel quente, tinta escura, linhas finas para separar, hierarquia feita de peso e de espaço e não de caixas coloridas. Por isso não há cartões, sombras nem ícones decorativos: a estrutura é título, uma frase que diz o que vai acontecer, o conteúdo, e uma barra de ações em baixo.
+Revisto na Fase 6 (ver `docs/ROADMAP.md`). A primeira versão era "um formulário bem impresso": papel quente, sem cartões. Depois do primeiro teste em Windows real, o produto ganhou um modo simples para gamers e uso diário, e o carácter passou a ser **um painel escuro e sóbrio**: fundo quase preto frio, uma única cor de acento menta-ciano, números grandes em tipo monoespaçado, cartões de cantos suaves. "Gamer sem exagero" quer dizer: nenhum néon a brilhar, nenhum gradiente, nenhuma sombra, nenhuma animação decorativa. A seriedade vem de que a mesma interface autoriza remoções: a fricção e a clareza da secção 3.8 mantêm-se tal e qual.
+
+A estrutura continua a ser título, uma frase que diz o que vai acontecer, o conteúdo e uma barra de ações em baixo. O ecrã inicial é a exceção: um menu de cartões (secção 3.11).
 
 ## 3. Decisões
 
 ### 3.1 Cor
 
-Um tema claro, quente e de contraste alto, único. Razões: (a) em ecrãs maus e com luz ambiente, texto escuro sobre fundo claro aguenta-se melhor do que o inverso; (b) um segundo tema duplica a superfície a testar e a rever sem resolver nenhum problema do contexto; (c) o branco puro cansa e encadeia em ecrãs sem calibração, por isso o papel é um branco quente. Se o Windows estiver em modo de contraste elevado, a interface não impõe cores: usa a paleta do sistema (ver 3.7).
+Um tema escuro único. Razões: (a) é o que quem joga espera e usa; (b) um segundo tema duplica a superfície a testar e a rever; (c) o preto puro e o branco puro cansam, por isso o fundo é um quase-preto frio (`paper`) e o texto um branco-azulado (`ink`), nunca `#000` nem `#FFF`. A decisão anterior (tema claro, por causa de ecrãs maus e luz forte de oficina) foi revogada: o contraste continua a ser verificado por teste (AA, 4.5:1) e o modo de contraste elevado do Windows continua a usar a paleta do sistema (ver 3.7).
 
-Uma só cor de ação (um azul-petróleo escuro), usada só para o botão principal e para o foco. Tudo o resto é tinta, cinza quente e as quatro cores de nível. As cores de nível são escuras e dessaturadas de propósito: têm de passar AA como texto sobre o papel e sobre o seu próprio fundo suave, e não podem parecer sinal de trânsito. Nunca há gradientes, nem neon, nem azul e roxo.
+Uma só cor de ação, menta-ciano (`accent`), usada para o botão principal, o anel de foco, os números grandes e o contorno do cartão da análise profunda. O texto sobre ela é quase-preto (`on_accent`). Tudo o resto é tinta, cinza frio e as quatro cores de nível, claras e dessaturadas sobre fundos escuros suaves. Nunca há gradientes, brilho, azul e roxo a competir, nem sombras.
 
 **O estado nunca depende só da cor.** Cada nível tem uma forma e um texto: SUSPEITO é um losango cheio com a palavra, CONFERIR um triângulo, OK um círculo, NAO_VERIFICADO um quadrado tracejado. Um teste confirma que as quatro formas são distintas e que o texto está sempre presente.
 
@@ -39,11 +41,11 @@ Grelha de 4. Dentro de uma linha ou de um grupo o espaço é curto (4 a 8); entr
 
 ### 3.4 Forma
 
-Quase quadrada: raio de 2 px, bordas de 1 px, sem sombras. Elevação nenhuma. A separação é feita por linhas finas e por espaço. Razão: cantos muito redondos e sombras difusas são o sinal visual de interface de marketing, e não dizem nada a quem está a decidir se autoriza uma remoção.
+Botões, campos e tabelas: quase quadrados (raio de 2 px, bordas de 1 px). **Cartões e grupos** (menu inicial, grupos da Autorização): raio de 8 px (`radius_card`), borda de 1 px, fundo `card` um degrau acima do `paper`. Sem sombras e sem elevação: a hierarquia faz-se por tom de fundo, linhas finas e espaço.
 
 ### 3.5 Estrutura das páginas
 
-- **Barra lateral de etapas** à esquerda, sempre visível: Contexto, Verificação, Diagnóstico, Autorização, Remoção, Confirmação, Depois. Mostra o número, o nome e o estado (concluída, atual, por fazer). Só a etapa atual e as concluídas são acessíveis: não se avança sem o utilizador carregar (BRIEF §4). Abaixo de cerca de 1000 pontos de largura passa a mostrar só os números, com o nome da etapa atual no cabeçalho.
+- **Barra lateral de etapas** à esquerda, sempre visível: Contexto, Verificação, Diagnóstico, Autorização, Remoção, Confirmação, Depois. Mostra o número, o nome e o estado (concluída, atual, por fazer). Só a etapa atual e as concluídas são acessíveis: não se avança sem o utilizador carregar (BRIEF §4). Abaixo de cerca de 1000 pontos de largura passa a mostrar só os números, com o nome da etapa atual no cabeçalho. Por cima da lista, a ligação "Menu inicial" leva ao ecrã inicial (desativada enquanto a verificação ou a remoção correm).
 - **Cabeçalho da página:** título e, por baixo, uma frase em linguagem simples que diz o que a etapa vai fazer (BRIEF §5, etapa 1).
 - **Conteúdo.** Na etapa de diagnóstico: a tabela em cima, o painel de detalhe por baixo (não ao lado, porque a largura é o recurso mais escasso), separados por um divisor que se arrasta.
 - **Barra de ações em baixo,** com o botão principal à direita e a ação segura à esquerda.
@@ -74,18 +76,28 @@ Ordem de tabulação igual à ordem visual. Todos os botões têm atalho Alt com
 
 O nome é ZeroBirus, com a assinatura "by Ferraz" mais pequena e em tinta secundária. O sinal é original: um anel grosso, quase um zero, com um pequeno quadrado encaixado numa abertura do traço. Lê-se como "zero" e como "o que ficou de fora do anel". Não é um escudo, não tem visto, não imita marcas de antivírus. Está em `src/zerobirus/ui/assets/logo.svg`, e o ícone `packaging/zerobirus.ico` é gerado dele (`tools/make_icon.py`) em 16, 24, 32, 48, 64, 128 e 256 px.
 
+### 3.11 Ecrã inicial
+
+O ecrã inicial é um menu de cartões clicáveis, em grelha (3 colunas a largura normal, 2 ou 1 quando é estreito). Cada cartão tem um título, uma frase e, quando ainda não existe, a marca "Em breve". Ordem: **Limpeza**, **FPS / Modo jogo**, **Arranque**, **Atualizar apps**, **Drivers**, e por último, **no fundo e a toda a largura**, o cartão da **Análise profunda** (contorno em `accent`, texto maior, a frase "Procura mineradores, trojans e outro malware; mostra tudo e só remove o que autorizares"). É a opção que distingue o ZeroBirus, por isso é a mais cuidada, mas fica no fim para não assustar quem só quer limpar.
+
+Cada cartão é um único botão (foco por teclado, Enter ou Espaço abrem, anel de foco em `accent`, nome acessível = título + frase). Os cartões ainda por construir não fazem nada além de mostrar "Esta função chega numa versão seguinte" por baixo da grelha.
+
+### 3.12 Grupos que se abrem e fecham (Autorização)
+
+No primeiro teste em Windows real, a lista plana da Autorização confundiu. Agora cada grupo (por exemplo "Ficheiros temporários", "Arranque com o Windows") é um cabeçalho com uma seta, o título, o número de itens e quantos estão marcados para remover. O grupo com itens SUSPEITO abre por omissão; os restantes ficam fechados, mas o resumo e o botão de remover contam sempre todos os itens, abertos ou não. Os cabeçalhos são botões (Enter e Espaço abrem e fecham; a seta e o texto dizem o estado, não só a cor). Há "Abrir tudo" e "Fechar tudo". Os itens CONFERIR continuam a vir em "Manter" e a decisão é item a item.
+
 ## 4. Padrões a evitar (verificação)
 
 Lista do BRIEF §11 e como a interface a cumpre:
 
 | Padrão a evitar | Como foi evitado |
 | --- | --- |
-| Gradientes decorativos, neon azul e roxo, glassmorphism, sombras difusas | Cores planas, uma só cor de ação em azul-petróleo escuro, nenhuma sombra nem transparência. |
-| Grelha de cartões iguais com ícone em círculo colorido | Sem cartões. Estrutura de formulário: título, frase, conteúdo, barra de ações. Sem ícones decorativos. |
+| Gradientes decorativos, neon azul e roxo, glassmorphism, sombras difusas | Cores planas, uma só cor de ação (menta-ciano, sem brilho), nenhuma sombra nem transparência. |
+| Grelha de cartões iguais com ícone em círculo colorido | Só o menu inicial usa cartões, sem ícones em círculos, e o da análise profunda é diferente dos outros (largo, com contorno, no fundo). As páginas de trabalho mantêm a estrutura título, frase, conteúdo, barra de ações. |
 | Emojis como ícones | Nenhum emoji. Os níveis usam formas desenhadas mais texto. |
-| Terminal de filme (verde sobre preto) | Tema claro, papel quente e tinta escura. A letra de largura fixa só aparece no detalhe técnico. |
+| Terminal de filme (verde sobre preto) | Tema escuro frio com um único acento menta-ciano; sem verde fosforescente, sem efeito de terminal. A letra de largura fixa só aparece no detalhe técnico e nos números grandes. |
 | Escudo com visto e texto de marketing | Sinal geométrico original. Textos factuais, sem promessas ("Protege o teu PC" não existe). |
-| Cantos muito redondos, espaçamento uniforme sem hierarquia | Raio de 2 px. Dois ritmos de espaçamento (dentro e entre) e escala tipográfica com títulos e corpo bem distintos. |
+| Cantos muito redondos, espaçamento uniforme sem hierarquia | Raio de 2 px nos controlos e de 8 px só nos cartões. Dois ritmos de espaçamento (dentro e entre) e escala tipográfica com títulos e corpo bem distintos. |
 | Animações sem função | Só a barra de progresso. Nada mais se move. Respeita a definição de reduzir animações. |
 
 As capturas de ecrã a 100% e a 150%, geradas pelo CI Windows e guardadas como artefactos (`zerobirus-screenshots`), servem para rever isto sobre a interface real.
@@ -95,31 +107,34 @@ As capturas de ecrã a 100% e a 150%, geradas pelo CI Windows e guardadas como a
 <!-- generated:tokens:start -->
 | Token | Valor |
 | --- | --- |
-| `paper` | `#F5F2EA` |
-| `surface` | `#FCFBF8` |
-| `ink` | `#1C1A17` |
-| `ink_muted` | `#57534B` |
-| `rule` | `#8C8677` |
-| `rule_soft` | `#D8D3C6` |
-| `selection` | `#DCE8EC` |
-| `accent` | `#0B5C73` |
-| `accent_hover` | `#084A5D` |
-| `on_accent` | `#FFFFFF` |
-| `suspeito` | `#9B1B1B` |
-| `suspeito_bg` | `#F6E3E0` |
-| `conferir` | `#7A4B00` |
-| `conferir_bg` | `#F4EAD0` |
-| `ok` | `#25623A` |
-| `ok_bg` | `#E1EEE3` |
-| `nao_verificado` | `#4B4F59` |
-| `nao_verificado_bg` | `#E6E7EA` |
-| `danger` | `#9B1B1B` |
+| `paper` | `#0E1218` |
+| `surface` | `#151B24` |
+| `card` | `#182030` |
+| `card_hover` | `#1F2A3D` |
+| `ink` | `#E8ECF1` |
+| `ink_muted` | `#9DA7B5` |
+| `rule` | `#6B7788` |
+| `rule_soft` | `#273040` |
+| `selection` | `#1D2B3A` |
+| `accent` | `#2BD9B4` |
+| `accent_hover` | `#55E6C6` |
+| `on_accent` | `#04211B` |
+| `suspeito` | `#FF8F86` |
+| `suspeito_bg` | `#3A1C20` |
+| `conferir` | `#F0C050` |
+| `conferir_bg` | `#34290F` |
+| `ok` | `#62D890` |
+| `ok_bg` | `#14301F` |
+| `nao_verificado` | `#A9B2BF` |
+| `nao_verificado_bg` | `#232A34` |
+| `danger` | `#C23B3B` |
 | `on_danger` | `#FFFFFF` |
-| `disabled` | `#6B665C` |
+| `disabled` | `#8591A3` |
 | `font_body_pt` | `10.0` |
 | `font_small_pt` | `9.0` |
 | `font_title_pt` | `16.0` |
 | `font_subtitle_pt` | `12.0` |
+| `font_metric_pt` | `22.0` |
 | `font_family` | `"Segoe UI Variable Text", "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif` |
 | `font_mono` | `"Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace` |
 | `space_1` | `4` |
@@ -130,30 +145,37 @@ As capturas de ecrã a 100% e a 150%, geradas pelo CI Windows e guardadas como a
 | `space_6` | `32` |
 | `row_height` | `36` |
 | `radius` | `2` |
+| `radius_card` | `8` |
 | `focus_width` | `2` |
 
 Contrastes (WCAG, mínimo 4.5:1 para texto e 3:1 para elementos sem texto):
 
 | Par | Rácio | Onde |
 | --- | --- | --- |
-| `ink` sobre `paper` | 15.52 | body text on the page |
-| `ink` sobre `surface` | 16.78 | table and text areas |
-| `ink_muted` sobre `paper` | 6.84 | secondary text on the page |
-| `ink_muted` sobre `surface` | 7.40 | secondary text in tables |
-| `ink` sobre `selection` | 13.89 | selected row |
-| `on_accent` sobre `accent` | 7.52 | primary button |
-| `on_accent` sobre `accent_hover` | 9.78 | primary button hovered |
-| `accent` sobre `paper` | 6.72 | links and accent text |
-| `on_danger` sobre `danger` | 8.18 | destructive button |
-| `suspeito` sobre `paper` | 7.31 | level text |
-| `suspeito` sobre `suspeito_bg` | 6.62 | level text on its tint |
-| `conferir` sobre `paper` | 6.62 | level text |
-| `conferir` sobre `conferir_bg` | 6.18 | level text on its tint |
-| `ok` sobre `paper` | 6.50 | level text |
-| `ok` sobre `ok_bg` | 6.08 | level text on its tint |
-| `nao_verificado` sobre `paper` | 7.33 | level text |
-| `nao_verificado` sobre `nao_verificado_bg` | 6.63 | level text on its tint |
-| `disabled` sobre `paper` | 5.10 | disabled text |
-| `rule` sobre `paper` | 3.24 | borders of inputs and tables |
-| `accent` sobre `paper` | 6.72 | focus ring |
+| `ink` sobre `paper` | 15.83 | body text on the page |
+| `ink` sobre `surface` | 14.58 | table and text areas |
+| `ink_muted` sobre `paper` | 7.72 | secondary text on the page |
+| `ink_muted` sobre `surface` | 7.11 | secondary text in tables |
+| `ink` sobre `card` | 13.74 | text on a card |
+| `ink_muted` sobre `card` | 6.70 | secondary text on a card |
+| `accent` sobre `card` | 9.07 | accent text on a card |
+| `ink` sobre `card_hover` | 12.15 | text on a hovered card |
+| `ink_muted` sobre `card_hover` | 5.92 | secondary text on a hovered card |
+| `ink` sobre `selection` | 12.13 | selected row |
+| `on_accent` sobre `accent` | 9.44 | primary button |
+| `on_accent` sobre `accent_hover` | 10.92 | primary button hovered |
+| `accent` sobre `paper` | 10.45 | links and accent text |
+| `on_danger` sobre `danger` | 5.27 | destructive button |
+| `suspeito` sobre `paper` | 8.52 | level text |
+| `suspeito` sobre `suspeito_bg` | 6.97 | level text on its tint |
+| `conferir` sobre `paper` | 11.05 | level text |
+| `conferir` sobre `conferir_bg` | 8.41 | level text on its tint |
+| `ok` sobre `paper` | 10.50 | level text |
+| `ok` sobre `ok_bg` | 7.98 | level text on its tint |
+| `nao_verificado` sobre `paper` | 8.77 | level text |
+| `nao_verificado` sobre `nao_verificado_bg` | 6.75 | level text on its tint |
+| `disabled` sobre `paper` | 5.88 | disabled text |
+| `rule` sobre `paper` | 4.13 | borders of inputs and tables |
+| `accent` sobre `paper` | 10.45 | focus ring |
+| `rule` sobre `card` | 3.59 | borders of cards |
 <!-- generated:tokens:end -->

@@ -35,7 +35,14 @@ from zerobirus.core.plan import (
 from zerobirus.ui import catalog
 from zerobirus.ui.page_base import Page, button
 from zerobirus.ui.theme import TOKENS
-from zerobirus.ui.widgets import LevelBadge, WrapText, clear_layout, make_label, make_rule
+from zerobirus.ui.widgets import (
+    CollapsibleGroup,
+    LevelBadge,
+    WrapText,
+    clear_layout,
+    make_label,
+    make_rule,
+)
 
 
 class PlanItemRow(QWidget):
@@ -86,6 +93,7 @@ class AuthorizePage(Page):
         super().__init__("Autorização", catalog.STAGE_LEAD["authorize"])
         self._plan: Plan | None = None
         self._rows: list[PlanItemRow] = []
+        self._groups: list[tuple[CollapsibleGroup, tuple[PlanItem, ...]]] = []
         self._session_id = ""
         self._desktop: Path | None = None
         self._save_session: Callable[[Plan, list[str]], None] | None = None
@@ -93,7 +101,16 @@ class AuthorizePage(Page):
         self.saved_path: Path | None = None
 
         self.question = make_label(catalog.AUTH_QUESTION, "subtitle", wrap=False)
-        self.body.addWidget(self.question)
+        fold = QHBoxLayout()
+        fold.setSpacing(TOKENS.space_2)
+        self.open_all = button(catalog.GROUP_OPEN_ALL, "link")
+        self.close_all = button(catalog.GROUP_CLOSE_ALL, "link")
+        self.open_all.clicked.connect(lambda: self._set_all(True))
+        self.close_all.clicked.connect(lambda: self._set_all(False))
+        fold.addWidget(self.question, 1)
+        fold.addWidget(self.open_all)
+        fold.addWidget(self.close_all)
+        self.body.addLayout(fold)
         self.scroller = QScrollArea()
         self.scroller.setWidgetResizable(True)
         self.scroller.setFrameShape(QScrollArea.Shape.NoFrame)
@@ -150,10 +167,19 @@ class AuthorizePage(Page):
         self._plan = plan
         clear_layout(self.list_layout)
         self._rows = []
+        self._groups = []
         if not plan.items:
             self.list_layout.addWidget(make_label(catalog.DIAG_NOTHING, "lead"))
-        for title, members in plan.groups():
-            self.list_layout.addWidget(make_label(title, "subtitle", wrap=False))
+        grouped = plan.groups()
+        # Open the groups that need a decision first; if none has a SUSPEITO item, open the first.
+        opened = [any(m.level is Level.SUSPEITO for m in members) for _t, members in grouped]
+        if grouped and not any(opened):
+            opened[0] = True
+        for (title, members), is_open in zip(grouped, opened, strict=True):
+            group = CollapsibleGroup(title, expanded=is_open)
+            self._groups.append((group, members))
+            self.list_layout.addWidget(group)
+            inner = group.content_layout
             for level, intro in (
                 (Level.SUSPEITO, catalog.AUTH_INTRO_SUSPECT),
                 (Level.CONFERIR, catalog.AUTH_INTRO_CONFER),
@@ -162,14 +188,14 @@ class AuthorizePage(Page):
                 chosen = [m for m in members if m.level is level]
                 if not chosen:
                     continue
-                self.list_layout.addWidget(make_label(intro, "small"))
+                inner.addWidget(make_label(intro, "small"))
                 for m in chosen:
                     row = PlanItemRow(m)
                     row.changed.connect(self._refresh)
                     self._rows.append(row)
-                    self.list_layout.addWidget(row)
-                    self.list_layout.addWidget(make_rule())
-            self.list_layout.addSpacing(TOKENS.space_4)
+                    inner.addWidget(row)
+                    inner.addWidget(make_rule())
+            self.list_layout.addSpacing(TOKENS.space_2)
         if plan.not_plannable:
             self.list_layout.addWidget(
                 make_label(catalog.AUTH_NOT_PLANNABLE, "subtitle", wrap=False)
@@ -190,12 +216,21 @@ class AuthorizePage(Page):
     def rows(self) -> list[PlanItemRow]:
         return list(self._rows)
 
+    def groups(self) -> list[CollapsibleGroup]:
+        return [g for g, _members in self._groups]
+
+    def _set_all(self, expanded: bool) -> None:
+        for group, _members in self._groups:
+            group.set_expanded(expanded)
+
     def selected_items(self) -> list[PlanItem]:
         return [r.item for r in self._rows if r.selected()]
 
     def _refresh(self) -> None:
         chosen = self.selected_items()
         n = len(chosen)
+        for group, members in self._groups:
+            group.set_counts(len(members), sum(1 for m in members if m in chosen))
         if self._plan is None or not self._plan.items:
             self.summary.setText(catalog.DIAG_NOTHING)
         elif n == 0:

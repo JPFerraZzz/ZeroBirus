@@ -45,7 +45,8 @@ def test_no_gradients_shadows_or_transparency_in_the_style_sheet() -> None:
 
 def test_text_is_never_below_nine_points_and_corners_are_nearly_square() -> None:
     assert TOKENS.font_small_pt >= 9.0
-    assert TOKENS.radius <= 2
+    assert TOKENS.radius <= 2  # buttons and inputs
+    assert TOKENS.radius_card <= 10  # soft, not a bubble
     assert TOKENS.row_height >= 36
 
 

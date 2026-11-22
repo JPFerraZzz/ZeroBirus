@@ -57,12 +57,22 @@ def test_icon_is_a_valid_multi_size_ico_made_from_the_logo() -> None:
     assert sizes == [16, 24, 32, 48, 64, 128, 256]
 
 
-def test_logo_is_original_flat_and_uses_only_theme_colours() -> None:
+def test_logos_are_original_flat_and_use_only_their_palette() -> None:
+    """``logo.svg`` is the icon (light backgrounds: taskbar, Explorer); ``logo-dark.svg`` is the
+    sidebar mark on the dark theme and uses the theme tokens."""
+    import re
+
     from zerobirus.ui.theme import TOKENS
 
-    svg = (PACKAGING.parent / "src" / "zerobirus" / "ui" / "assets" / "logo.svg").read_text("utf-8")
-    low = svg.lower()
-    for banned in ("gradient", "filter", "shadow", "<text", "<image", "opacity"):
-        assert banned not in low
-    colours = set(__import__("re").findall(r"#[0-9a-fA-F]{6}", svg))
-    assert {c.upper() for c in colours} <= {TOKENS.ink.upper(), TOKENS.accent.upper()}
+    assets = PACKAGING.parent / "src" / "zerobirus" / "ui" / "assets"
+    palettes = {
+        "logo.svg": {"#1C1A17", "#0B5C73"},
+        "logo-dark.svg": {TOKENS.ink.upper(), TOKENS.accent.upper()},
+    }
+    for name, palette in palettes.items():
+        svg = (assets / name).read_text("utf-8")
+        low = svg.lower()
+        for banned in ("gradient", "filter", "shadow", "<text", "<image", "opacity"):
+            assert banned not in low, name
+        colours = {c.upper() for c in re.findall(r"#[0-9a-fA-F]{6}", svg)}
+        assert colours <= palette, name
