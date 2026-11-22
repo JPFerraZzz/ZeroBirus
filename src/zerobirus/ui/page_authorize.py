@@ -24,7 +24,6 @@ from PySide6.QtWidgets import (
 )
 
 from zerobirus import __version__
-from zerobirus.core.models import Level
 from zerobirus.core.plan import (
     Plan,
     PlanItem,
@@ -37,7 +36,7 @@ from zerobirus.ui.page_base import Page, button
 from zerobirus.ui.theme import TOKENS
 from zerobirus.ui.widgets import (
     CollapsibleGroup,
-    LevelBadge,
+    RiskBadge,
     WrapText,
     clear_layout,
     make_label,
@@ -75,10 +74,10 @@ class PlanItemRow(QWidget):
         text.addWidget(WrapText(item.description, name="Ação"))
         text.addWidget(make_label(item.why, "small"))
         lay.addLayout(text, 1)
-        badge = LevelBadge(item.level)
-        badge.set_level(item.level)
-        badge.setFixedWidth(150)
-        lay.addWidget(badge)
+        if item.risk is not None:
+            badge = RiskBadge(item.risk)
+            badge.setFixedWidth(120)
+            lay.addWidget(badge)
 
     def selected(self) -> bool:
         return self.remove.isChecked()
@@ -170,31 +169,26 @@ class AuthorizePage(Page):
         self._groups = []
         if not plan.items:
             self.list_layout.addWidget(make_label(catalog.DIAG_NOTHING, "lead"))
-        grouped = plan.groups()
-        # Open the groups that need a decision first; if none has a SUSPEITO item, open the first.
-        opened = [any(m.level is Level.SUSPEITO for m in members) for _t, members in grouped]
-        if grouped and not any(opened):
-            opened[0] = True
-        for (title, members), is_open in zip(grouped, opened, strict=True):
+        # The risk table first, most serious level on top; the optional cleaning last, apart.
+        sections: list[tuple[str, str, tuple[PlanItem, ...], bool]] = [
+            (risk.label, catalog.RISK_INTRO[risk.value], members, risk.preselected)
+            for risk, members in plan.risk_groups()
+        ]
+        temp = plan.temp_items()
+        if temp:
+            sections.append((catalog.TEMP_GROUP_TITLE, catalog.AUTH_INTRO_TEMP, temp, False))
+        for title, intro, members, is_open in sections:
             group = CollapsibleGroup(title, expanded=is_open)
             self._groups.append((group, members))
             self.list_layout.addWidget(group)
             inner = group.content_layout
-            for level, intro in (
-                (Level.SUSPEITO, catalog.AUTH_INTRO_SUSPECT),
-                (Level.CONFERIR, catalog.AUTH_INTRO_CONFER),
-                (Level.OK, catalog.AUTH_INTRO_TEMP),
-            ):
-                chosen = [m for m in members if m.level is level]
-                if not chosen:
-                    continue
-                inner.addWidget(make_label(intro, "small"))
-                for m in chosen:
-                    row = PlanItemRow(m)
-                    row.changed.connect(self._refresh)
-                    self._rows.append(row)
-                    inner.addWidget(row)
-                    inner.addWidget(make_rule())
+            inner.addWidget(make_label(intro, "small"))
+            for m in members:
+                row = PlanItemRow(m)
+                row.changed.connect(self._refresh)
+                self._rows.append(row)
+                inner.addWidget(row)
+                inner.addWidget(make_rule())
             self.list_layout.addSpacing(TOKENS.space_2)
         if plan.not_plannable:
             self.list_layout.addWidget(

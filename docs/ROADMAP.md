@@ -14,7 +14,7 @@ Menu principal
 │   ├── FPS Optimizer      tudo o que rende FPS
 │   ├── RAM Lover          diagnóstico simples da RAM e otimização
 │   └── MegaTweaker        submenu próprio (muitas opções, organizadas por categoria)
-├── PitStop                (nome proposto: a paragem na box do PC, para afinar e preparar)
+├── PitStop                (nome aprovado: a paragem na box do PC, para afinar e preparar)
 │   ├── FirstSetup         submenu próprio (estilo Ninite)
 │   ├── AllUp              atualizar apps e serviços (estilo winget)
 │   ├── BigDiag            submenu próprio (relatório completo do PC)
@@ -62,30 +62,38 @@ Todas as alterações são reversíveis (valor anterior guardado, verificado a r
 - **BigDiag**: relatório de diagnóstico completo, só leitura: resultado do MRT, RAM, discos (SSD e SMART), CPU, GPU, temperaturas quando disponíveis, estado do Defender, últimas falhas, espaço. Exporta para ficheiro redigido (sem dados pessoais).
 - **AllUp**: lista o que tem atualização e atualiza as escolhidas ou todas, chamando o `winget` do Windows por caminho absoluto.
 - **FirstSetup**: ecrã igual ao Ninite, com as mesmas categorias (Web Browsers, Messaging, Media, Developer Tools, Compression, Utilities, Other, etc.). Escolhes as apps e o ZeroBirus gera um executável no ambiente de trabalho com a marca ZeroBirus que instala tudo de seguida.
-- **AllDrivers**: lista drivers com atualização disponível. Ver decisão 2.
+- **AllDrivers**: lista drivers com atualização disponível. Ver decisão 2 (só Windows Update).
 
 ## Fases (cada uma para e é revista)
 
 | Fase | Conteúdo | Aceitação |
 | --- | --- | --- |
-| **6. Ecrã inicial e tema** (feita, PR aberto) | Tema escuro, cartões, grupos recolhíveis na Autorização. | Capturas revistas; CI verde. |
+| **6. Ecrã inicial e tema** (feita, PR #8 aberto, à espera do CI Windows e do OK do João) | Tema escuro, cartões, grupos recolhíveis na Autorização. | Capturas revistas; CI verde. |
 | **7. Reorganização** | DESIGN.md primeiro. Menu principal com 3 cartões e janelas por módulo (esqueleto, módulos "Em breve"). Nerd'O: tabela de risco de 5 níveis, novo sinal de seleção (Grave e Crítico marcados), grupo "Arquivos Temporários". | Golden tests dos níveis; capturas a 100% e 150%; CI verde. |
 | **8. Modo Jogo (FPS Optimizer e RAM Lover)** | Operações reversíveis novas no motor (valor de registo, plano de energia, fecho de processo), "Repor". Auditoria adversarial. | Integração Windows com desfazer; auditoria em docs/reviews. |
 | **9. MegaTweaker** | Catálogo de tweaks por categoria e nível, submenu próprio, ponto de restauro, "Repor" por tweak e total. Auditoria. | Integração Windows; teste manual do João. |
 | **10. PitStop (BigDiag e AllUp)** | Relatório completo e atualizador winget. | Teste manual do João. |
-| **11. FirstSetup e AllDrivers** | Dependem das decisões 1 e 2. | Depois das decisões. |
+| **11. FirstSetup e AllDrivers** | FirstSetup via `winget` (decisão 1); AllDrivers só por Windows Update (decisão 2). Confirmar as categorias no site do Ninite. | Teste manual do João. |
 | **12. Release 1.1** | Instalador opcional, assinatura de código (SignPath), formulário de falsos positivos da Microsoft. | Teste manual completo. |
 
 ## Regras que continuam (BRIEF, secção 4 e CLAUDE.md)
 
 Nada altera o sistema sem um plano autorizado; tudo é reversível e verificado a reler o estado; nunca tocar em ficheiros do Windows; nunca desativar um antivírus; tudo o que vem do sistema é dado; sem telemetria; "testado em Windows" só com CI verde ou confirmação do João.
 
-## Decisões em aberto (do João)
+## Decisões do João (2026-10-29)
 
-Estas três bloqueiam a Fase 11 e o âmbito da Fase 9. As Fases 7 e 8 não dependem delas.
+O João aceitou a proposta inteira: a tabela de risco com as ações por nível, o nome **PitStop**, a leitura "limpeza profunda = Nerd'O" e as três recomendações abaixo. Registadas em `docs/DECISIONS.md` (D-014 a D-017).
 
-1. **FirstSetup e a rede.** Um executável "como o Ninite" tem de descarregar instaladores, e o CLAUDE.md diz "zero pedidos de rede no código do produto". Recomendo: o executável gerado chama o `winget` (quem descarrega é o Windows, de uma fonte assinada pela Microsoft), e o ZeroBirus em si continua sem rede. Copiar o Ninite à letra (instaladores diretos dos sites dos fabricantes) obriga a manter links e somas de verificação de dezenas de apps, partem a cada versão, e abre a porta a instaladores trocados. Se aceitares o winget, o ecrã e as categorias ficam iguais ao Ninite; só muda o motor por trás.
-2. **AllDrivers.** Recomendo **não** instalar drivers fora do Windows Update: drivers de sites de terceiros são um risco de cadeia de fornecimento e de ecrã preto. Versão proposta: listar versão e data, mostrar o que o Windows Update tem como opcional e instalar por aí, mais a ligação à página do fabricante (NVIDIA, AMD, Intel) para a placa gráfica. Não faz "atualizar tudo num clique" com ficheiros de terceiros.
-3. **Âmbito do MegaTweaker.** A decisão anterior era só mudanças pequenas e reversíveis. O MegaTweaker alarga isto. Recomendo aceitar com estas condições: ponto de restauro antes, cada tweak reversível por valor anterior guardado, nível "agressivo" desligado por omissão e com aviso, e a lista negra acima (antivírus, Defender, atualizações de segurança, firewall, ficheiros do Windows).
+1. **FirstSetup e a rede: aceite o `winget`.** O executável gerado chama o `winget` por caminho absoluto (quem descarrega é o Windows, de uma fonte assinada pela Microsoft) e o ZeroBirus em si continua sem rede. O ecrã e as categorias ficam iguais ao Ninite; só muda o motor. Copiar o Ninite à letra (instaladores diretos dos fabricantes) obrigava a manter links e somas de verificação de dezenas de apps, que partem a cada versão e abrem a porta a instaladores trocados.
+   - Categorias, as do Ninite: Web Browsers, Messaging, Media, Runtimes, Imaging, Documents, Security, File Sharing, Online Storage, Other, Utilities, Compression, Developer Tools. Esta lista é de memória: **confirmar no site do Ninite na Fase 11**, antes de implementar.
+2. **AllDrivers: só pelo Windows Update.** Lista versão e data, mostra o que o Windows Update tem como opcional e instala por aí, mais a ligação à página do fabricante (NVIDIA, AMD, Intel) para a placa gráfica. Sem instalar drivers de sites de terceiros (risco de cadeia de fornecimento e de ecrã preto) e sem "atualizar tudo" com ficheiros de terceiros.
+3. **Âmbito do MegaTweaker: aceite, com condições.** Ponto de restauro antes, cada tweak reversível por valor anterior guardado, nível "agressivo" desligado por omissão e com aviso, e a lista negra (antivírus, Defender, atualizações de segurança, firewall, ficheiros do Windows).
+
+Nada está em aberto. A Fase 11 ainda depende de confirmar a lista de categorias do Ninite.
+
+Pontos a verificar na Fase 7 (não são decisões do João):
+
+- **Anómalo.** Hoje `core/compare.py` guarda como base só os achados SUSPEITO e CONFERIR. Se o mecanismo não servir para o nível Anómalo, este passa a ter outra ação além de "informar", para não ficar igual ao Incomum.
+- **Crítico.** O fecho do processo e o ponto de restauro têm de entrar como passos do plano autorizado, nunca como efeito lateral da remoção.
 
 Nota sobre a ideia: a estrutura em 3 janelas é boa e cabe no motor que já existe. O ponto fraco é o FirstSetup à Ninite, pela razão da decisão 1; o resto é trabalho, não risco.

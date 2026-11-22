@@ -24,6 +24,7 @@ from zerobirus.core.models import (
     SignatureStatus,
     TempEntry,
 )
+from zerobirus.core.risk import Risk, risk_of
 from zerobirus.core.safety import (
     SignerKind,
     SystemContext,
@@ -117,6 +118,8 @@ class PlanItem:
     finding_id: str
     default_selected: bool
     sha256: str | None = None
+    # The five-level risk (core/risk.py); None for optional cleaning, which is outside the table.
+    risk: Risk | None = None
 
     def param(self, key: str, default: str = "") -> str:
         return next((v for k, v in self.params if k == key), default)
@@ -151,6 +154,18 @@ class Plan:
                 out.append((title, members))
         return out
 
+    def risk_groups(self) -> list[tuple[Risk, tuple[PlanItem, ...]]]:
+        """Items of the risk table, most serious level first. Optional cleaning is not in it."""
+        out: list[tuple[Risk, tuple[PlanItem, ...]]] = []
+        for risk in sorted(Risk, key=lambda r: -r.rank):
+            members = tuple(i for i in self.items if i.risk is risk)
+            if members:
+                out.append((risk, members))
+        return out
+
+    def temp_items(self) -> tuple[PlanItem, ...]:
+        return tuple(i for i in self.items if i.risk is None)
+
 
 def item_id(action: ActionType, params: Iterable[tuple[str, str]]) -> str:
     """Stable id: the same action on the same target always gets the same id."""
@@ -180,6 +195,9 @@ def _item(
     default_selected: bool | None = None,
 ) -> PlanItem:
     pairs = tuple(sorted(params.items()))
+    risk = risk_of(finding)
+    if default_selected is None:
+        default_selected = risk is not None and risk.preselected
     return PlanItem(
         id=item_id(action, pairs),
         action=action,
@@ -188,10 +206,9 @@ def _item(
         level=finding.level,
         why=finding.description,
         finding_id=finding.id,
-        default_selected=(
-            finding.level is Level.SUSPEITO if default_selected is None else default_selected
-        ),
+        default_selected=default_selected,
         sha256=finding.sha256,
+        risk=risk,
     )
 
 
@@ -384,7 +401,7 @@ def build_plan(
 ) -> Plan:
     """Turn findings that deserve action into proposed plan items.
 
-    SUSPEITO items come pre-selected; CONFERIR items never do. Anything protected by
+    GRAVE and CRITICO items come pre-selected (D-015); the rest never do. Anything protected by
     ``core.safety`` is not planned and appears in ``not_plannable`` with the reason. OK and
     NAO_VERIFICADO findings never become actions.
     """
@@ -527,6 +544,7 @@ def plan_to_dict(plan: Plan, approved_ids: Iterable[str]) -> dict[str, object]:
                 "target": i.target,
                 "params": dict(i.params),
                 "level": i.level.value,
+                "risk": i.risk.value if i.risk else None,
                 "why": i.why,
                 "finding_id": i.finding_id,
                 "sha256": i.sha256,
