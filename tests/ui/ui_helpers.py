@@ -1,4 +1,4 @@
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -35,6 +35,7 @@ def make_window(
     size: tuple[int, int] = (1100, 700),
     animations: bool = True,
     home: bool = False,
+    opener: Callable[[str], None] | None = None,
 ) -> MainWindow:
     app = QApplication.instance()
     if isinstance(app, QApplication):
@@ -45,6 +46,7 @@ def make_window(
         data_dir=tmp_path / "data",
         desktop_dir=tmp_path / "Desktop",
         animations=animations,
+        opener=opener,
     )
     qtbot.addWidget(window)
     window.resize(*size)

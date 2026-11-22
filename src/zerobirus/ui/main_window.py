@@ -31,6 +31,7 @@ from zerobirus.core.compare import (
 )
 from zerobirus.core.context import Answers, check_order, emphasised
 from zerobirus.core.diagnosis import Diagnosis
+from zerobirus.core.drivers import CONTACT_PAGE
 from zerobirus.core.models import TempEntry
 from zerobirus.core.plan import AuthorizedPlan, Plan, build_plan, plan_to_dict
 from zerobirus.core.redact import redact
@@ -226,7 +227,16 @@ class MainWindow(QMainWindow):
             pit_page.configure(pit_services)
             self.screens.addWidget(pit_page)
             pit_page.back_requested.connect(lambda: self.show_hub(catalog.HOME_PITSTOP))
-        self.setCentralWidget(self.screens)
+        self._open = opener or (self._demo_open if demo else open_uri)
+        central = QWidget()
+        central.setObjectName("root")
+        central.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        outer = QVBoxLayout(central)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+        outer.addWidget(self.screens, 1)
+        outer.addWidget(self._build_contact_bar())
+        self.setCentralWidget(central)
 
         # pages
         self.context_page = ContextPage(
@@ -305,6 +315,29 @@ class MainWindow(QMainWindow):
         self.screens.setCurrentWidget(module)
         self.setWindowTitle(f"{catalog.APP_NAME} {catalog.SIGNATURE}: {module.title_label.text()}")
         module.on_enter()
+
+    def _build_contact_bar(self) -> QWidget:
+        """The bottom line of every window: where to ask when something does not work."""
+        bar = QWidget()
+        row = QHBoxLayout(bar)
+        row.setContentsMargins(TOKENS.space_4, TOKENS.space_1, TOKENS.space_4, TOKENS.space_2)
+        row.setSpacing(0)
+        self.contact_label = make_label(catalog.CONTACT_TEXT, "small", wrap=False)
+        self.contact_link = button(catalog.CONTACT_LINK, "link", name=catalog.CONTACT_LINK_NAME)
+        self.contact_link.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.contact_link.clicked.connect(self._open_contact)
+        row.addStretch(1)
+        row.addWidget(self.contact_label)
+        row.addWidget(self.contact_link)
+        row.addStretch(1)
+        return bar
+
+    def _open_contact(self) -> None:
+        try:
+            self._open(CONTACT_PAGE)
+        except (OSError, ValueError):
+            self.contact_label.setText(catalog.CONTACT_FAILED)
+            self.contact_link.hide()
 
     @staticmethod
     def _demo_open(uri: str) -> None:

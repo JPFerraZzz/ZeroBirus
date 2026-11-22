@@ -78,12 +78,14 @@ O nome é ZeroBirus, com a assinatura "by Ferraz" mais pequena e em tinta secund
 
 ### 3.11 Ecrã inicial e janelas
 
-Revisto na Fase 7 (ver `docs/ROADMAP.md`, D-014). O ecrã inicial é o **menu principal** e tem exatamente três cartões, em fila a largura normal e empilhados quando é estreito: **Modo Jogo**, **PitStop** e **Nerd'O**. Cada cartão tem título, uma frase e, quando o módulo ainda não existe, a marca "Em breve". O Nerd'O (a análise profunda) mantém o contorno em `accent` e o texto maior: é o que distingue o ZeroBirus.
+Revisto na Fase 7 (ver `docs/ROADMAP.md`, D-014). O ecrã inicial é o **menu principal** e tem exatamente três cartões, em fila a largura normal e empilhados quando é estreito: **Modo Jogo**, **PitStop** e **Nerd'O**. Cada cartão do menu principal é um **quadrado grande** (largura igual à altura, com um máximo), com um **ícone gamer desenhado em traço** na cor `accent` por cima do título e da frase: comando (Modo Jogo), bandeira de xadrez da box (PitStop) e inseto (Nerd'O). Os ícones são originais, desenhados em código (sem ficheiros nem imagens), e são decorativos: o nome acessível continua a ser título mais frase. Os cartões dos módulos dentro de cada janela mantêm o formato baixo. Cada cartão tem título, uma frase e, quando o módulo ainda não existe, a marca "Em breve". O Nerd'O (a análise profunda) mantém o contorno em `accent` e o texto maior: é o que distingue o ZeroBirus.
 
 Cada cartão abre **a sua janela**, com o mesmo tema e a mesma barra lateral:
 
 - **Modo Jogo** e **PitStop** abrem uma janela com os módulos em cartões (FPS Optimizer, RAM Lover, MegaTweaker; FirstSetup, AllUp, BigDiag, AllDrivers). MegaTweaker, FirstSetup e BigDiag terão submenu próprio quando forem construídos. Na Fase 7 são esqueleto: cada módulo mostra "Em breve" e o que vai fazer.
 - **Nerd'O** abre o fluxo de sete etapas já existente, sem modos.
+
+**Rodapé de contacto**, no fundo de todas as janelas: "Algo não funciona? Contacte-me aqui", onde "aqui" é um botão-ligação que abre `https://jpferraz.netlify.app` no browser do utilizador. É um dos endereços da lista permitida (`core.drivers.LINKS`); o ZeroBirus não envia nada, só pede ao Windows para abrir a página.
 
 Cada janela tem "← Menu principal" no topo da barra lateral (desativado enquanto algo corre). Cada cartão é um único botão (foco por teclado, Enter ou Espaço abrem, anel de foco em `accent`, nome acessível = título + frase). Um módulo "Em breve" não faz nada além de mostrar essa nota.
 

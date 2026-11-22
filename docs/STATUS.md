@@ -265,6 +265,14 @@ Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyrigh
 - Por provar em Windows real: que o URI abre a página de arranque.
 - Também no PR: `docs/PHASE12_PLAN.md` (rascunho da Fase 12) e D-023 (instalador opcional em MSI com WiX, decisão do João a 2026-11-18).
 
+## Fase 12a: menu com ícones e contacto (branch `phase-12a/home-icons`, 2026-11-22)
+
+Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1768 testes). **Não testado em Windows real** nem em CI Windows (ainda sem PR). A branch parte de `phase-11b/startup-link`.
+
+- Menu principal: 3 quadrados grandes (largura igual à altura, máximo de 340 pt) com ícone gamer desenhado em código (`CardIcon`): comando, bandeira de xadrez, inseto. Decorativos, sem ficheiros. DESIGN.md 3.11 atualizado primeiro.
+- Rodapé em todas as janelas: "Algo não funciona? Contacte-me aqui"; "aqui" abre `https://jpferraz.netlify.app` pelo abridor restrito (entrada nova em `core.drivers.LINKS`). Sem pedidos de rede do produto: só pede ao Windows para abrir o browser. Se não abrir, mostra o endereço.
+- Por confirmar: o site redireciona para o formulário de contacto? Usei a raiz do site; se houver uma âncora (por exemplo `#contacto`), muda-se numa linha.
+
 ## Próximo passo
 
 Situação a 2026-11-18: PRs #8 (Fase 6) e #15 a #20 (Fases 7 a 11b, empilhados) abertos, todos com CI verde (Ubuntu, Windows no runner, build do executável, capturas). Nada fundido, nada testado em Windows real. O João só quer fundir depois do teste manual. O que falta:

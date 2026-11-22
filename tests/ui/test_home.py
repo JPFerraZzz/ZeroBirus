@@ -135,3 +135,36 @@ def test_authorisation_is_grouped_by_risk_with_temporaries_last_and_unticked(
         if row.item.risk is None:
             assert row.keep.isChecked()  # Arquivos Temporários never start marked
     w.wait_all()
+
+
+def test_home_cards_have_a_distinct_icon_each_and_are_square(
+    qtbot: QtBot, home: MainWindow
+) -> None:
+    home.resize(1100, 800)
+    home.show()
+    qtbot.waitExposed(home)
+    cards = home.home_page.cards
+    assert [c.glyph.kind for c in cards.values() if c.glyph] == ["gamepad", "flag", "bug"]
+    widths = {c.width() for c in cards.values()}
+    assert max(widths) - min(widths) <= 1  # the grid rounds a pixel
+    for c in cards.values():
+        assert abs(c.height() - min(c.width(), 340)) <= 1
+
+
+def test_contact_link_opens_only_the_authors_page(qtbot: QtBot, tmp_path: Path) -> None:
+    opened: list[str] = []
+    w = make_window(qtbot, tmp_path, home=True, opener=opened.append)
+    assert w.contact_label.text() == "Algo não funciona? Contacte-me"
+    w.contact_link.click()
+    assert opened == ["https://jpferraz.netlify.app"]
+    w.wait_all()
+
+
+def test_contact_link_failure_shows_the_address(qtbot: QtBot, tmp_path: Path) -> None:
+    def boom(_: str) -> None:
+        raise OSError("no browser")
+
+    w = make_window(qtbot, tmp_path, home=True, opener=boom)
+    w.contact_link.click()
+    assert "jpferraz.netlify.app" in w.contact_label.text()
+    w.wait_all()
