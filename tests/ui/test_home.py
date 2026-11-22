@@ -156,7 +156,7 @@ def test_contact_link_opens_only_the_authors_page(qtbot: QtBot, tmp_path: Path) 
     w = make_window(qtbot, tmp_path, home=True, opener=opened.append)
     assert w.contact_label.text() == "Algo não funciona? Contacte-me"
     w.contact_link.click()
-    assert opened == ["https://jpferraz.netlify.app"]
+    assert opened == ["https://jpferraz.netlify.app/pt/#contact"]
     w.wait_all()
 
 

@@ -19,7 +19,7 @@ STARTUP_APPS = "ms-settings:startupapps"
 NVIDIA_PAGE = "https://www.nvidia.com/Download/index.aspx"
 AMD_PAGE = "https://www.amd.com/en/support/download/drivers.html"
 INTEL_PAGE = "https://www.intel.com/content/www/us/en/download-center/home.html"
-CONTACT_PAGE = "https://jpferraz.netlify.app"
+CONTACT_PAGE = "https://jpferraz.netlify.app/pt/#contact"
 LINKS: dict[str, str] = {
     OPTIONAL_UPDATES: "Atualizações opcionais do Windows",
     STARTUP_APPS: "Aplicações de arranque do Windows",

@@ -85,7 +85,7 @@ Cada cartão abre **a sua janela**, com o mesmo tema e a mesma barra lateral:
 - **Modo Jogo** e **PitStop** abrem uma janela com os módulos em cartões (FPS Optimizer, RAM Lover, MegaTweaker; FirstSetup, AllUp, BigDiag, AllDrivers). MegaTweaker, FirstSetup e BigDiag terão submenu próprio quando forem construídos. Na Fase 7 são esqueleto: cada módulo mostra "Em breve" e o que vai fazer.
 - **Nerd'O** abre o fluxo de sete etapas já existente, sem modos.
 
-**Rodapé de contacto**, no fundo de todas as janelas: "Algo não funciona? Contacte-me aqui", onde "aqui" é um botão-ligação que abre `https://jpferraz.netlify.app` no browser do utilizador. É um dos endereços da lista permitida (`core.drivers.LINKS`); o ZeroBirus não envia nada, só pede ao Windows para abrir a página.
+**Rodapé de contacto**, no fundo de todas as janelas: "Algo não funciona? Contacte-me aqui", onde "aqui" é um botão-ligação que abre `https://jpferraz.netlify.app/pt/#contact` no browser do utilizador. É um dos endereços da lista permitida (`core.drivers.LINKS`); o ZeroBirus não envia nada, só pede ao Windows para abrir a página.
 
 Cada janela tem "← Menu principal" no topo da barra lateral (desativado enquanto algo corre). Cada cartão é um único botão (foco por teclado, Enter ou Espaço abrem, anel de foco em `accent`, nome acessível = título + frase). Um módulo "Em breve" não faz nada além de mostrar essa nota.
 
