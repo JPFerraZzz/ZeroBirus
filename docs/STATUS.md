@@ -196,7 +196,7 @@ Versão 1.0.0, publicada como pré-release "ZeroBirus Alpha". Testes: CI Windows
 
 ## Fase 6: ecrã inicial e tema (branch `phase-6/home`, 2026-10-28)
 
-Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1584 testes). **Não testado em Windows real.** A PR #7 já está fundida em main (e a Alpha 1.0 publicada); o CI Windows desta branch corre com o PR da Fase 6.
+Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1584 testes). **Não testado em Windows real.** A PR #7 já está fundida em main (e a Alpha 1.0 publicada). PR #8 aberto; CI verde (runner windows-latest), à espera do OK do João para fundir.
 
 - **DESIGN.md atualizado primeiro**: tema escuro único (secção 3.1), cartões e grupos com raio de 8 px (3.4), ecrã inicial (3.11), grupos que se abrem e fecham (3.12). Tokens regenerados.
 - **Tema escuro**: `paper #0E1218`, acento menta-ciano `#2BD9B4`, níveis claros sobre fundos suaves; todos os pares passam AA (teste). Sem gradientes, sombras ou brilho. `logo-dark.svg` para a barra lateral; `logo.svg` fica para o ícone.
@@ -207,7 +207,7 @@ Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyrigh
 
 ## Fase 7: reorganização (branch `phase-7/restructure`, 2026-10-29)
 
-Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1608 testes). **Não testado em Windows real**; o CI Windows ainda não correu esta branch. A branch parte de `phase-6/home` (PR #8 ainda aberto), por isso a PR da Fase 7 deve apontar a essa branch até a #8 ser fundida.
+Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1608 testes). **Não testado em Windows real**; PR #15 aberto, CI verde a 2026-11-04 (Ubuntu, Windows, build e capturas; só no runner windows-latest). A branch parte de `phase-6/home` (PR #8 ainda aberto).
 
 - **DESIGN.md primeiro** (3.11 e 3.12): menu principal com 3 cartões, ecrãs dos módulos, selos de risco e grupos por nível.
 - **Tabela de risco** (`core/risk.py`, limiares e famílias de sinais em `core/rules/risk.json`): Incomum, Anómalo, Suspeito, Grave, Crítico. Sem sinal forte, o nível sai da pontuação (10, 30, 60) e nunca passa de Suspeito. Com sinal forte: um só é Suspeito; dois sinais fortes, ou um forte mais outra família de prova, é Grave; Crítico exige dois fortes e três famílias independentes (execução, persistência, rede, integridade, defesas). Testes: golden dos níveis, todos os sinais têm família, sinal forte nunca fica abaixo de Suspeito, distribuição da fixture `miner_pc` (1 Crítico, 4 Graves, 3 Suspeitos, 3 Anómalos).
@@ -220,7 +220,7 @@ Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyrigh
 
 ## Fase 8: Modo Jogo (branch `phase-8/game`, 2026-10-29)
 
-Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1652 testes). **Não testado em Windows real** e o teste de integração novo (`tests/integration/test_tweaks_windows.py`) ainda não correu no CI. A branch parte de `phase-7/restructure`.
+Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1652 testes). **Não testado em Windows real** ; PR #16 aberto, CI verde a 2026-11-04 (inclui `tests/integration/test_tweaks_windows.py`, só no runner). A branch parte de `phase-7/restructure`.
 
 - **Motor**: duas ações reversíveis novas, `SET_REGISTRY_VALUE` e `SET_POWER_PLAN`, que só aceitam as entradas exatas de um catálogo fixo (`core/tweaks.py`). O valor anterior é guardado antes, o resultado é relido (`APLICADO` só depois de confirmado) e `Repor` volta ao valor antigo. Resultado novo `ActionResult.APLICADO`.
 - **FPS Optimizer**: Modo de Jogo do Windows, desligar a captura da Game Bar e a captura em segundo plano (marcados por omissão), plano de energia de alto desempenho e agendamento da GPU por hardware (moderados, desmarcados; o segundo só aparece se o PC o tem, precisa de administrador e de reiniciar). Mostra a RAM livre antes e depois. Ponto de restauro antes, com a opção de continuar sem ele se o Windows não o criar.
@@ -230,7 +230,7 @@ Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyrigh
 
 ## Fase 9: MegaTweaker (branch `phase-9/megatweaker`, 2026-10-29)
 
-Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1658 testes). **Não testado em Windows real**; os testes de integração novos (`tests/integration/test_tweaks_windows.py`, 5 testes no total) ainda não correram no CI. A branch parte de `phase-8/game`.
+Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1658 testes). **Não testado em Windows real**; PR #17 aberto, CI verde a 2026-11-04 (inclui `tests/integration/test_tweaks_windows.py`, só no runner). A branch parte de `phase-8/game`.
 
 - **MegaTweaker** (cartão do Modo Jogo, ecrã próprio): 16 definições em 4 categorias (Privacidade e recomendações, Aspeto e animações, Jogos e rede, Sistema e arranque), por nível: seguro (marcado), moderado (desmarcado) e agressivo (desmarcado, grupo à parte com aviso e caixa de confirmação para aplicar). Mostra o estado atual de cada uma e se precisa de administrador ou de reiniciar.
 - Mesmo motor da Fase 8: ponto de restauro antes, valor anterior guardado, resultado relido (`APLICADO`), plano gravado na sessão, **Repor por definição e Repor tudo**.
@@ -240,7 +240,7 @@ Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyrigh
 
 ## Fase 10: PitStop, BigDiag e AllUp (branch `phase-10/pitstop`, 2026-10-29)
 
-Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1725 testes). **Não testado em Windows real**; `tests/integration/test_pitstop_windows.py` ainda não correu no CI. A branch parte de `phase-9/megatweaker`.
+Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1725 testes). **Não testado em Windows real**; PR #18 aberto, CI verde a 2026-11-04 (inclui `tests/integration/test_pitstop_windows.py`, só no runner). A branch parte de `phase-9/megatweaker`.
 
 - **BigDiag** (`core/bigdiag.py`, `scripts/bigdiag.ps1`): relatório só de leitura com 9 secções: sistema, processador, RAM, discos (saúde, desgaste, temperatura, erros, horas), espaço livre, placa gráfica, MRT (versão, última execução e resultado lidos do log), Defender e falhas dos últimos 30 dias. Cada secção tem estado Bom, Atenção, Problema ou "Não foi possível ler"; o que não se leu nunca conta como bom. Exporta para o Ambiente de trabalho, redigido e sem dados pessoais.
 - **AllUp** (`core/allup.py`, `remediation/updates.py`, `platform/windows/winget.py`): lista o que o `winget` diz que tem atualização, a pessoa marca (nada vem marcado, há "Marcar todas"), confirma que percebe que instalar não se desfaz, e o plano fica gravado na sessão antes de instalar. Cada pacote só é "confirmado" se uma nova listagem do winget já não o mostrar. Quem descarrega é o Windows (D-016); o ZeroBirus não faz pedidos de rede.
@@ -248,6 +248,21 @@ Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyrigh
 - Não há "drivers" nem FirstSetup nesta fase (Fase 11).
 - Riscos e barreiras: adenda da Fase 10 em `docs/reviews/phase-8-audit.md`. O mais importante para o teu teste: o analisador do `winget upgrade` foi escrito sem ver uma saída real; se a lista vier vazia com atualizações disponíveis, é isso.
 
+## Fase 11: FirstSetup e AllDrivers (branch `phase-11/firstsetup`, 2026-10-29)
+
+Estado: código pronto e verde em Linux (ruff, mypy nas duas plataformas, pyright, 1762 testes). **Não testado em Windows real**; PR #19 aberto, CI verde a 2026-11-04 (a 1.ª corrida falhou, a 2.ª passou; só no runner windows-latest). A branch parte de `phase-10/pitstop`.
+
+- **FirstSetup**: as 16 categorias do Ninite (lidas em ninite.com a 2026-10-29: Web Browsers, Messaging, Media, .NET, Java, Imaging, 3D Printing, Documents, Security, File Sharing, Online Storage, Other, Utilities, Compression, VC++ Redistributables, Developer Tools), 90 apps com id do winget. A pessoa marca e o ZeroBirus cria `ZeroBirus-FirstSetup.cmd` no Ambiente de trabalho (D-021). O script instala com o winget e confirma cada app voltando a perguntar ao winget se ficou instalada.
+- **Ids**: Todos os ids foram verificados no repositório `winget-pkgs` (2026-11-05, com `GITHUB_TOKEN=$(gh auth token) uv run python tools/check_winget_ids.py`; usa a rede, é uma ferramenta de desenvolvimento). Corrigidos: AnyDesk (`AnyDesk.AnyDesk`), Tailscale (`Tailscale.Tailscale`), PeaZip (`Giorgiotani.Peazip`). Retirados por não existirem: WhatsApp, MusicBee, GhostScript, RustDesk, FileZilla. Isto prova que o id existe no repositório, não que a instalação funciona em Windows real. Várias apps do Ninite não têm id verificado (Winamp, Trillian, CCCP, MediaMonkey, Avast, AVG, Avira, Spybot, SUPERAntiSpyware, Glary, Revo, Launchy...) e ficaram de fora.
+- **AllDrivers**: lê os drivers do PC (versão e data; avisa nos com mais de 3 anos), pergunta ao Windows Update o que tem pendente e abre as «Atualizações opcionais» do Windows e a página do fabricante da placa gráfica (NVIDIA, AMD ou Intel). Não instala drivers (D-016, auditoria).
+- Auditoria: adenda da Fase 11 em `docs/reviews/phase-8-audit.md`.
+
 ## Próximo passo
 
-`docs/ROADMAP.md` foi reescrito com o feedback do João às capturas da Fase 6: menu principal com 3 janelas (Modo Jogo, PitStop, Nerd'O), tabela de risco de 5 níveis no diagnóstico e seleção por omissão de Grave e Crítico. A Fase 6 está feita (PR #8 aberto, à espera do CI Windows e do OK do João). Em 2026-10-29 o João aceitou a tabela de risco, o nome PitStop e as decisões 1 a 3 (D-014 a D-017); já não há decisões em aberto. A Fase 7 está na branch `phase-7/restructure` as Fases 8 a 10 em `phase-8/game`, `phase-9/megatweaker` e `phase-10/pitstop` (empilhadas), à espera do teu teste. Segue a Fase 11 (FirstSetup e AllDrivers) e a Fase 11 só precisa de confirmar as categorias do Ninite.
+Situação a 2026-11-05: PRs #8 (Fase 6) e #15 a #19 (Fases 7 a 11, empilhados) abertos, todos com CI verde (Ubuntu, Windows no runner, build do executável, capturas). Nada fundido, nada testado em Windows real. O que falta:
+
+- Teste manual do João das Fases 6 a 11 (`docs/WINDOWS_TEST_PLAN.md`). O analisador do `winget upgrade` (AllUp) nunca viu saída real.
+- Fundir pela ordem #8, #15, #16, #17, #18, #19, com o OK do João em cada um.
+- Decisões do João: categoria "Arranque" do MegaTweaker (recomendado: fase pequena depois do teste, ou abrir `ms-settings:startupapps`) e flush da standby list (recomendado: deixar de fora, D-019).
+- PRs do Dependabot #9 a #13 por rever.
+- Depois: Fase 12 (release 1.1: instalador opcional, assinatura de código, formulário de falsos positivos da Microsoft).
