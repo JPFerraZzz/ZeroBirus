@@ -19,7 +19,7 @@ zerobirus = "zerobirus.cli:main"
 [dependency-groups]
 dev = [
     "ruff==0.17.2",
-    "mypy==2.4.0",
+    "mypy==2.4.1",
     "pyright==1.1.414",
     "pytest==9.1.1",
     "hypothesis==6.170.9",
